@@ -6,17 +6,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const express_1 = __importDefault(require("express"));
+const morgan_1 = __importDefault(require("morgan"));
 const userRoutes_1 = require("./routes/userRoutes");
+const authRoutes_1 = require("./routes/authRoutes");
 // Load environment variables
 dotenv_1.default.config();
 // Initialize express app
 const app = (0, express_1.default)();
-const port = process.env.PORT || 3000;
 // Middleware
-app.use((0, cors_1.default)()); // Enable CORS
-app.use(express_1.default.json()); // Parse JSON bodies
+app.use((0, cors_1.default)());
+app.use(express_1.default.json());
+app.use((0, morgan_1.default)('common'));
 // Routes
 app.use('/api/users', userRoutes_1.userRouter);
+app.use('/api/auth', authRoutes_1.authRouter);
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok' });
@@ -25,4 +28,4 @@ app.get('/health', (req, res) => {
 app.listen(process.env.PORT, () => {
     console.log(`Server running on http://localhost:${process.env.PORT}`);
 });
-exports.default = app; // Export for testing
+exports.default = app;
