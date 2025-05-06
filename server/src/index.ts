@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import morgan from 'morgan';
 import { userRouter } from './routes/userRoutes';
+import { authRouter } from './routes/authRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -17,6 +18,7 @@ app.use(morgan('common'));
 
 // Routes
 app.use('/api/users', userRouter);
+app.use('/api/auth', authRouter)
 
 // Health check endpoint
 app.get('/health', (req, res) => {
