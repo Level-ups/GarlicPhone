@@ -9,4 +9,56 @@
 
 body{
     box-sizing: border-box;
+    background-color: #FEF3E2;
+    /* background: linear-gradient(45deg, #3D365C, #7C4585, #C95792, #F8B55F); */
+}
+
+/* Default base size (usually desktop) */
+html {
+    font-size: 16px; /* 1rem = 16px */
+}
+
+/* Base: Fluid typography with clamp */
+html {
+    font-size: clamp(10px, 2vw + 1rem, 16px); /* 10px to 16px scaling based on viewport width */
+}
+
+/* Medium screens (tablet) */
+@media (max-width: 1200px) {
+    html {
+        font-size: clamp(9px, 2vw + 1rem, 15px); /* Fluid scale between 9px and 15px */
+    }
+}
+
+/* Small screens (large phones) */
+@media (max-width: 992px) {
+    html {
+        font-size: clamp(8px, 2vw + 1rem, 14px); /* Fluid scale between 8px and 14px */
+    }
+}
+
+/* Extra small screens (small phones) */
+@media (max-width: 768px) {
+    html {
+        font-size: clamp(7px, 2vw + 1rem, 13px); /* Fluid scale between 7px and 13px */
+    }
+}
+
+/* Tiny screens (very small devices) */
+@media (max-width: 576px) {
+    html {
+        font-size: clamp(6px, 2vw + 1rem, 12px); /* Fluid scale between 6px and 12px */
+    }
+}
+
+@media (max-width: 375px) {
+    html {
+        font-size: clamp(5px, 2vw + 1rem, 11px); /* Fluid scale between 6px and 12px */
+    }
+}
+
+@media (max-width: 345px) {
+    html {
+        font-size: clamp(4px, 2vw + 1rem, 10px); /* Fluid scale between 6px and 12px */
+    }
 }

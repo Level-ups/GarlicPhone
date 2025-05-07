@@ -1,0 +1,221 @@
+.draw-page {
+  width: 100%;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 15% auto 15%;
+  grid-template-rows: auto auto 65%;
+  gap: 2rem;
+  padding: 3rem 8rem;
+  padding-top: 1.5rem;
+  container-type: inline-size;
+}
+
+@media (max-width: 1200px) {
+    .draw-page{
+        padding: 3rem 4rem;
+    }
+}
+
+.draw-page > div {
+  width: 100%;
+  height: 100%;
+  /* border: 1px solid black; */
+}
+
+.draw-page-header-ctn {
+  grid-column: span 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  container-type: inline-size;
+}
+
+.draw-page-title-timer-ctn{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.draw-page-prompt-ctn {
+  grid-column: span 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.draw-page-controls {
+  display: grid;
+  grid-template-columns: 4rem 4rem;
+  grid-auto-rows: 4rem;
+  gap: 2rem;
+  align-content: center;
+  justify-content: center;
+  /* border: 2px solid black; */
+  border-radius: 2rem;
+  /* box-shadow: 0.4rem 0.5rem black; */
+  /* container-type: inline-size; */
+}
+
+@container (max-width: 1200px) {
+  .draw-page-controls {
+    grid-template-columns: 3.5rem 3.5rem;
+    grid-auto-rows: 3.5rem;
+    gap: 1.5rem;
+  }
+}
+
+@container (max-width: 925px) {
+  .draw-page-controls {
+    grid-template-columns: 2.5rem;
+    grid-auto-rows: 2.5rem;
+  }
+
+}
+
+.canvas-container {
+  margin-top: 3rem;
+  display: flex;
+  flex-direction: column;
+  row-gap: 2rem;
+}
+
+.canvas {
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  border-radius: inherit;
+  /* border: 4px solid black;
+    box-shadow: .5rem .75rem black; */
+  display: block;
+  cursor: pointer;
+  border: 2px solid black;
+  border-radius: 2rem;
+  box-shadow: 0.5rem 0.75rem black;
+  background-color: white;
+}
+
+.draw-page-logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 9rem;
+}
+
+.draw-page-title {
+  letter-spacing: 8px;
+  font-size: 2rem;
+  padding: 1rem 2rem;
+  background-color: black;
+  color: white;
+  border-radius: 1.5rem;
+}
+
+.draw-page-timer{
+    padding-right: 4rem;
+    font-size: 2rem;
+    padding: 1rem 2rem;
+    background-color: black;
+    color: white;
+    border-radius: 1.5rem;
+}
+
+.colour-button {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.5rem;
+  border: 4px solid black;
+  box-shadow: 0.25rem 0.5rem black;
+  background-color: white;
+  transition: 0.3s;
+  cursor: pointer;
+}
+.colour-button:hover{
+    animation: jiggle ease .4s;
+}
+/* 
+.colour-button-active{
+    box-shadow: .15rem .25rem lightgray;
+    border: px solid lightgray;
+} */
+
+@media (max-width: 768px) {
+  .draw-page {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 40% auto auto; 
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .canvas{
+    box-shadow: 0 .4rem black;
+  }
+
+  .colour-button{
+    box-shadow: 0 .2rem black;
+  }
+
+
+  .draw-page-header-ctn{
+    flex-direction: column;
+    align-items: center;
+    
+  }
+
+  .draw-page-title-timer-ctn{
+    justify-content: space-between;
+  }
+
+  .draw-page-logo{
+    position: relative;
+    order: -1;
+    left: unset;
+    top: unset;
+    transform: none;
+  }
+
+  .draw-page > div {
+    grid-column: span 1;
+  }
+
+  .draw-page-header-ctn,
+  .draw-page-prompt-ctn {
+    grid-column: span 1;
+  }
+
+  .draw-page-controls {
+    order: 1;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  .colour-button {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+}
+
+@media (max-width: 542px) {
+  .draw-page-controls {
+    gap: .5rem;
+  }
+}
+
+@media (max-width: 447px){
+    .draw-page-title{
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 390px) {
+  .draw-page-controls {
+    gap: 0.5rem;
+  }
+
+  .draw-page {
+    padding: 0.5rem;
+  }
+}

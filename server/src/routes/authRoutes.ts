@@ -14,6 +14,7 @@ router.get('/start', (req, res) => {
   authUrl.searchParams.set('client_id', clientId);
   authUrl.searchParams.set('redirect_uri', redirectUri);
   authUrl.searchParams.set('scope', scope);
+  authUrl.searchParams.set('prompt', 'consent')
 
   console.log(authUrl);
 

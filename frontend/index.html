@@ -10,21 +10,75 @@
       rel="stylesheet"
     />
     <link href="styles/base.css" type="text/css" rel="stylesheet" />
+    <link
+      href="styles/abstract/animations.css"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="styles/typography/typography.css"
+      type="text/css"
+      rel="stylesheet"
+    />
     <link href="styles/components/login.css" type="text/css" rel="stylesheet" />
-    <link href="styles/typography/typography.css" type="text/css" rel="stylesheet" />
+    <link
+      href="styles/components/canvas.css"
+      type="text/css"
+      rel="stylesheet"
+    />
     <title>Garlic Phone</title>
   </head>
   <body>
-    <section class="login">
+    <!-- <section class="login">
       <form class="login-form">
         <h3 class="login-heading">Sign Up</h3>
         <button id="google-login-button" class="login-google-button">
             <p class="login-google-button-text">Login With Google</p>
             <img class="login-google-image" src="./public/assets/login/google-icon-logo-svgrepo-com.svg"/></button>
       </form>
+    </section> -->
+
+    <section class="draw-page">
+      <div class="draw-page-header-ctn">
+        <div class="draw-page-title-timer-ctn">
+          <h2 class="large-heading draw-page-title">Garlic Phone</h2>
+          <p class="draw-page-timer">00:00</p>
+        </div>
+        <img class="draw-page-logo" src="./public/assets/logo.svg" />
+      </div>
+      <div class="draw-page-prompt-ctn">
+        <p>Draw:</p>
+        <h3 class="medium-heading">Clown with pie on his face</h3>
+      </div>
+      <div class="draw-page-controls">
+        <button
+          style="background-color: red"
+          class="colour-button colour-button-active"
+        ></button>
+        <button style="background-color: blue" class="colour-button"></button>
+        <button style="background-color: green" class="colour-button"></button>
+        <button style="background-color: yellow" class="colour-button"></button>
+        <button style="background-color: orange" class="colour-button"></button>
+        <button style="background-color: purple" class="colour-button"></button>
+        <button style="background-color: pink" class="colour-button"></button>
+        <button style="background-color: black" class="colour-button"></button>
+      </div>
+      <div><canvas id="canvas" class="canvas"></canvas></div>
+      <div class="draw-page-controls">
+        <button
+          style="background-color: red"
+          class="colour-button colour-button-active"
+        ></button>
+        <button style="background-color: blue" class="colour-button"></button>
+        <button style="background-color: green" class="colour-button"></button>
+        <button style="background-color: yellow" class="colour-button"></button>
+        <button style="background-color: orange" class="colour-button"></button>
+        <button style="background-color: purple" class="colour-button"></button>
+        <button style="background-color: pink" class="colour-button"></button>
+        <button style="background-color: black" class="colour-button"></button>
+      </div>
     </section>
 
-    <script src="./dist/index.js"></script>
-    <script src="./dist/components/auth/auth.js"></script>
+    <script type="module" src="./dist/index.js"></script>
   </body>
 </html>

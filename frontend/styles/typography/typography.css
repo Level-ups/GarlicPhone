@@ -1,5 +1,12 @@
 body{
-    font-size: 62.5%;
     font-family: "Cal Sans", sans-serif;
     letter-spacing: 2px;
+}
+
+.large-heading{
+    font-size: 3rem;
+}
+
+.medium-heading{
+    font-size: 2rem;
 }

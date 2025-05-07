@@ -18,6 +18,7 @@ router.get('/start', (req, res) => {
     authUrl.searchParams.set('client_id', clientId);
     authUrl.searchParams.set('redirect_uri', redirectUri);
     authUrl.searchParams.set('scope', scope);
+    authUrl.searchParams.set('prompt', 'consent');
     console.log(authUrl);
     res.redirect(authUrl.toString());
 });
@@ -49,15 +50,12 @@ router.get('/callback', async (req, res) => {
         }
         const tokens = (await tokenResponse.json());
         console.log('Tokens:', tokens);
-        // Verify ID token
         const idToken = tokens.id_token;
         const certsResponse = await (0, node_fetch_1.default)('https://www.googleapis.com/oauth2/v3/certs');
         const { keys } = (await certsResponse.json());
-        // 2. Decode header to get 'kid'
         const [headerB64] = idToken.split('.');
         const headerJson = Buffer.from(headerB64, 'base64').toString('utf-8');
         const { kid } = JSON.parse(headerJson);
-        // 3. Find matching key
         const matchingKey = keys.find((k) => k.kid === kid);
         if (!matchingKey) {
             console.error('No matching key found for kid:', kid);
@@ -69,6 +67,7 @@ router.get('/callback', async (req, res) => {
             audience: clientId,
         });
         console.log('Verified user:', payload);
+        // TO-DO: Create user
         res.redirect(`http://127.0.0.1:3000/GarlicPhone/frontend/test.html`);
     }
     catch (error) {
