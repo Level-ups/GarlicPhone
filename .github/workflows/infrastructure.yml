@@ -5,6 +5,7 @@ on:
     branches: [ main ]
     paths:
       - 'terraform/**'
+  workflow_dispatch:
 
 jobs:
   terraform:
@@ -13,6 +14,19 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+
+    - name: Install AWS CLI
+      run: |
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        unzip awscliv2.zip
+        sudo ./aws/install --update
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ vars.AWS_REGION }}
       
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v2
@@ -22,12 +36,39 @@ jobs:
       working-directory: ./terraform
       
     - name: Terraform Apply
-      run: terraform apply -auto-approve -var "db_username=${{ secrets.TF_VAR_DB_USERNAME }}" -var "db_password=${{ secrets.TF_VAR_DB_PASSWORD }}"
+      run: terraform apply -auto-approve -var "db_username=${{ secrets.DB_USERNAME }}" -var "db_password=${{ secrets.DB_PASSWORD }}" -var "server_port=${{ vars.PORT }}"
       working-directory: ./terraform
       
     - name: Get Terraform Outputs
       id: terraform
       run: |
-        echo "RDS_ENDPOINT=$(terraform output -raw rds_endpoint)" >> $GITHUB_OUTPUT
-        echo "RDS_DB_NAME=$(terraform output -raw rds_db_name)" >> $GITHUB_OUTPUT
+        echo "RDS_ENDPOINT=$(terraform output -raw db_endpoint)" >> $GITHUB_OUTPUT
+        echo "RDS_DB_NAME=$(terraform output -raw db_database)" >> $GITHUB_OUTPUT
+        echo "RDS_HOST=$(terraform output -raw db_host)" >> $GITHUB_OUTPUT
+        echo "RDS_PORT=$(terraform output -raw db_port)" >> $GITHUB_OUTPUT
+        echo "EC2_HOST=$(terraform output -raw ec2_endpoint)" >> $GITHUB_OUTPUT
       working-directory: ./terraform
+
+    - name: Save infrastructure outputs
+      run: |
+        echo "RDS_HOST=${{ steps.terraform.outputs.RDS_HOST }}" >> infra-outputs.env
+        echo "RDS_DB_NAME=${{ steps.terraform.outputs.RDS_DB_NAME }}" >> infra-outputs.env
+        echo "RDS_PORT=${{ steps.terraform.outputs.RDS_PORT }}" >> infra-outputs.env
+        echo "RDS_ENDPOINT=${{ steps.terraform.outputs.RDS_ENDPOINT }}" >> infra-outputs.env
+        echo "EC2_HOST=${{ steps.terraform.outputs.EC2_HOST }}" >> infra-outputs.env
+
+    - name: Upload infrastructure outputs
+      uses: actions/upload-artifact@v4
+      with:
+        name: infra-outputs
+        path: infra-outputs.env
+
+  migrations:
+    needs: terraform
+    uses: ./.github/workflows/flyway-migrations.yml
+    secrets: inherit
+
+  deploy:
+    needs: terraform
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit

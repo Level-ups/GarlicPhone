@@ -1,10 +1,7 @@
 name: Run Tests
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'server/**'
+  workflow_call:
 
 jobs:
   test:
