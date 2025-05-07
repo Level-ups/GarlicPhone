@@ -1,3 +1,5 @@
+import { ErrorDetails, InsertErrorDetails } from "../library/error-types";
+import { Either } from '../library/types';
 import { User } from '../models/User';
 import userRepository from '../repositories/userRepository';
 
@@ -9,8 +11,13 @@ async function getUserById(id: string): Promise<User | null> {
   return userRepository.findUserById(id);
 }
 
-async function createUser(userData: Omit<User, 'userId'>): Promise<User> {
-  return userRepository.insertUser(userData);
+async function createUser(userData: Omit<User, 'userId'>): Promise<Either<User, ErrorDetails>> {
+  const createdUser = await userRepository.insertUser(userData);
+  if (!createdUser) {
+    return [undefined, new InsertErrorDetails('Failed to create user')];
+  } else {
+    return [createdUser];
+  }
 }
 
 async function updateUser(id: string, userData: Partial<User>): Promise<User | null> {
