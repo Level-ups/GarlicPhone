@@ -89,7 +89,7 @@ router.get('/callback', async (req, res) => {
 
     // TO-DO: Create user
 
-    res.redirect(`http://127.0.0.1:3000/GarlicPhone/frontend/test.html`);
+    res.redirect(`http://127.0.0.1:3000/congrats`);
   } catch (error) {
     console.error('Error during OAuth callback handling:', error);
     res.status(500).send('Internal Server Error');
