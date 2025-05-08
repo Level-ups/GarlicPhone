@@ -1,5 +1,13 @@
 export const canvasConfig = {
-    colour: "#000",
-    canvasContext: undefined
+    pencilContext: {
+        pixelSize: 10,
+        colour: "black"
+    },
+    canvasContext: undefined,
+    modes: {
+        fill: false,
+        erase: false,
+        draw: true
+    }
 };
 console.log('canvasConfig loaded');

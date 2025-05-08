@@ -68,8 +68,8 @@
 
 @container (max-width: 925px) {
   .draw-page-controls {
-    grid-template-columns: 2.5rem;
-    grid-auto-rows: 2.5rem;
+    grid-template-columns: 3rem;
+    grid-auto-rows: 3rem;
   }
 
 }
@@ -91,7 +91,7 @@
   display: block;
   cursor: pointer;
   border: 2px solid black;
-  border-radius: 2rem;
+  border-radius: 1.5rem;
   box-shadow: 0.5rem 0.75rem black;
   background-color: white;
 }
@@ -122,18 +122,53 @@
     border-radius: 1.5rem;
 }
 
-.colour-button {
+.canvas-button,
+.colour-button
+{
   width: 100%;
   height: 100%;
   border-radius: 0.5rem;
   border: 4px solid black;
   box-shadow: 0.25rem 0.5rem black;
   background-color: white;
-  transition: 0.3s;
+  transition: 0.2s;
   cursor: pointer;
+  display: block;
 }
+
+.inner-button-img{
+  width: 70%;
+  margin: auto;
+  transition: .2s opacity;
+}
+
+.colour-button > .inner-button-img{
+  opacity: 0;
+}
+
+.canvas-button:hover,
 .colour-button:hover{
-    animation: jiggle ease .4s;
+    /* animation: jiggle ease .4s; */
+}
+
+.colour-button:active,
+.canvas-button:active{
+  border: 4px solid black;
+  box-shadow: 0rem 0rem black;
+  background-color: lightgray;
+  transform: translateY(.5rem);
+}
+
+.colour-button-active,
+.canvas-button-active{
+  border: 4px solid black;
+  box-shadow: 0rem 0rem black;
+  background-color: lightgray;
+  transform: translateY(.5rem);
+}
+
+.colour-button-active  > .inner-button-img{
+  opacity: 1;
 }
 /* 
 .colour-button-active{
@@ -153,6 +188,7 @@
     box-shadow: 0 .4rem black;
   }
 
+  .colour-button,
   .colour-button{
     box-shadow: 0 .2rem black;
   }
@@ -195,6 +231,10 @@
   .colour-button {
     width: 3.5rem;
     height: 3.5rem;
+  }
+  .canvas-button{
+    width: 4rem;
+    height: 4rem;
   }
 }
 

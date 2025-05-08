@@ -7,9 +7,28 @@
     font-family: inherit;
 }
 
+@keyframes back-colour-fade {
+    0%{
+        background-color: #FEF3E2;
+    }
+    25%{
+        background-color: #C7D9DD;
+    }
+    50%{
+        background-color: #CCE0AC;
+    }
+    75%{
+        background-color: #C8AAAA;
+    }
+    100%{
+        background-color: #FEF3E2;
+    }
+}
+
 body{
     box-sizing: border-box;
-    background-color: #FEF3E2;
+    /* animation: back-colour-fade infinite 30s; */
+    background-color: #CCE0AC;
     /* background: linear-gradient(45deg, #3D365C, #7C4585, #C95792, #F8B55F); */
 }
 

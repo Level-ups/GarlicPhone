@@ -1,7 +1,8 @@
 import { canvasConfig } from "./canvasConfig.js";
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-const ctx = canvas.getContext("2d");
+const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
 
 if (!ctx) throw new Error("Canvas not supported");
 
@@ -12,36 +13,15 @@ let lastX = 0;
 let lastY = 0;
 
 
-canvasConfig.canvasContext.fillStyle = canvasConfig.colour;
+canvasConfig.canvasContext.fillStyle = canvasConfig.pencilContext.colour;
 
-canvas.addEventListener("mousedown", (event: MouseEvent) => {
-  isDrawing = true;
-  const x = Math.floor(event.offsetX / PIXEL_SIZE);
-  const y = Math.floor(event.offsetY / PIXEL_SIZE);
-  lastX = x;
-  lastY = y;
-  drawPixel(x, y, ctx);
-});
-const PIXEL_SIZE = 10;
-canvas.addEventListener("mousemove", (event: MouseEvent) => {
-  if (!isDrawing) return;
-  const x = Math.floor(event.offsetX / PIXEL_SIZE);
-  const y = Math.floor(event.offsetY / PIXEL_SIZE);
-  drawLine(lastX, lastY, x, y, ctx);
-  lastX = x;
-  lastY = y;
-});
 
-canvas.addEventListener("mouseup", () => {
-  isDrawing = false;
-});
+// Initial call
+resizeCanvasToDisplaySize(ctx);
 
-canvas.addEventListener("mouseleave", () => {
-  isDrawing = false;
-});
-
+// Helper functions
 function drawPixel(x: number, y: number, ctx: CanvasRenderingContext2D) {
-  ctx.fillRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+  ctx.fillRect(x * canvasConfig.pencilContext.pixelSize, y * canvasConfig.pencilContext.pixelSize, canvasConfig.pencilContext.pixelSize, canvasConfig.pencilContext.pixelSize);
 }
 
 function resizeCanvasToDisplaySize(ctx: CanvasRenderingContext2D) {
@@ -55,15 +35,6 @@ function resizeCanvasToDisplaySize(ctx: CanvasRenderingContext2D) {
   if (ctx) ctx.scale(dpr, dpr);
 }
 
-// Initial call
-resizeCanvasToDisplaySize(ctx);
-
-// On resize
-window.addEventListener("resize", () => {
-  resizeCanvasToDisplaySize(ctx)
-});
-
-// Bresenham’s line algorithm for pixel art style
 function drawLine(
   x0: number,
   y0: number,
@@ -92,13 +63,114 @@ function drawLine(
     }
   }
 }
-// const template = document.createElement('template');
-// class GarlicCanvas extends HTMLElement{
-//   constructor(){
-//     super();
-//     const shadow = this.attachShadow({mode: 'open'})
-//     shadow.appendChild(template.content.cloneNode(true))
-//   }
-// }
 
-// customElements.define('garlic-canvas', GarlicCanvas)
+function floodFill(
+  ctx: CanvasRenderingContext2D,
+  startX: number,
+  startY: number,
+) {
+  const fillColor = cssColorToRgba(); // get current ctx.fillStyle as [r, g, b, a]
+  const canvasWidth = ctx.canvas.width;
+  const canvasHeight = ctx.canvas.height;
+  const imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+  const data = imageData.data;
+
+  const stack: [number, number][] = [[startX, startY]];
+
+  const pixelIndex = (x: number, y: number) => (y * canvasWidth + x) * 4;
+
+  const startIdx = pixelIndex(startX, startY);
+  const targetColor: [number, number, number, number] = [
+    data[startIdx],
+    data[startIdx + 1],
+    data[startIdx + 2],
+    data[startIdx + 3],
+  ];
+
+  // If the target color is already the fill color, skip
+  if (targetColor.every((v, i) => v === fillColor[i])) {
+    return; // Nothing to fill
+  }
+
+  while (stack.length) {
+    const [x, y] = stack.pop()!;
+    const idx = pixelIndex(x, y);
+
+    // Check if current pixel matches the target color
+    if (
+      data[idx] === targetColor[0] &&
+      data[idx + 1] === targetColor[1] &&
+      data[idx + 2] === targetColor[2] &&
+      data[idx + 3] === targetColor[3]
+    ) {
+      // Set new color
+      data[idx] = fillColor[0];
+      data[idx + 1] = fillColor[1];
+      data[idx + 2] = fillColor[2];
+      data[idx + 3] = fillColor[3];
+
+      // Add neighbors to stack
+      if (x > 0) stack.push([x - 1, y]);
+      if (x < canvasWidth - 1) stack.push([x + 1, y]);
+      if (y > 0) stack.push([x, y - 1]);
+      if (y < canvasHeight - 1) stack.push([x, y + 1]);
+    }
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+}
+
+
+function cssColorToRgba(): [number, number, number, number] {
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = tempCanvas.height = 1;
+  const tempCtx = tempCanvas.getContext('2d')!;
+  tempCtx.fillStyle = canvasConfig.pencilContext.colour;
+  tempCtx.fillRect(0, 0, 1, 1);
+  const pixel = tempCtx.getImageData(0, 0, 1, 1).data;
+  return [pixel[0], pixel[1], pixel[2], pixel[3]];
+}
+
+// Events
+window.addEventListener("resize", () => {
+  resizeCanvasToDisplaySize(ctx)
+});
+
+canvas.addEventListener("mousedown", (event: MouseEvent) => {
+  const x = Math.floor(event.offsetX / canvasConfig.pencilContext.pixelSize);
+  const y = Math.floor(event.offsetY / canvasConfig.pencilContext.pixelSize);
+
+  if (canvasConfig.modes.fill) {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const canvasX = Math.floor((event.clientX - rect.left) * dpr);
+    const canvasY = Math.floor((event.clientY - rect.top) * dpr);
+    floodFill(ctx, canvasX, canvasY);
+  } else if(canvasConfig.modes.erase){
+    isDrawing = true;
+    lastX = x;
+    lastY = y;
+    drawPixel(x, y, ctx);
+  } else if(canvasConfig.modes.draw) {
+    isDrawing = true;
+    lastX = x;
+    lastY = y;
+    drawPixel(x, y, ctx);
+  }
+});
+canvas.addEventListener("mousemove", (event: MouseEvent) => {
+  if (!isDrawing) return;
+  const x = Math.floor(event.offsetX / canvasConfig.pencilContext.pixelSize);
+  const y = Math.floor(event.offsetY / canvasConfig.pencilContext.pixelSize);
+  drawLine(lastX, lastY, x, y, ctx);
+  lastX = x;
+  lastY = y;
+});
+
+canvas.addEventListener("mouseup", () => {
+  isDrawing = false;
+});
+
+canvas.addEventListener("mouseleave", () => {
+  isDrawing = false;
+});
