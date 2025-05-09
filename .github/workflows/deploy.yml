@@ -48,16 +48,16 @@ jobs:
         touch key.pem
         echo "$PRIVATE_KEY" > key.pem
         chmod 600 key.pem
-        echo "export PORT=$PORT" > .bashrc
-        echo "export EC2_HOST=$EC2_HOST" >> .bashrc
-        echo "export EC2_USER=$EC2_USER" >> .bashrc
-        echo "export GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID" >> .bashrc
-        echo "export GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET" >> .bashrc
-        echo "export PG_USER=$PG_USER" >> .bashrc
-        echo "export PG_PASSWORD=$PG_PASSWORD" >> .bashrc
-        echo "export PG_HOST=$PG_HOST" >> .bashrc
-        echo "export PG_DATABASE=$PG_DATABASE" >> .bashrc
-        echo "export PG_PORT=$PG_PORT" >> .bashrc
+        echo "export PORT=$PORT" > .env
+        echo "export EC2_HOST=$EC2_HOST" >> .env
+        echo "export EC2_USER=$EC2_USER" >> .env
+        echo "export GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID" >> .env
+        echo "export GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET" >> .env
+        echo "export PG_USER=$PG_USER" >> .env
+        echo "export PG_PASSWORD=$PG_PASSWORD" >> .env
+        echo "export PG_HOST=$PG_HOST" >> .env
+        echo "export PG_DATABASE=$PG_DATABASE" >> .env
+        echo "export PG_PORT=$PG_PORT" >> .env
         scp -i key.pem -o StrictHostKeyChecking=no -r ./server .bashrc $USER@$HOST:/home/$USER/
 
     - name: Install packages, build, and run
@@ -67,10 +67,10 @@ jobs:
       run: |
         echo "$USER@$HOST"
         ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
+        source ~/.env
         cd server
-        source ~/.bashrc
         npm install
         npm run build
         fuser -k ${PORT}/tcp || true
-        nohup npm start > server.log 2>&1 &
+        nohup $(which npm) start > server.log 2>&1 &
         EOF
