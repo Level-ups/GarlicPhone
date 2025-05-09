@@ -50,22 +50,6 @@ jobs:
         chmod 600 key.pem
         scp -i key.pem -o StrictHostKeyChecking=no -r ./server $USER@$HOST:/home/$USER/
 
-    - name: Set environment variables on EC2
-      env:
-        HOST: ${{ vars.EC2_HOST }}
-        USER: ${{ vars.EC2_USER }}
-      run: |
-        ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
-        echo "export PORT=${PORT}" >> ~/.bashrc
-        echo "export GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}" >> ~/.bashrc
-        echo "export GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}" >> ~/.bashrc
-        echo "export PG_USER=${PG_USER}" >> ~/.bashrc
-        echo "export PG_PASSWORD=${PG_PASSWORD}" >> ~/.bashrc
-        echo "export PG_HOST=${PG_HOST}" >> ~/.bashrc
-        echo "export PG_DATABASE=${PG_DATABASE}" >> ~/.bashrc
-        echo "export PG_PORT=${PG_PORT}" >> ~/.bashrc
-        EOF
-
     - name: Install packages, build, and run
       env:
         HOST: ${{ env.EC2_HOST }}
@@ -75,7 +59,16 @@ jobs:
         ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
         source ~/.bashrc
         cd server
+        echo "export PORT=${PORT}" >> ~/.bash_profile
+        echo "export GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}" >> ~/.bash_profile
+        echo "export GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}" >> ~/.bash_profile
+        echo "export PG_USER=${PG_USER}" >> ~/.bash_profile
+        echo "export PG_PASSWORD=${PG_PASSWORD}" >> ~/.bash_profile
+        echo "export PG_HOST=${PG_HOST}" >> ~/.bash_profile
+        echo "export PG_DATABASE=${PG_DATABASE}" >> ~/.bash_profile
+        echo "export PG_PORT=${PG_PORT}" >> ~/.bash_profile
+        source ~/.bash_profile
         npm install
         npm run build
-        npm start
+        nohup npm start > server.log 2>&1 &
         EOF
