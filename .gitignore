@@ -8,3 +8,7 @@ dist
 terraform.tfstate
 terraform.tfstate.backup
 terraform.tfvars
+
+# AWS key-pair
+*.pem
+*.ppk

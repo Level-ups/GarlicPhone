@@ -106,6 +106,20 @@ resource "aws_security_group" "ec2_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = var.server_port
+    to_port     = var.server_port
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   tags = {
     Name = "ec2-postgres-sg"
   }
@@ -129,6 +143,14 @@ resource "aws_instance" "ec2_instance" {
   subnet_id       = aws_subnet.public_1.id  
 
   iam_instance_profile = aws_iam_instance_profile.ec2_instance_profile.name # Allow EC2 to access S3 Bucket
+
+  user_data = <<-EOF
+              #!/bin/bash
+              curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+              source ~/.bashrc
+              nvm install 22
+              nvm use 22
+              EOF
 
   tags = {
     Name = "EC2 Instance"
@@ -220,6 +242,14 @@ output "db_port" {
   value = aws_db_instance.postgresql.port
 }
 
+output "db_host" {
+  value = aws_db_instance.postgresql.address
+}
+
+output "db_database" {
+  value = aws_db_instance.postgresql.db_name
+}
+
 output "ec2_endpoint" {
   value = aws_instance.ec2_instance.public_dns
   description = "The public DNS of the EC2 instance: "
@@ -234,4 +264,10 @@ variable "db_username" {
 variable "db_password" {
   type      = string
   sensitive = true
+}
+
+variable "server_port" {
+  type      = number
+  sensitive = false
+  default = 5000
 }
