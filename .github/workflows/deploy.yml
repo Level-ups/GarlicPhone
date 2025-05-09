@@ -70,5 +70,6 @@ jobs:
         source ~/.bash_profile
         npm install
         npm run build
+        fuser -k ${PORT}/tcp || true
         nohup npm start > server.log 2>&1 &
         EOF
