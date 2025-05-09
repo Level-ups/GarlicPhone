@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import fetch from 'node-fetch';
 import { jwtVerify, importJWK, JWK } from 'jose';
 
 const router = Router();

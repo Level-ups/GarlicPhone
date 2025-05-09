@@ -1,12 +1,30 @@
-// User type
+import { ValidationResult } from "../library/types";
+
 export type User = {
-  userId: string;
-  username: string;
-  email: string;
+  id: string;
+  googleSub: string;
+  name: string;
+  avatarUrl: string;
+  roleName: string;
 };
 
-/**
- * This file demonstrates the separation of concerns:
- * - Models directory contains type definitions and business logic
- * - Repositories directory handles database access
- */
+export function validateCreateOrUpdateUser(input: any): ValidationResult[] {
+  const invalidFields: ValidationResult[] = [
+    {
+      field: "name",
+      message: "'name' is required",
+      isValid: !!input.name.trim(),
+    },
+    {
+      field: "googleSub",
+      message: "'googleSub' is required",
+      isValid: !!input.googleSub.trim(),
+    },
+    {
+      field: "roleName",
+      message: "'roleName' is required",
+      isValid:!!input.roleName.trim(),
+    }
+  ].filter((field) => !field.isValid);
+  return invalidFields;
+}
