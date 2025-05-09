@@ -1,38 +1,88 @@
 name: Deploy Application
 
 on:
-  workflow_run:
-    workflows: ["Build Docker Image"]
-    types:
-      - completed
+  push:
+    branches:
+      - main
 
 env:
-  DATABASE_URL: ${{ secrets.TF_DATABASE_URL }}
+  PORT: ${{ vars.PORT }}
+  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+  GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+  PG_USER: ${{ secrets.DB_USERNAME }}
+  PG_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  PG_HOST: ${{ vars.DB_HOST }}
+  PG_DATABASE: ${{ vars.DB_DATABASE }}
+  PG_PORT: ${{ vars.DB_PORT }}
+  PG_ENDPOINT: ${{ vars.DB_ENDPOINT }}
 
 jobs:
   deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-      
+
+    - name: Download infrastructure outputs
+      uses: actions/download-artifact@v4
+      with:
+        name: infra-outputs
+
+    - name: Load infrastructure outputs into environment
+      run: |
+        cat infra-outputs.env >> $GITHUB_ENV
+
     - name: Install AWS CLI
       run: |
         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
         unzip awscliv2.zip
         sudo ./aws/install
-    
+
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: af-south-1
-    
-    - name: Deploy to EC2
+        aws-region: ${{ vars.AWS_REGION }}
+
+    - name: Copy server folder to EC2 via SCP
+      env:
+        PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+        HOST: ${{ vars.EC2_HOST }}
+        USER: ${ vars.EC2_USER }}
       run: |
-        aws ssm send-command \
-          --instance-ids ${{ steps.get-terraform-outputs.outputs.instance_id }} \
-          --document-name "AWS-RunShellScript" \
-          --parameters "commands=['cd /home/ec2-user/app && docker-compose pull && docker-compose up -d --remove-orphans']"
+        echo "$PRIVATE_KEY" > key.pem
+        chmod 600 key.pem
+        scp -i key.pem -o StrictHostKeyChecking=no -r ./server $USER@$HOST:/home/$USER/
+
+    - name: Set environment variables on EC2
+      env:
+        HOST: ${{ vars.EC2_HOST }}
+        USER: ${ vars.EC2_USER }}
+      run: |
+        ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
+        echo "export PORT=${PORT}" >> ~/.bashrc
+        echo "export GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}" >> ~/.bashrc
+        echo "export GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}" >> ~/.bashrc
+        echo "export PG_USER=${PG_USER}" >> ~/.bashrc
+        echo "export PG_PASSWORD=${PG_PASSWORD}" >> ~/.bashrc
+        echo "export PG_HOST=${PG_HOST}" >> ~/.bashrc
+        echo "export PG_DATABASE=${PG_DATABASE}" >> ~/.bashrc
+        echo "export PG_PORT=${PG_PORT}" >> ~/.bashrc
+        echo "export PG_ENDPOINT=${PG_ENDPOINT}" >> ~/.bashrc
+        EOF
+
+    - name: Install packages, build, and run
+      env:
+        HOST: ${{ env.EC2_HOST }}
+        USER: ec2-user
+      run: |
+        ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
+        source ~/.bashrc
+        cd server
+        npm install
+        npm run build
+        npm start
+        EOF
