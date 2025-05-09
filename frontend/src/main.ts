@@ -18,8 +18,9 @@ const pages: { [key: string]: PageRenderer } = {
         "|div": {
           "_": "hello world",
           "$": {
-            "border": "1px solid blue",
-            "fontSize": "0.5em",
+            color: "var(--asdf)",
+            border: "1px solid blue",
+            fontSize: "0.5em",
           }
         }
       }
