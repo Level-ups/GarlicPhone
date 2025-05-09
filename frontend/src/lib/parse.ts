@@ -42,13 +42,13 @@ const body: ElemTree = {
   // # and . can be appended to set classnames and id's
   "|h1#mainHeader": {
         // _ Sets the element's innerHTML
-        "_": "Header text content goes here"
+        _: "Header text content goes here"
   },
 
   "|p.content": {
 
     // $ allows CSS overrides to set styling
-    "$": {
+    $: {
         fontFamily: "Nuva Sans",
         color: "red"
     },
@@ -64,7 +64,7 @@ const body: ElemTree = {
 
     // Instead of {} objects, any value can be replaced with a function to make it reactive
     // redraw() appends the object to the `redraws` list, scheduling it for redrawing
-    // "_": (redraw: Function) => {
+    // _: (redraw: Function) => {
     //     redraw();
     //     return "Hello world " + Date.now();
     // },
@@ -73,12 +73,12 @@ const body: ElemTree = {
   },
 
   "|div": {
-    "_": "asdf",
+    _: "asdf",
 
     "|span": {
         "|p": {
             "|asdf": {},
-            "_": "fdsa"
+            _: "fdsa"
         }
     },
     "|span.1": {
@@ -92,7 +92,8 @@ type ElemTree = {
   "$"?: StyleDict | (() => StyleDict);
 } &
 { [key in `%${keyof HTMLElementEventMap}`]?: (e: Event) => void; } &
-{ [key in `${string}|${keyof HTMLElementTagNameMap}${string}`]?: ElemTree | (() => ElemTree); };
+{ [key in `|${keyof HTMLElementTagNameMap}`]?: ElemTree | (() => ElemTree); } &
+{ [key in `${string}|${string}`]?: ElemTree | (() => ElemTree); };
 
 type ElemData = {
     tag: string;
@@ -127,7 +128,6 @@ function tryCall<T>(x: T, args: any[] = []) {
 export function parse(tree: ElemTree, par: ElemData = createEmptyElemData()): HTMLElement[] {
     const res: HTMLElement[] = [];
 
-    // for (let [k, v] of Object.keys(tree)) {
     for (let k in tree) {
         const tok = k as keyof ElemTree;
         const v = tree[tok];
