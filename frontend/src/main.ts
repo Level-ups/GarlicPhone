@@ -13,7 +13,14 @@ const pages: { [key: string]: PageRenderer } = {
       "|h1 #someid.someclass1 .someclass2": {
         "_": "Home",
         "$": {
-          "color": "red"
+          color: "red"
+        },
+        "|div": {
+          "_": "hello world",
+          "$": {
+            "border": "1px solid blue",
+            "fontSize": "0.5em",
+          }
         }
       }
     });

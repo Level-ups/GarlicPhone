@@ -105,8 +105,8 @@ type ElemData = {
 };
 
 type EventHandler = (e: Event) => void;
-type StyleDict = { [property: string]: string };
-type AttrDict = { [attribute: string]: string };
+type StyleDict = { [key in keyof CSSStyleDeclaration | `--${string}`]?: string };
+type AttrDict = { [key: string]: string };
 type EventHandlerDict = { [eventName: string]: EventHandler; }
 
 // Parse an ElemTree and set it as the subtree of the given parent
