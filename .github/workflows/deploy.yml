@@ -48,7 +48,17 @@ jobs:
         touch key.pem
         echo "$PRIVATE_KEY" > key.pem
         chmod 600 key.pem
-        scp -i key.pem -o StrictHostKeyChecking=no -r ./server $USER@$HOST:/home/$USER/
+        echo "export PORT=$PORT" > .bashrc
+        echo "export EC2_HOST=$EC2_HOST" >> .bashrc
+        echo "export EC2_USER=$EC2_USER" >> .bashrc
+        echo "export GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID" >> .bashrc
+        echo "export GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET" >> .bashrc
+        echo "export PG_USER=$PG_USER" >> .bashrc
+        echo "export PG_PASSWORD=$PG_PASSWORD" >> .bashrc
+        echo "export PG_HOST=$PG_HOST" >> .bashrc
+        echo "export PG_DATABASE=$PG_DATABASE" >> .bashrc
+        echo "export PG_PORT=$PG_PORT" >> .bashrc
+        scp -i key.pem -o StrictHostKeyChecking=no -r ./server .bashrc $USER@$HOST:/home/$USER/
 
     - name: Install packages, build, and run
       env:
@@ -57,17 +67,8 @@ jobs:
       run: |
         echo "$USER@$HOST"
         ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
-        source ~/.bashrc
         cd server
-        echo "export PORT=${PORT}" >> ~/.bash_profile
-        echo "export GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}" >> ~/.bash_profile
-        echo "export GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}" >> ~/.bash_profile
-        echo "export PG_USER=${PG_USER}" >> ~/.bash_profile
-        echo "export PG_PASSWORD=${PG_PASSWORD}" >> ~/.bash_profile
-        echo "export PG_HOST=${PG_HOST}" >> ~/.bash_profile
-        echo "export PG_DATABASE=${PG_DATABASE}" >> ~/.bash_profile
-        echo "export PG_PORT=${PG_PORT}" >> ~/.bash_profile
-        source ~/.bash_profile
+        source ~/.bashrc
         npm install
         npm run build
         fuser -k ${PORT}/tcp || true
