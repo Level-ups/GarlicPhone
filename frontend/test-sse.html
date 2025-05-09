@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+
+  <h1>Testing</h1>
+  <main id="container"></main>
+
+  <script>
+    function addEventToDOM(event) {
+      const container = document.getElementById('container')
+      const newElement = document.createElement('p')
+      newElement.innerText = event
+      container.appendChild(newElement)
+    }
+
+    const eventSource = new EventSource('http://localhost:5000/events/health');
+
+    eventSource.addEventListener('health', (event) => {
+      addEventToDOM(`${event.type}: ${event.data}`);
+    });
+  </script>
+</body>
+</html>
