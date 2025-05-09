@@ -33,7 +33,7 @@ app.get('/events/health', createServerSentEventHandler<string>(sendEvent => {
 
 // Start server
 app.listen(Number(process.env.PORT) || 5000, '0.0.0.0', () => {
-  console.log(`Server running on http://localhost:${process.env.PORT}`);
+  console.log(`Server is running on http://localhost:${process.env.PORT}`);
 });
 
 export default app;
