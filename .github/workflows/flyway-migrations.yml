@@ -31,9 +31,9 @@ jobs:
           FLYWAY_USER: ${{ secrets.DB_USERNAME }}
           FLYWAY_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          ./flyway \
+          flyway \
             -url="$FLYWAY_URL" \
             -user="$FLYWAY_USER" \
             -password="$FLYWAY_PASSWORD" \
-            -locations=filesystem:sql/migrations,filesystem:sql/migrations/repeatable-scripts \
+            -locations=filesystem:flyway/sql/migrations,filesystem:flyway/sql/migrations/repeatable-scripts \
             migrate
