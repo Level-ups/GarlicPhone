@@ -125,31 +125,39 @@ function tryCall<T>(x: T, args: any[] = []) {
 
 // Parse an ElemTree into a set of HTMLElements
 export function parse(tree: ElemTree, par: ElemData = createEmptyElemData()): HTMLElement[] {
+    console.log("PARSE:", tree);
     const res: HTMLElement[] = [];
 
-    for (let [k, v] of Object.entries(tree)) {
-        const key = k as keyof ElemTree;
-        switch(key[0]) {
+    // for (let [k, v] of Object.keys(tree)) {
+    for (let k in tree) {
+        const tok = k as keyof ElemTree;
+        const v = tree[tok];
+
+        console.log(`KEY[${k}]`)
+        switch(tok[0]) {
             // Set parent properties
             case '_': par.textContent = tryCall(v);                        break; // content
             case '$': par.style       = tryCall(v);                        break; // style
             case '@': par.attributes  = tryCall(v);                        break; // attribute
-            case '%': par.eventHandlers[key.slice(1)] = v as EventHandler; break; // event
+            case '%': par.eventHandlers[tok.slice(1)] = v as EventHandler; break; // event
 
             // Create new child
             default:                                                              // child
-                const subtree : ElemTree = tryCall(tree[key]);
+                console.log("PARSING:", tok)
+                const subtree : ElemTree = tryCall(tree[tok]);
 
                 // Create element data + physical HTML element
                 const childData = createEmptyElemData();
-                const tokData = parseElemToken(key);
+                const tokData = parseElemToken(tok);
+                console.log("TOKDATA:", tokData);
                 if (typeof tokData === "string") {
-                    console.error(`Invalid element token:\n${key}\n${tokData}`);
+                    console.error(`Invalid element token:\n${tok}\n${tokData}`);
                     break;
                 }
                 [childData.tag, childData.id, childData.classList] = tokData;
 
                 const grandchildren = parse(subtree, childData);
+                console.log("GRANDCHILDREN:", grandchildren);
                 res.push(createDomElement(childData, grandchildren));
                 break;
         }
@@ -160,7 +168,7 @@ export function parse(tree: ElemTree, par: ElemData = createEmptyElemData()): HT
 
 const ID_MARKER = /\s*\#/g;
 const CLASS_MARKER = /\s*\./g;
-const SPACELESS_MARKER = /[#.]/g;
+const SPACELESS_MARKER = /(?=[\#\.])/g;
 const WHITESPACE = /\s+/g;
 
 type ElemTokenParseRes = [string, string, string[]];
@@ -206,12 +214,17 @@ function createEmptyElemData(): ElemData {
 
 // Construct HTML DOM element from PElem metadata
 function createDomElement(meta: ElemData, children: HTMLElement[] = []): HTMLElement {
-    const { tag, id, classList = [], style = {}, attributes: attrs = {}, eventHandlers: evnts = {} } = meta;
+    const {
+        tag, id, classList,
+        style, attributes: attrs,
+        eventHandlers: evnts, textContent
+    } = meta;
 
     const elem = document.createElement(tag);
 
     if (id !== "") { elem.id = id; }
     elem.classList.add(...classList);
+    elem.textContent = textContent;
     Object.entries(style).forEach(([key, val]) => { (elem.style as any)[key] = val; });
     Object.entries(attrs).forEach(([attr, val]) => { elem.setAttribute(attr, val); });
     Object.entries(evnts).forEach(([eventName, handler]) => { elem.addEventListener(eventName, handler); })

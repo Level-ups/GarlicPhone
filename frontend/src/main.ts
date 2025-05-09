@@ -10,7 +10,12 @@ const pages: { [key: string]: PageRenderer } = {
   // "home": c => { c.innerHTML = '<h1>Home</h1>'; },
   "home": c => {
     parseInto(c, {
-      "|h1": { "_": "Home" }
+      "|h1 #someid.someclass1 .someclass2": {
+        "_": "Home",
+        "$": {
+          "color": "red"
+        }
+      }
     });
   },
   "about": c => { c.innerHTML = '<h1>About</h1>'; },
