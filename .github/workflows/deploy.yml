@@ -24,15 +24,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Download infrastructure outputs
-      uses: actions/download-artifact@v4
-      with:
-        name: infra-outputs
-
-    - name: Load infrastructure outputs into environment
-      run: |
-        cat infra-outputs.env >> $GITHUB_ENV
-
     - name: Install AWS CLI
       run: |
         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"

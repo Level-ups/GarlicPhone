@@ -14,15 +14,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download infrastructure outputs
-        uses: actions/download-artifact@v4
-        with:
-          name: infra-outputs
-
-      - name: Load infrastructure outputs into environment
-        run: |
-          cat infra-outputs.env >> $GITHUB_ENV
-
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
