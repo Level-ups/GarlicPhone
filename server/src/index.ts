@@ -4,6 +4,7 @@ import express from 'express';
 import morgan from 'morgan';
 import { userRouter } from './routes/userRoutes';
 import { authRouter } from './routes/authRoutes';
+import { createServerSentEventHandler } from './library/serverSentEvents';
 
 // Load environment variables
 dotenv.config();
@@ -24,6 +25,13 @@ app.use('/api/auth', authRouter)
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
+
+// Server Sent Events Health Check Endpoint
+app.get('/events/health', createServerSentEventHandler<string>(sendEvent => {
+  setInterval(() => {
+    sendEvent('health', 'healthy');
+  }, 5000);
+}))
 
 // Start server
 app.listen(process.env.PORT, () => {
