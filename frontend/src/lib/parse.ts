@@ -49,8 +49,8 @@ const body: ElemTree = {
 
     // $ allows CSS overrides to set styling
     "$": {
-        "font-family": "Nuva Sans",
-        "color": "red"
+        fontFamily: "Nuva Sans",
+        color: "red"
     },
 
     // %<event> allows calling functions on HTML element events
@@ -105,7 +105,7 @@ type ElemData = {
 };
 
 type EventHandler = (e: Event) => void;
-type StyleDict = { [key in keyof CSSStyleDeclaration | `--${string}`]?: string };
+type StyleDict = { [key in keyof CSSStyleDeclaration]?: string };
 type AttrDict = { [key: string]: string };
 type EventHandlerDict = { [eventName: string]: EventHandler; }
 
@@ -125,7 +125,6 @@ function tryCall<T>(x: T, args: any[] = []) {
 
 // Parse an ElemTree into a set of HTMLElements
 export function parse(tree: ElemTree, par: ElemData = createEmptyElemData()): HTMLElement[] {
-    console.log("PARSE:", tree);
     const res: HTMLElement[] = [];
 
     // for (let [k, v] of Object.keys(tree)) {
@@ -133,7 +132,6 @@ export function parse(tree: ElemTree, par: ElemData = createEmptyElemData()): HT
         const tok = k as keyof ElemTree;
         const v = tree[tok];
 
-        console.log(`KEY[${k}]`)
         switch(tok[0]) {
             // Set parent properties
             case '_': par.textContent = tryCall(v);                        break; // content
@@ -143,13 +141,11 @@ export function parse(tree: ElemTree, par: ElemData = createEmptyElemData()): HT
 
             // Create new child
             default:                                                              // child
-                console.log("PARSING:", tok)
                 const subtree : ElemTree = tryCall(tree[tok]);
 
                 // Create element data + physical HTML element
                 const childData = createEmptyElemData();
                 const tokData = parseElemToken(tok);
-                console.log("TOKDATA:", tokData);
                 if (typeof tokData === "string") {
                     console.error(`Invalid element token:\n${tok}\n${tokData}`);
                     break;
@@ -157,7 +153,6 @@ export function parse(tree: ElemTree, par: ElemData = createEmptyElemData()): HT
                 [childData.tag, childData.id, childData.classList] = tokData;
 
                 const grandchildren = parse(subtree, childData);
-                console.log("GRANDCHILDREN:", grandchildren);
                 res.push(createDomElement(childData, grandchildren));
                 break;
         }
