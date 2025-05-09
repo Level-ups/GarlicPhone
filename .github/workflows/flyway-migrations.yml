@@ -20,12 +20,10 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Download Flyway
+      - name: Install Flyway CLI
         run: |
-          wget -q -O flyway-commandline.zip https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/9.22.3/flyway-commandline-9.22.3.zip
-          unzip flyway-commandline.zip -d flyway
-          rm flyway-commandline.zip
-          echo "$(pwd)/flyway" >> $GITHUB_PATH
+          curl -L https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/9.22.3/flyway-commandline-9.22.3-linux-x64.tar.gz | tar xz
+          sudo ln -s $PWD/flyway-9.22.3/flyway /usr/local/bin/flyway
 
       - name: Run Flyway migrations
         env:
@@ -33,4 +31,4 @@ jobs:
           FLYWAY_USER: ${{ secrets.DB_USERNAME }}
           FLYWAY_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          flyway migrate -user=$FLYWAY_USER -password=$FLYWAY_PASSWORD -url=$FLYWAY_URL
+          flyway -url="$FLYWAY_URL" -user="$FLYWAY_USER" -password="$FLYWAY_PASSWORD" migrate
