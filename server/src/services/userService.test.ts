@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import userRepository from '../repositories/userRepository'; // Import the actual repository
 import userService from './userService';
+import { User } from '../models/User';
 
 // Mock the userRepository directly, matching the actual method names
 vi.mock('../repositories/userRepository', () => ({
@@ -49,7 +50,13 @@ describe('userService', () => {
     it('should create new user', async () => {
       const createdUser = { userId: '2', username: 'New User', email: 'new@example.com' };
       (userRepository.insertUser as any).mockResolvedValue(createdUser); // insertUser returns the created user
-      const userData = { username: 'New User', email: 'new@example.com' };
+      const userData: User = {
+        name: 'New User',
+        avatarUrl: '',
+        roleName: '',
+        id: '',
+        googleSub: ''
+      };
       const result = await userService.createUser(userData);
       expect(userRepository.insertUser).toHaveBeenCalledWith(userData); // Corrected method name and expectation
       expect(result).toEqual(createdUser);
@@ -60,7 +67,7 @@ describe('userService', () => {
     it('should update existing user', async () => {
       const updatedUser = { userId: '1', username: 'Updated Name', email: 'example@EMAIL' };
       (userRepository.updateUser as any).mockResolvedValue(updatedUser); // updateUser returns the updated user or null
-      const updateData = { username: 'Updated Name' };
+      const updateData = { name: 'Updated Name' };
       const result = await userService.updateUser('1', updateData);
       expect(userRepository.updateUser).toHaveBeenCalledWith('1', updateData); // Corrected method name and expectation
       expect(result).toEqual(updatedUser);

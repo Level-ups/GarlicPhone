@@ -1,7 +1,3 @@
-/**
- * Utility functions for the application
- */
-
 export function toCamelCase<T>(obj: any): T {
   if (obj === null || obj === undefined) {
     return obj;
