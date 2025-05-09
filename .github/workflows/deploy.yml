@@ -58,7 +58,7 @@ jobs:
         echo "export PG_HOST=$PG_HOST" >> .env
         echo "export PG_DATABASE=$PG_DATABASE" >> .env
         echo "export PG_PORT=$PG_PORT" >> .env
-        scp -i key.pem -o StrictHostKeyChecking=no -r ./server .bashrc $USER@$HOST:/home/$USER/
+        scp -i key.pem -o StrictHostKeyChecking=no -r ./server .env $USER@$HOST:/home/$USER/
 
     - name: Install packages, build, and run
       env:
