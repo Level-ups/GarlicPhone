@@ -27,6 +27,3 @@ export const canvasConfig : CanvasConfig = {
         draw: true
     }
 } 
-
-
-console.log('canvasConfig loaded');

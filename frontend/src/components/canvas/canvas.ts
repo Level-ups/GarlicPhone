@@ -174,3 +174,50 @@ canvas.addEventListener("mouseup", () => {
 canvas.addEventListener("mouseleave", () => {
   isDrawing = false;
 });
+
+// TOUCH EVENTS
+canvas.addEventListener("touchstart", (event: TouchEvent) => {
+  event.preventDefault(); // prevent scrolling
+
+  const touch = event.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor((touch.clientX - rect.left) / canvasConfig.pencilContext.pixelSize);
+  const y = Math.floor((touch.clientY - rect.top) / canvasConfig.pencilContext.pixelSize);
+
+  if (canvasConfig.modes.fill) {
+    const dpr = window.devicePixelRatio || 1;
+    const canvasX = Math.floor((touch.clientX - rect.left) * dpr);
+    const canvasY = Math.floor((touch.clientY - rect.top) * dpr);
+    floodFill(ctx, canvasX, canvasY);
+  } else if (canvasConfig.modes.erase) {
+    isDrawing = true;
+    lastX = x;
+    lastY = y;
+    drawPixel(x, y, ctx);
+  } else if (canvasConfig.modes.draw) {
+    isDrawing = true;
+    lastX = x;
+    lastY = y;
+    drawPixel(x, y, ctx);
+  }
+});
+
+canvas.addEventListener("touchmove", (event: TouchEvent) => {
+  event.preventDefault(); // prevent scrolling
+
+  if (!isDrawing) return;
+
+  const touch = event.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor((touch.clientX - rect.left) / canvasConfig.pencilContext.pixelSize);
+  const y = Math.floor((touch.clientY - rect.top) / canvasConfig.pencilContext.pixelSize);
+
+  drawLine(lastX, lastY, x, y, ctx);
+  lastX = x;
+  lastY = y;
+});
+
+canvas.addEventListener("touchend", () => {
+  isDrawing = false;
+});
+

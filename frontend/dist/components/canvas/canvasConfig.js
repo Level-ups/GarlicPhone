@@ -10,4 +10,3 @@ export const canvasConfig = {
         draw: true
     }
 };
-console.log('canvasConfig loaded');
