@@ -11,10 +11,9 @@ env:
   GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
   PG_USER: ${{ secrets.DB_USERNAME }}
   PG_PASSWORD: ${{ secrets.DB_PASSWORD }}
-  PG_HOST: ${{ vars.DB_HOST }}
-  PG_DATABASE: ${{ vars.DB_DATABASE }}
-  PG_PORT: ${{ vars.DB_PORT }}
-  PG_ENDPOINT: ${{ vars.DB_ENDPOINT }}
+  PG_HOST: ${{ vars.PG_HOST }}
+  PG_DATABASE: ${{ vars.PG_DATABASE }}
+  PG_PORT: ${{ vars.PG_PORT }}
 
 jobs:
   deploy:
@@ -71,7 +70,6 @@ jobs:
         echo "export PG_HOST=${PG_HOST}" >> ~/.bashrc
         echo "export PG_DATABASE=${PG_DATABASE}" >> ~/.bashrc
         echo "export PG_PORT=${PG_PORT}" >> ~/.bashrc
-        echo "export PG_ENDPOINT=${PG_ENDPOINT}" >> ~/.bashrc
         EOF
 
     - name: Install packages, build, and run
