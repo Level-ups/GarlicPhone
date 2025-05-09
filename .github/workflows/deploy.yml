@@ -41,7 +41,7 @@ jobs:
       env:
         PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
         HOST: ${{ vars.EC2_HOST }}
-        USER: ${ vars.EC2_USER }}
+        USER: ${{ vars.EC2_USER }}
       run: |
         touch key.pem
         echo "$PRIVATE_KEY" > key.pem
@@ -51,7 +51,7 @@ jobs:
     - name: Set environment variables on EC2
       env:
         HOST: ${{ vars.EC2_HOST }}
-        USER: ${ vars.EC2_USER }}
+        USER: ${{ vars.EC2_USER }}
       run: |
         ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
         echo "export PORT=${PORT}" >> ~/.bashrc
