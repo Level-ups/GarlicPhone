@@ -5,8 +5,13 @@ function updateCanvasColour(colourButton) {
     if (!canvasConfig.canvasContext) {
         return;
     }
-    canvasConfig.canvasContext.fillStyle = canvasConfig.pencilContext.colour =
-        colourButton.style.backgroundColor;
+    if (canvasConfig.modes.erase) {
+        canvasConfig.pencilContext.colour = colourButton.style.backgroundColor;
+    }
+    else {
+        canvasConfig.canvasContext.fillStyle = canvasConfig.pencilContext.colour =
+            colourButton.style.backgroundColor;
+    }
 }
 let activeColourButton = null;
 colourButtons.forEach((button) => {
@@ -59,10 +64,6 @@ eraserButton?.addEventListener("click", () => {
         fill: false,
         draw: false,
     };
-    canvasConfig.pencilContext = {
-        ...canvasConfig.pencilContext,
-        pixelSize: 50,
-    };
     if (canvasConfig.canvasContext) {
         canvasConfig.canvasContext.fillStyle = "white";
     }
@@ -75,10 +76,6 @@ drawButton?.addEventListener("click", () => {
         fill: false,
         draw: true,
     };
-    canvasConfig.pencilContext = {
-        ...canvasConfig.pencilContext,
-        pixelSize: 10,
-    };
     if (canvasConfig.canvasContext) {
         canvasConfig.canvasContext.fillStyle = canvasConfig.pencilContext.colour;
     }
@@ -88,5 +85,14 @@ clearButton?.addEventListener("click", () => {
     if (canvasConfig.canvasContext) {
         canvasConfig.canvasContext.fillStyle = "#ffffff";
         canvasConfig.canvasContext.fillRect(0, 0, canvasConfig.canvasContext.canvas.width, canvasConfig.canvasContext.canvas.height);
+        canvasConfig.canvasContext.fillStyle = canvasConfig.pencilContext.colour;
     }
+});
+const pixelSlider = document.getElementById("pixelSliderInput");
+const pixelSizeLabel = document.getElementById("pixelSliderLabel");
+pixelSlider?.addEventListener('input', () => {
+    const newSize = parseInt(pixelSlider.value, 10);
+    canvasConfig.pencilContext = { ...canvasConfig.pencilContext, pixelSize: newSize };
+    if (pixelSizeLabel)
+        pixelSizeLabel.textContent = `${newSize}px`;
 });

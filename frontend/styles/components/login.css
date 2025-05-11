@@ -52,7 +52,6 @@
     grid-column: 3 / 4;
     justify-self: end;
     height: 60%;
-    justify-self: end;
 }
 
 .login-google-button:hover{
