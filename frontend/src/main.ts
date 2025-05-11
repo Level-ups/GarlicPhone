@@ -2,21 +2,25 @@ import './style.css'
 import googleLogo from '/assets/google.svg'
 import { PageRouter, type PageRenderer, type RedirectFn } from './lib/router'
 import { parseInto } from './lib/parse';
+import { defineCustomComponents } from './components/custom-components';
 
+//---------- Setup ----------//
 const pageContainer = document.getElementById("app")!;
+
+defineCustomComponents();
 
 //---------- Page routing ----------//
 const pages: { [key: string]: PageRenderer } = {
   // "home": c => { c.innerHTML = '<h1>Home</h1>'; },
   "home": c => parseInto(c, {
     "|h1 #someid.someclass1 .someclass2": {
-      "_": "Home",
-      "$": {
-        color: "red"
+      _: "Home",
+      $: {
+        color: "red",
       },
       "|div": {
-        "_": "hello world",
-        "$": {
+        _: "hello world",
+        $: {
           color: "var(--asdf)",
           border: "1px solid blue",
           fontSize: "0.5em",
@@ -24,8 +28,9 @@ const pages: { [key: string]: PageRenderer } = {
         "%click": () => {
           console.log("CLICKED!")
         }
-      }
-    }
+      },
+      "|ui-button": { _: "asdf" }
+    },
   }),
   "about": c => { c.innerHTML = '<h1>About</h1>'; },
   "contact": c => { c.innerHTML = '<h1>Contact</h1>'; },

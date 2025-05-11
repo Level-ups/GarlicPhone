@@ -1,40 +1,28 @@
-class Signal<T> {
-    val: T;
-    deps: any[];
+//-------------------- Types --------------------//
+type ElemTree = {
+  "_"?: string | (() => string);
+  "@"?: AttrDict | (() => AttrDict);
+  "$"?: StyleDict | (() => StyleDict);
+} &
+{ [key in `%${keyof HTMLElementEventMap}`]?: (e: Event) => void; } &
+{ [key in `|${keyof HTMLElementTagNameMap}`]?: ElemTree | (() => ElemTree); } &
+{ [key in `${string}|${string}`]?: ElemTree | (() => ElemTree); };
 
-    constructor(val: T, deps: any[] = []) {
-        this.val = val;
-        this.deps = deps;
-    }
+type ElemData = {
+    tag: string;
+    id: string;
+    classList: string[];
+    style: StyleDict;
+    attributes: AttrDict;
+    eventHandlers: EventHandlerDict;
+    textContent: string;
+};
 
-    set(setter: T | ((v: T) => T)) {
-        this.val = typeof setter === "function" ? (setter as Function)(this.val) : setter;
-        this.notify();
-    }
+type EventHandler = (e: Event) => void;
+type StyleDict = { [key in keyof CSSStyleDeclaration]?: string };
+type AttrDict = { [key: string]: string };
+type EventHandlerDict = { [eventName: string]: EventHandler; }
 
-    notify() { this.deps.forEach(x => x()); }
-    addDep(dep: (v: T) => void){ this.deps.push(dep); }
-}
-
-let x = new Signal(10);
-x.set(20);
-
-let silentRegisterCaller = (_: any) => {};
-
-function init() {
-    const $state = new Proxy({}, {
-        get(target: { [key: string]: Signal<any> }, prop: string) {
-            if (typeof prop === "symbol") return;
-
-            // Silently add dependency when getting signal element
-            const signal = target[prop];
-            if (typeof silentRegisterCaller === "function") {
-                signal.addDep(silentRegisterCaller);
-            }
-            return signal;
-        }
-    })
-}
 
 //-------------------- Spec --------------------//
 const body: ElemTree = {
@@ -86,30 +74,47 @@ const body: ElemTree = {
   }
 };
 
-type ElemTree = {
-  "_"?: string | (() => string);
-  "@"?: AttrDict | (() => AttrDict);
-  "$"?: StyleDict | (() => StyleDict);
-} &
-{ [key in `%${keyof HTMLElementEventMap}`]?: (e: Event) => void; } &
-{ [key in `|${keyof HTMLElementTagNameMap}`]?: ElemTree | (() => ElemTree); } &
-{ [key in `${string}|${string}`]?: ElemTree | (() => ElemTree); };
 
-type ElemData = {
-    tag: string;
-    id: string;
-    classList: string[];
-    style: StyleDict;
-    attributes: AttrDict;
-    eventHandlers: EventHandlerDict;
-    textContent: string;
-};
+//-------------------- Trinkets --------------------//
+class Signal<T> { val: T;
+    deps: any[];
 
-type EventHandler = (e: Event) => void;
-type StyleDict = { [key in keyof CSSStyleDeclaration]?: string };
-type AttrDict = { [key: string]: string };
-type EventHandlerDict = { [eventName: string]: EventHandler; }
+    constructor(val: T, deps: any[] = []) {
+        this.val = val;
+        this.deps = deps;
+    }
 
+    set(setter: T | ((v: T) => T)) {
+        this.val = typeof setter === "function" ? (setter as Function)(this.val) : setter;
+        this.notify();
+    }
+
+    notify() { this.deps.forEach(x => x()); }
+    addDep(dep: (v: T) => void){ this.deps.push(dep); }
+}
+
+let x = new Signal(10);
+x.set(20);
+
+let silentRegisterCaller = (_: any) => {};
+
+function init() {
+    const $state = new Proxy({}, {
+        get(target: { [key: string]: Signal<any> }, prop: string) {
+            if (typeof prop === "symbol") return;
+
+            // Silently add dependency when getting signal element
+            const signal = target[prop];
+            if (typeof silentRegisterCaller === "function") {
+                signal.addDep(silentRegisterCaller);
+            }
+            return signal;
+        }
+    })
+}
+
+
+//-------------------- Parser --------------------//
 // Parse an ElemTree and set it as the subtree of the given parent
 // Any _,$,@,% set on the root of the tree are ignored
 export function parseInto(parent: HTMLElement, tree: ElemTree) {
@@ -218,7 +223,7 @@ function createDomElement(meta: ElemData, children: HTMLElement[] = []): HTMLEle
     const elem = document.createElement(tag);
 
     if (id !== "") { elem.id = id; }
-    elem.classList.add(...classList);
+    if (elem.classList.length > 0) elem.classList.add(...classList);
     elem.textContent = textContent;
     Object.entries(style).forEach(([key, val]) => { (elem.style as any)[key] = val; });
     Object.entries(attrs).forEach(([attr, val]) => { elem.setAttribute(attr, val); });

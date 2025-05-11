@@ -1,4 +1,6 @@
-class UIButton extends HTMLElement {
+import { parse } from "../lib/parse";
+
+export class UIButton extends HTMLElement {
   static get observedAttributes() {
     return ['label', 'color', 'background'];
   }
@@ -9,18 +11,21 @@ class UIButton extends HTMLElement {
     super();
     const shadow = this.attachShadow({ mode: 'open' });
 
-    this.elem = document.createElement('button');
-    this.elem.textContent = this.getAttribute('label') || 'Click me';
-    this.updateStyles();
+    this.elem = parse({
+      "|button": {
+        _: this.getAttribute("label") || "Click me",
 
-    // Event listener
-    this.elem.addEventListener('click', () => {
-      this.dispatchEvent(new CustomEvent('button-click', {
-        detail: { message: 'Button clicked!' },
-        bubbles: true,
-        composed: true
-      }));
-    });
+        "%click": () => {
+          this.dispatchEvent(new CustomEvent('button-click', {
+            detail: { message: 'Button clicked!' },
+            bubbles: true,
+            composed: true
+          }));
+        }
+      }
+    })[0] as HTMLButtonElement;
+
+    this.updateStyles();
 
     // Append
     shadow.appendChild(this.elem);
@@ -54,6 +59,3 @@ class UIButton extends HTMLElement {
     }
   }
 }
-
-// Register the element
-customElements.define('ui-button', UIButton);
