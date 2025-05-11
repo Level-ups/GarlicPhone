@@ -1,8 +1,9 @@
 import './style.css'
-import googleLogo from '/assets/google.svg'
 import { PageRouter, type PageRenderer, type RedirectFn } from './lib/router'
 import { parseInto } from './lib/parse';
 import { defineCustomComponents } from './components/custom-components';
+import { loginPage } from './pages/login';
+import { galleryPage } from './pages/gallery';
 
 //---------- Setup ----------//
 const pageContainer = document.getElementById("app")!;
@@ -34,22 +35,14 @@ const pages: { [key: string]: PageRenderer } = {
   }),
   "about": c => { c.innerHTML = '<h1>About</h1>'; },
   "contact": c => { c.innerHTML = '<h1>Contact</h1>'; },
-  "login": c => parseInto(c, {
-      "|section.login": {
-        "|form.login-form": {
-          "|h3.login-heading": { _: "Sign Up" },
-          "|button#google-login-button.login-google-button": {
-            "|p.login-google-button-text": { _: "Login with Google" },
-            "|img.login-google-image": { '@': { src: googleLogo } }
-          }
-        }
-      }
-  })
+  "login": c => loginPage(c),
+  "gallery": c => galleryPage(c)
 };
 
 const redirects: RedirectFn[] = [
   path => path === '/'      ? 'home' : null,
   path => path === '/login' ? 'login' : null,
+  path => path === '/gallery' ? 'gallery' : null,
   path => path.startsWith('/about') ? 'about' : null,
 ];
 
