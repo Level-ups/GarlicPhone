@@ -77,7 +77,7 @@ async function insertImage(image: InsertImageDto): Promise<Image | null> {
     WITH inserted_image AS (
       INSERT INTO images (s3_url, prompt_id, user_id)
       VALUES ($1, $2, $3)
-      RETURNING id AS image_id, s3_url, prompt_id, user_id
+      RETURNING id, s3_url, prompt_id, user_id
     )
     SELECT
       i.id AS image_id,
@@ -118,7 +118,6 @@ async function uploadImageToS3(image: Buffer, filename: string): Promise<Either<
     Key: filename,
     Body: image,
     ContentType: 'image/png',
-    ACL: 'public-read',
   };
 
   try {
