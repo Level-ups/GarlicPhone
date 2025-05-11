@@ -191,6 +191,37 @@ resource "aws_s3_bucket" "garlicPhone_bucket" {
   }
 }
 
+resource "aws_s3_bucket_public_access_block" "public_access" {
+  bucket = aws_s3_bucket.garlicPhone_bucket.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_policy" "public_read" {
+  bucket = aws_s3_bucket.garlicPhone_bucket.id
+  policy = data.aws_iam_policy_document.public_read.json
+}
+
+data "aws_iam_policy_document" "public_read" {
+  statement {
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "s3:GetObject",
+    ]
+
+    resources = [
+      "${aws_s3_bucket.garlicPhone_bucket.arn}/*",
+    ]
+  }
+}
+
 resource "aws_iam_role" "ec2_s3_access" {
   name = "ec2-s3-access-role"
 
