@@ -15,6 +15,8 @@
 :root {
   --bg:         var(--black);
   --text:       var(--grey);
+  --card:       var(--navy);
+  --border:     var(--green);
   --header:     var(--white);
   --link:       var(--purple);
   --link-hover: color-mix(in hsl, var(--purple), black 15%);
@@ -24,6 +26,7 @@
 @media (prefers-color-scheme: light) {
   :root {
     --bg:     var(--white);
+    --card:   var(--grey);
     --text:   var(--black);
     --header: var(--navy);
     --link:   var(--purple);
@@ -84,9 +87,13 @@ a:hover { color: var(--link-hover) }
 
 #app {
   max-width: 100vw;
+  height: 100vh;
+  width: 90em;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0;
+  padding: 1em;
   text-align: center;
+  border: 1px solid blue;
 }
 
 .logo {
@@ -103,7 +110,15 @@ a:hover { color: var(--link-hover) }
 }
 
 .card {
+  display: block;
+  width: 100%;
+  min-height: 5em;
   padding: 2em;
+  background: var(--card);
+  /* border: 1px solid green; */
+  border-radius: 1em;
+  overflow: hidden;
+  filter: drop-shadow(0 0 1em black);
 }
 
 .read-the-docs {

@@ -1,12 +1,18 @@
 //-------------------- Types --------------------//
-type ElemTree = {
+type ElemTree_Meta = {
   "_"?: string | (() => string);
   "@"?: AttrDict | (() => AttrDict);
   "$"?: StyleDict | (() => StyleDict);
-} &
-{ [key in `%${keyof HTMLElementEventMap}`]?: (e: Event) => void; } &
-{ [key in `|${keyof HTMLElementTagNameMap}`]?: ElemTree | (() => ElemTree); } &
-{ [key in `${string}|${string}`]?: ElemTree | (() => ElemTree); };
+};
+
+type ElemTree_Elems = (
+    { [key in `|${keyof HTMLElementTagNameMap}`]?: ElemTree | (() => ElemTree); } &
+    { [key in `${string}|${string}`]?: ElemTree | (() => ElemTree); }
+);
+
+type ElemTree_Events = { [key in `%${keyof HTMLElementEventMap}`]?: (e: Event) => void; };
+
+export type ElemTree = ElemTree_Meta & ElemTree_Events & ElemTree_Elems;
 
 type ElemData = {
     tag: string;
@@ -18,15 +24,15 @@ type ElemData = {
     textContent: string;
 };
 
-type EventHandler = (e: Event) => void;
-type StyleDict = { [key in keyof CSSStyleDeclaration]?: string };
-type AttrDict = { [key: string]: string };
-type EventHandlerDict = { [eventName: string]: EventHandler; }
+export type EventHandler = (e: Event) => void;
+export type StyleDict = { [key in keyof CSSStyleDeclaration]?: string };
+export type AttrDict = { [key: string]: string };
+export type EventHandlerDict = { [eventName: string]: EventHandler; }
 
 
 //-------------------- Spec --------------------//
-const body: ElemTree = {
-  // Key names starting with alphanumeric characters are parsed as element types
+const spec: ElemTree = {
+  // Key names starting with | followed by alphanumeric characters are parsed as element types
   // # and . can be appended to set classnames and id's
   "|h1#mainHeader": {
         // _ Sets the element's innerHTML
@@ -49,15 +55,6 @@ const body: ElemTree = {
     "@": {
         "attr": "value"
     },
-
-    // Instead of {} objects, any value can be replaced with a function to make it reactive
-    // redraw() appends the object to the `redraws` list, scheduling it for redrawing
-    // _: (redraw: Function) => {
-    //     redraw();
-    //     return "Hello world " + Date.now();
-    // },
-
-    // ...createParagraph()
   },
 
   "|div": {
@@ -178,7 +175,8 @@ type ElemTokenParseRes = [string, string, string[]];
 // Returns error string if something goes wrong
 function parseElemToken(token: string): ElemTokenParseRes | string {
     // Remove label
-    let [_, tok] = token.split("|").map(p => p.trim());
+    let tok = token.split("|")?.at(-1)?.trim();
+    if (tok == null) return "Invalid element token";
 
     // Remove redundant whitespace
     tok = tok.replaceAll(ID_MARKER, "#").replaceAll(CLASS_MARKER, ".")
@@ -223,7 +221,7 @@ function createDomElement(meta: ElemData, children: HTMLElement[] = []): HTMLEle
     const elem = document.createElement(tag);
 
     if (id !== "") { elem.id = id; }
-    if (elem.classList.length > 0) elem.classList.add(...classList);
+    if (classList.length > 0) elem.classList.add(...classList);
     elem.textContent = textContent;
     Object.entries(style).forEach(([key, val]) => { (elem.style as any)[key] = val; });
     Object.entries(attrs).forEach(([attr, val]) => { elem.setAttribute(attr, val); });
@@ -232,3 +230,28 @@ function createDomElement(meta: ElemData, children: HTMLElement[] = []): HTMLEle
 
     return elem;
 }
+
+//-------------------- Utils --------------------//
+
+// Repeat a tree's elements N times
+export function forEl<T>(it: number | T[], tree: ElemTree | ((i: number, x: T) => ElemTree)): ElemTree_Elems {
+    let res = {};
+    let n = typeof it === "number" ? it : it.length;
+    const getArg = typeof it === "number" ? (i: number) => [i] : (i: number) => [i, it[i]];
+
+    for (let i = 0; i < n; i++) {
+        const t = tryCall(tree, getArg(i));
+        for (let k in t) {
+            if (!k.includes("|")) continue; // skip meta elements
+            res = { ...res, [`${i}|${k}`]: t[k as keyof ElemTree] }
+        }
+    }
+    return res;
+}
+
+// { ...repeat(3, { _: "hello world", "asdf": {}, "fdsa": {} }) }
+// {
+//     "0|asdf": {}, "0|fdsa": {}
+//     "1|asdf": {}, "1|fdsa": {}
+//     "2|asdf": {}, "2|fdsa": {}
+// }
