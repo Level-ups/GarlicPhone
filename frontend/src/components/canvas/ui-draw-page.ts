@@ -1,21 +1,72 @@
-import { parse, parseInto } from "../../lib/parse";
+import { forEl, parse, parseInto, type ElemTree } from "../../lib/parse";
+import garlicPhoneLogo from "/assets/logo.svg";
+import eraserToolIcon from "/assets/canvas/eraser-tool.svg";
+import fillToolIcon from "/assets/canvas/fill-tool.svg";
+import pecilToolIcon from "/assets/canvas/pencil-tool.svg";
+import tickIcon from "/assets/canvas/tick.svg";
+import trashIcon from "/assets/canvas/trash.svg";
 
-export const drawPage = (par: HTMLElement) => {
-  function generateCanvasColourButton(colour: string) {
-    return {
-      "|button.colour-button": {
-        $: {
-          backgroundColor: "colour",
-        },
-        "|img.inner-button-img": {
-          "@": {
-            src: "./public/assets/canvas/tick-svgrepo-com.svg",
-            alt: "Colour button",
-          },
+type ToolButton = { imagePath: string; altText: string };
+
+function generateCanvasColourButton(colour: string): ElemTree {
+  return {
+    "|button.colour-button": {
+      $: {
+        backgroundColor: colour,
+      },
+      "|img.inner-button-img": {
+        "@": {
+          src: tickIcon,
+          alt: "Colour button",
         },
       },
-    };
-  }
+    },
+  };
+}
+
+function generateCanvasToolButton(button: ToolButton) {
+  return {
+    "|button.canvas-button": {
+      "|img.inner-button-img": {
+        "@": {
+          src: button.imagePath,
+          alt: button.altText,
+        },
+      },
+    },
+  };
+}
+
+export const drawPage = (par: HTMLElement) => {
+  const colourButtons: string[] = [
+    "rgb(255, 0, 0)",
+    "rgb(0, 0, 255)",
+    "rgb(0, 128, 0)",
+    "rgb(255, 255, 0)",
+    "rgb(255, 166, 0)",
+    "rgb(128, 0, 128)",
+    "rgb(255, 192, 203)",
+    "rgb(0, 0, 0)",
+  ];
+
+  const toolButtons: ToolButton[] = [
+    {
+      imagePath: fillToolIcon,
+      altText: "fill tool",
+    },
+    {
+      imagePath: eraserToolIcon,
+      altText: "eraser tool",
+    },
+    {
+      imagePath: pecilToolIcon,
+      altText: "draw tool",
+    }, 
+    {
+      imagePath: trashIcon,
+      altText: "clear tool",
+    },
+  ];
 
   return parseInto(par, {
     "|section.draw-page": {
@@ -30,134 +81,27 @@ export const drawPage = (par: HTMLElement) => {
         },
         "|img.draw-page-logo": {
           "@": {
-            src: "./public/assets/logo.svg",
+            src: garlicPhoneLogo,
             alt: "Garlic Phone Logo",
           },
         },
-        "|div.draw-page-prompt-ctn": {
-          "|p": {
-            _: "Draw:",
-          },
-          "|h3.medium-heading": {
-            _: "Clown with pie on his face",
-          },
+      },
+      "|div.draw-page-prompt-ctn": {
+        "|p": {
+          _: "Draw:",
         },
-        "|div.draw-page-controls": {
-          "|button.colour-button": {
-            $: {
-              backgroundColor: "rgb(255, 0, 0)",
-            },
-            "|img.inner-button-img": {
-              "@": {
-                src: "./public/assets/canvas/tick-svgrepo-com.svg",
-                alt: "Colour button",
-              },
-            },
-          },
-          "|button.colour-button": {
-            $: {
-              backgroundColor: "rgb(0, 0, 255)",
-            },
-            "|img.inner-button-img": {
-              "@": {
-                src: "./public/assets/canvas/tick-svgrepo-com.svg",
-                alt: "Colour button",
-              },
-            },
-          },
-          "|button.colour-button": {
-            $: {
-              backgroundColor: "rgb(0, 128, 0)",
-            },
-            "|img.inner-button-img": {
-              "@": {
-                src: "./public/assets/canvas/tick-svgrepo-com.svg",
-                alt: "Colour button",
-              },
-            },
-          },
-          "|button.colour-button": {
-            $: {
-              backgroundColor: "rgb(255, 255, 0)",
-            },
-            "|img.inner-button-img": {
-              "@": {
-                src: "./public/assets/canvas/tick-svgrepo-com.svg",
-                alt: "Colour button",
-              },
-            },
-          },
-          "|button.colour-button": {
-            $: {
-              backgroundColor: "rgb(255, 166, 0)",
-            },
-            "|img.inner-button-img": {
-              "@": {
-                src: "./public/assets/canvas/tick-svgrepo-com.svg",
-                alt: "Colour button",
-              },
-            },
-          },
-          "|button.colour-button": {
-            $: {
-              backgroundColor: "rgb(128, 0, 128)",
-            },
-            "|img.inner-button-img": {
-              "@": {
-                src: "./public/assets/canvas/tick-svgrepo-com.svg",
-                alt: "Colour button",
-              },
-            },
-          },
-          "|button.colour-button": {
-            $: {
-              backgroundColor: "rgb(255, 192, 203)",
-            },
-            "|img.inner-button-img": {
-              "@": {
-                src: "./public/assets/canvas/tick-svgrepo-com.svg",
-                alt: "Colour button",
-              },
-            },
-          },
+        "|h3.medium-heading": {
+          _: "Clown with pie on his face",
         },
-        "|div": {
-          "|canvas.canvas": {},
-        },
-        "|div.draw-page-controls": {
-          "|button.canvas-button#fillButton": {
-            "|img.inner-button-img": {
-              "@": {
-                src: "./public/assets/canvas/fill-solid-svgrepo-com.svg",
-                alt: "fill tool",
-              },
-            },
-          },
-          "|button.canvas-button#eraserButton": {
-            "|img.inner-button-img": {
-              "@": {
-                src: "./public/assets/canvas/eraser-svgrepo-com.svg",
-                alt: "eraser tool",
-              },
-            },
-          },
-          "|button.canvas-button#drawButton": {
-            "|img.inner-button-img": {
-              "@": {
-                src: "./public/assets/canvas/eraser-svgrepo-com.svg",
-                alt: "draw tool",
-              },
-            },
-          },
-          "|button.canvas-button#clearButton": {
-            "|img.inner-button-img": {
-              "@": {
-                src: "./public/assets/canvas/trash-svgrepo-com.svg",
-                alt: "clear tool",
-              },
-            },
-          },
-        },
+      },
+      "|div.draw-page-controls": {
+        ...forEl(colourButtons, (_, v) => generateCanvasColourButton(v)),
+      },
+      "|div": {
+        "|canvas.canvas": {},
+      },
+      "|div.draw-page-controls#toolControls": {
+        ...forEl(toolButtons, (_, v) => generateCanvasToolButton(v)),
       },
     },
   });

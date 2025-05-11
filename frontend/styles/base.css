@@ -136,14 +136,10 @@ a:hover { color: var(--link-hover) }
 
 
 #app {
-  max-width: 100vw;
+  width: 100vw;
   height: 100vh;
-  width: 90em;
   margin: 0 auto;
-  padding: 0;
-  padding: 1em;
   text-align: center;
-  border: 1px solid blue;
 }
 
 .logo {
@@ -175,7 +171,7 @@ a:hover { color: var(--link-hover) }
   color: #888;
 }
 
-button {
+/* button {
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
@@ -192,4 +188,4 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
-}
+} */

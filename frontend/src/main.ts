@@ -4,6 +4,7 @@ import { parseInto } from './lib/parse';
 import { defineCustomComponents } from './components/custom-components';
 import { loginPage } from './pages/login';
 import { galleryPage } from './pages/gallery';
+import { drawPage } from './components/canvas/ui-draw-page';
 
 //---------- Setup ----------//
 const pageContainer = document.getElementById("app")!;
@@ -36,13 +37,15 @@ const pages: { [key: string]: PageRenderer } = {
   "about": c => { c.innerHTML = '<h1>About</h1>'; },
   "contact": c => { c.innerHTML = '<h1>Contact</h1>'; },
   "login": c => loginPage(c),
-  "gallery": c => galleryPage(c)
+  "gallery": c => galleryPage(c),
+  "draw": c => drawPage(c)
 };
 
 const redirects: RedirectFn[] = [
   path => path === '/'      ? 'home' : null,
   path => path === '/login' ? 'login' : null,
   path => path === '/gallery' ? 'gallery' : null,
+  path => path === '/draw' ? 'draw' : null,
   path => path.startsWith('/about') ? 'about' : null,
 ];
 
