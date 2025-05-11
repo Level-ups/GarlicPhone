@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Garlic Phone Game - Simple Lobby Demo</title>
+  <link rel="stylesheet" href="styles/lobby.css">
+</head>
+<body>
+  <div id="lobby-container">
+    <div class="lobby-ui">
+      <h1>Garlic Phone Game</h1>
+      <div class="player-setup">
+        <h2>Enter Your Name</h2>
+        <div class="form-group">
+          <label for="player-name">Your Name:</label>
+          <input type="text" id="player-name" placeholder="Enter your name">
+          <input type="text" id="player-id" placeholder="Enter your ID (optional)">
+        </div>
+        <div class="action-buttons">
+          <button id="create-lobby-btn">Create Lobby</button>
+          <div class="join-lobby">
+            <input type="text" id="lobby-code" placeholder="Enter lobby code">
+            <button id="join-lobby-btn">Join Lobby</button>
+          </div>
+        </div>
+      </div>
+      
+      <div id="lobby-display" style="display: none;">
+        <h2>Lobby Information</h2>
+        <div id="lobby-info"></div>
+        <div id="players-list"></div>
+        <div class="lobby-actions">
+          <button id="ready-btn">Set Ready</button>
+          <button id="start-game-btn">Start Game</button>
+          <button id="leave-lobby-btn">Leave Lobby</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Simple lobby client implementation
+    document.addEventListener('DOMContentLoaded', () => {
+      // DOM elements
+      const playerNameInput = document.getElementById('player-name');
+      const playerIdInput = document.getElementById('player-id');
+      const createLobbyBtn = document.getElementById('create-lobby-btn');
+      const lobbyCodeInput = document.getElementById('lobby-code');
+      const joinLobbyBtn = document.getElementById('join-lobby-btn');
+      const lobbyDisplay = document.getElementById('lobby-display');
+      const lobbyInfo = document.getElementById('lobby-info');
+      const playersList = document.getElementById('players-list');
+      const readyBtn = document.getElementById('ready-btn');
+      const startGameBtn = document.getElementById('start-game-btn');
+      const leaveLobbyBtn = document.getElementById('leave-lobby-btn');
+      
+      // State
+      let playerId = '';
+      let playerName = '';
+      let currentLobby = null;
+      let eventSource = null;
+      
+      // Generate a random player ID if not provided
+      function getPlayerId() {
+        if (playerIdInput.value.trim()) {
+          return playerIdInput.value.trim();
+        }
+        return Math.random().toString(36).substring(2, 15);
+      }
+      
+      // API calls
+      async function createLobby() {
+        const response = await fetch('http://localhost:5000/api/lobbies', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            hostId: playerId,
+            hostName: playerName,
+            hostAvatarUrl: '',
+            maxPlayers: 10
+          })
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to create lobby');
+        }
+        
+        return await response.json();
+      }
+      
+      async function joinLobbyByCode(code) {
+        const response = await fetch('http://localhost:5000/api/lobbies/join', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            code,
+            playerId,
+            playerName,
+            playerAvatarUrl: ''
+          })
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to join lobby');
+        }
+        
+        return await response.json();
+      }
+      
+      async function leaveLobby(lobbyId) {
+        const response = await fetch(`http://localhost:5000/api/lobbies/${lobbyId}/leave`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            playerId
+          })
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to leave lobby');
+        }
+        
+        return await response.json();
+      }
+      
+      async function setPlayerReady(lobbyId, isReady) {
+        const response = await fetch(`http://localhost:5000/api/lobbies/${lobbyId}/ready`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            playerId,
+            isReady
+          })
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to update ready status');
+        }
+        
+        return await response.json();
+      }
+      
+      async function startGame(lobbyId) {
+        const response = await fetch(`http://localhost:5000/api/lobbies/${lobbyId}/start`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            playerId
+          })
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to start game');
+        }
+        
+        return await response.json();
+      }
+      
+      // Connect to lobby events via SSE
+      function connectToLobbyEvents(lobbyId) {
+        if (eventSource) {
+          eventSource.close();
+        }
+        
+        eventSource = new EventSource(`http://localhost:5000/api/lobbies/${lobbyId}/events`);
+        
+        eventSource.addEventListener('lobby_state', (event) => {
+          const lobby = JSON.parse(event.data);
+          updateLobbyDisplay(lobby);
+        });
+        
+        eventSource.addEventListener('lobby_update', (event) => {
+          const lobby = JSON.parse(event.data);
+          updateLobbyDisplay(lobby);
+        });
+        
+        eventSource.addEventListener('error', (event) => {
+          console.error('Lobby event error:', event);
+          // If lobby was deleted or doesn't exist
+          if (event.target.readyState === EventSource.CLOSED) {
+            resetToInitialState();
+            alert('The lobby no longer exists.');
+          }
+        });
+      }
+      
+      // Update the lobby display with current state
+      function updateLobbyDisplay(lobby) {
+        currentLobby = lobby;
+        
+        // Show lobby section
+        lobbyDisplay.style.display = 'block';
+        
+        // Update lobby info
+        lobbyInfo.innerHTML = `
+          <p><strong>Lobby Code:</strong> ${lobby.code}</p>
+          <p><strong>Status:</strong> ${lobby.status}</p>
+          <p><strong>Players:</strong> ${lobby.players.length}/${lobby.maxPlayers}</p>
+        `;
+        
+        // Update players list
+        playersList.innerHTML = '<h3>Players:</h3><ul>' + 
+          lobby.players.map(player => `
+            <li>
+              ${player.name} 
+              ${player.isHost ? '(Host)' : ''} 
+              ${player.isReady ? '(Ready)' : ''}
+              ${player.id === playerId ? '(You)' : ''}
+            </li>
+          `).join('') + 
+        '</ul>';
+        
+        // Check if current player is host
+        const isHost = lobby.players.some(p => p.id === playerId && p.isHost);
+        
+        // Check if current player is ready
+        const currentPlayer = lobby.players.find(p => p.id === playerId);
+        const isReady = currentPlayer?.isReady || false;
+        
+        // Update buttons
+        readyBtn.textContent = isReady ? 'Set Not Ready' : 'Set Ready';
+        readyBtn.style.display = isHost ? 'none' : 'inline-block';
+        
+        startGameBtn.style.display = isHost ? 'inline-block' : 'none';
+        
+        // Enable/disable start game button based on all players ready
+        const allPlayersReady = lobby.players.every(p => p.isReady || p.isHost);
+        const hasEnoughPlayers = lobby.players.length >= 2;
+        startGameBtn.disabled = !(isHost && allPlayersReady && hasEnoughPlayers);
+        
+        // If game is started, update UI accordingly
+        if (lobby.status === 'started') {
+          readyBtn.style.display = 'none';
+          startGameBtn.style.display = 'none';
+          lobbyInfo.innerHTML += '<h3>Game in Progress!</h3>';
+        }
+      }
+      
+      // Reset to initial state
+      function resetToInitialState() {
+        lobbyDisplay.style.display = 'none';
+        currentLobby = null;
+        if (eventSource) {
+          eventSource.close();
+          eventSource = null;
+        }
+      }
+      
+      // Event Listeners
+      createLobbyBtn.addEventListener('click', async () => {
+        playerName = playerNameInput.value.trim();
+        
+        if (!playerName) {
+          alert('Please enter your name');
+          return;
+        }
+        
+        playerId = getPlayerId();
+        
+        try {
+          createLobbyBtn.disabled = true;
+          createLobbyBtn.textContent = 'Creating...';
+          
+          const lobby = await createLobby();
+          connectToLobbyEvents(lobby.id);
+          
+        } catch (error) {
+          alert(`Error creating lobby: ${error.message}`);
+        } finally {
+          createLobbyBtn.disabled = false;
+          createLobbyBtn.textContent = 'Create Lobby';
+        }
+      });
+      
+      joinLobbyBtn.addEventListener('click', async () => {
+        playerName = playerNameInput.value.trim();
+        const code = lobbyCodeInput.value.trim();
+        
+        if (!playerName) {
+          alert('Please enter your name');
+          return;
+        }
+        
+        if (!code) {
+          alert('Please enter a lobby code');
+          return;
+        }
+        
+        playerId = getPlayerId();
+        
+        try {
+          joinLobbyBtn.disabled = true;
+          joinLobbyBtn.textContent = 'Joining...';
+          
+          const lobby = await joinLobbyByCode(code);
+          connectToLobbyEvents(lobby.id);
+          
+        } catch (error) {
+          alert(`Error joining lobby: ${error.message}`);
+        } finally {
+          joinLobbyBtn.disabled = false;
+          joinLobbyBtn.textContent = 'Join Lobby';
+        }
+      });
+      
+      readyBtn.addEventListener('click', async () => {
+        if (!currentLobby) return;
+        
+        try {
+          readyBtn.disabled = true;
+          
+          const currentPlayer = currentLobby.players.find(p => p.id === playerId);
+          if (currentPlayer) {
+            await setPlayerReady(currentLobby.id, !currentPlayer.isReady);
+          }
+          
+        } catch (error) {
+          alert(`Error updating ready status: ${error.message}`);
+        } finally {
+          readyBtn.disabled = false;
+        }
+      });
+      
+      startGameBtn.addEventListener('click', async () => {
+        if (!currentLobby) return;
+        
+        try {
+          startGameBtn.disabled = true;
+          startGameBtn.textContent = 'Starting...';
+          
+          await startGame(currentLobby.id);
+          
+        } catch (error) {
+          alert(`Error starting game: ${error.message}`);
+        } finally {
+          startGameBtn.disabled = false;
+          startGameBtn.textContent = 'Start Game';
+        }
+      });
+      
+      leaveLobbyBtn.addEventListener('click', async () => {
+        if (!currentLobby) return;
+        
+        try {
+          leaveLobbyBtn.disabled = true;
+          
+          await leaveLobby(currentLobby.id);
+          resetToInitialState();
+          
+        } catch (error) {
+          alert(`Error leaving lobby: ${error.message}`);
+        } finally {
+          leaveLobbyBtn.disabled = false;
+        }
+      });
+    });
+  </script>
+</body>
+</html> 
