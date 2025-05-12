@@ -111,13 +111,16 @@ resource "aws_security_group" "ec2_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
   }
 
   ingress {
-    from_port   = var.server_port
-    to_port     = var.server_port
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    description      = "Allow port 5000 (IPv4 & IPv6)"
+    from_port        = var.server_port
+    to_port          = var.server_port
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
   }
 
   tags = {
@@ -162,7 +165,7 @@ resource "aws_db_instance" "postgresql" {
   allocated_storage   = 20
   instance_class      = "db.t4g.micro"
   engine              = "postgres"
-  engine_version      = "16.3"
+  engine_version      = "16.4"
   identifier          = "garlicphone-db"
   db_name             = "garlicPhone"
   storage_type        = "gp2"
@@ -188,6 +191,37 @@ resource "aws_s3_bucket" "garlicPhone_bucket" {
   tags = {
     Name        = "garlicPhoneS3Bucket"
     Environment = "development"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "public_access" {
+  bucket = aws_s3_bucket.garlicPhone_bucket.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_policy" "public_read" {
+  bucket = aws_s3_bucket.garlicPhone_bucket.id
+  policy = data.aws_iam_policy_document.public_read.json
+}
+
+data "aws_iam_policy_document" "public_read" {
+  statement {
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "s3:GetObject",
+    ]
+
+    resources = [
+      "${aws_s3_bucket.garlicPhone_bucket.arn}/*",
+    ]
   }
 }
 

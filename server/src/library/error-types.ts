@@ -5,13 +5,17 @@ export enum ErrorType {
   Validation = 'Validation',
   ServerError = 'InternalServerError',
   InsertionError = 'InsertionError',
+  UpdatedError = 'UpdatedError',
 }
 
 export class ErrorDetails extends Error {
   type: ErrorType;
   details: string[];
+  message: string;
+
   constructor(message: string, details: string[] = [], type: ErrorType = ErrorType.ServerError) {
     super(message);
+    this.message = message;
     this.type = type;
     this.details = details;
   }
@@ -33,5 +37,11 @@ export class NotFoundErrorDetails extends ErrorDetails {
 export class InsertErrorDetails extends ErrorDetails {
   constructor(message: string, details: string[] = []) {
     super(message, details, ErrorType.InsertionError);
+  }
+}
+
+export class UpdatedErrorDetails extends ErrorDetails {
+  constructor(message: string, details: string[] = []) {
+    super(message, details, ErrorType.UpdatedError);
   }
 }
