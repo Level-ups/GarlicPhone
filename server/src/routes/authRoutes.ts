@@ -3,9 +3,10 @@ import { jwtVerify, importJWK, JWK } from 'jose';
 
 const router = Router();
 
+const redirectUri = "http://" + process.env.EC2_HOST + ":" + process.env.PORT + '/api/auth/callback';
+
 router.get('/start', (req, res) => {
-  const clientId = '789976131197-kn1hj43trbjkvaeodoqgrbhmrv05offp.apps.googleusercontent.com';
-  const redirectUri = 'http://localhost:5000/api/auth/callback';
+  const clientId = process.env.GOOGLE_CLIENT_ID || "";
   const scope = 'openid profile email';
   const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
 
@@ -13,6 +14,7 @@ router.get('/start', (req, res) => {
   authUrl.searchParams.set('client_id', clientId);
   authUrl.searchParams.set('redirect_uri', redirectUri);
   authUrl.searchParams.set('scope', scope);
+  authUrl.searchParams.set('prompt', 'consent select_account');
 
   console.log(authUrl);
 
@@ -28,13 +30,12 @@ router.get('/callback', async (req, res) => {
 
   const clientId = process.env.GOOGLE_CLIENT_ID || '';
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
-  const redirectUri = 'http://localhost:5000/api/auth/callback';
 
   try {
     // Exchange code for tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
       body: new URLSearchParams({
         code,
         client_id: clientId,
@@ -88,7 +89,7 @@ router.get('/callback', async (req, res) => {
 
     // TO-DO: Create user
 
-    res.redirect(`http://127.0.0.1:3000/GarlicPhone/frontend/test.html`);
+    res.status(200).send("Great Success!");
   } catch (error) {
     console.error('Error during OAuth callback handling:', error);
     res.status(500).send('Internal Server Error');

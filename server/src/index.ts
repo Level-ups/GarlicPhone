@@ -59,7 +59,7 @@ setInterval(() => {
 
 // Start server
 app.listen(Number(process.env.PORT) || 5000, '0.0.0.0', () => {
-  console.log(`Server is running on http://localhost:${process.env.PORT}`);
+  console.log(`Server is running on http://${process.env.EC2_HOST}:${process.env.PORT}`);
 });
 
 export default app;
