@@ -122,7 +122,7 @@ router.get("/:lobbyCode/current-phase/assignments", async (req, res) => {
   const [phaseAssignments, getPhaseAssignmentsError] = await lobbyService.getLobbyPhases(lobbyCode as UUID);
 
   if (phaseAssignments) {
-    const currentPhaseAssignments = phaseAssignments.filter((phase) => phase.phase.index === lobby.currentPhase.index);
+    const currentPhaseAssignments = phaseAssignments.filter((phase) => phase.phase.promptIndex === lobby.currentPhase.promptIndex);
     return res.status(200).json(currentPhaseAssignments);
   } else if (getPhaseAssignmentsError) {
     if (getPhaseAssignmentsError.type === ErrorType.NotFound) {

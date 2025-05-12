@@ -8,7 +8,7 @@ import { User } from "./User";
 export type GamePhaseName = "Waiting" | "Prompt" | "Draw" | "Guess" | "Review" | "Complete";
 
 export type GamePhase = {
-  index: number;
+  promptIndex: number;
   phase: GamePhaseName;
 }
 
@@ -18,14 +18,14 @@ class GamePhaseNode {
   
   constructor(phaseName: GamePhaseName, index?: number) {
     this.value = {
-      index: index ?? 0,
+      promptIndex: index ?? 0,
       phase: phaseName,
     };
     this.next = null;
   }
 
   addNext(phaseName: GamePhaseName): GamePhaseNode {
-    const node = new GamePhaseNode(phaseName, this.value.index + 1);
+    const node = new GamePhaseNode(phaseName, this.value.promptIndex + 1);
     this.next = node;
     return this.next;
   }
@@ -64,7 +64,7 @@ class GamePhaseList {
     if (this.current.next) {
       this.current = this.current.next;
     } else {
-      this.current = this.head; // Loop back to start
+      // TODO: Game over, terminate
     }
     return this.current.value;
   }
@@ -180,7 +180,7 @@ export class Lobby {
   }
 
   getPhaseByIndex(index: number): PhasePlayerAssignment | undefined {
-    return this.phasePlayerAssignments.find((phase) => phase.phase.index === index);
+    return this.phasePlayerAssignments.find((phase) => phase.phase.promptIndex === index);
   }
 
   toJSON() {
