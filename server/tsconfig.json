@@ -6,12 +6,11 @@
     "lib": ["ES2022"],
     "allowJs": false,
     "outDir": "dist",
-    "rootDir": "src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*", "src/index.ts"],
+  "include": ["src/**/*", "src/index.ts", "../lib/**/*.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

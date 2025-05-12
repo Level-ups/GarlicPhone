@@ -1,5 +1,5 @@
+import type { Either } from "../../../lib/types";
 import { ErrorDetails, InsertErrorDetails } from "../library/error-types";
-import { Either } from '../library/types';
 import { User } from '../models/User';
 import userRepository from '../repositories/userRepository';
 

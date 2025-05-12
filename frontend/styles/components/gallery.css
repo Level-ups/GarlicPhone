@@ -1,0 +1,142 @@
+/* styles.css */
+  .highlight {
+    font-weight: bold;
+    color: #9c57d3;
+    font-family: 'Rubik Beastly', cursive, sans-serif;
+  }
+ 
+  .logo {
+    width: 100px;
+    height: 100px;
+  }
+ 
+  .gallery-header {
+    background-color: #fff;
+    padding: 1rem;
+    margin: 1rem auto;
+    border-radius: 10px;
+    width: 90%;
+    height: 90px;
+    max-width: 1015px;
+    text-align: center;
+  }
+ 
+  .gallery-header h2 {
+    font-size: 1.5rem;
+    color: #9c57d3;
+    margin-bottom: 0.2rem;
+    font-family: 'Rowdies';
+  }
+ 
+  .game-gallery {
+    padding: 1rem;
+    display: flex;
+    justify-content: center;
+  }
+ 
+  .game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+    width: 90%;
+    max-width: 1050px;
+  }
+ 
+  /* GAME CARD */
+  .game-card {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 0.5rem;
+    position: relative;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  }
+ 
+  .game-card:hover {
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+  }
+ 
+  .thumbnail {
+    background-color: #d3d3d3;
+    height: 150px;
+    width: 210px;
+    border-radius: 5px;
+    position: center;
+  }
+ 
+  .game-card footer {
+    padding: 0.5rem 0;
+    font-size: 0.85rem;
+  }
+ 
+  time {
+    background-color: #E6DBE9;
+    color: #fff;
+    border-radius: 12px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+    display: inline-block;
+    margin-bottom: 0.2rem;
+  }
+ 
+  .round-tag {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background-color: #eee;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+  }
+ 
+  /* Make header elements wrap nicely */
+  .main-header h1 {
+    flex-wrap: wrap;
+    text-align: center;
+    font-size: 1.5rem;
+  }
+ 
+  /* Ensure image scales properly */
+  .logo {
+    width: 50px;
+    height: 50px;
+  }
+ 
+  /* Responsive Grid: 1 column on small screens, up to 3 on larger */
+  .game-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+ 
+  /* Adjust spacing and font sizes for small screens */
+  @media (max-width: 600px) {
+    .main-header,
+    .gallery-header,
+    .game-grid {
+      width: 95%;
+      margin: 0 auto;
+    }
+ 
+    .main-header h1 {
+      font-size: 1.2rem;
+    }
+ 
+    .gallery-header h2 {
+      font-size: 1.2rem;
+    }
+ 
+    .thumbnail {
+      height: 100px;
+    }
+ 
+    .round-tag {
+      font-size: 0.65rem;
+    }
+ 
+    time {
+      font-size: 0.7rem;
+    }
+ 
+    .game-card p {
+      font-size: 0.8rem;
+    }
+  }
+ 

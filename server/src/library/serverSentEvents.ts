@@ -5,7 +5,11 @@ export type ServerSentEvent<T> = {
   data: T
 };
 
-export type ServerSentEventResponseWriter<T> = (event: string, data: T) => void
+// Define a proper interface for the response writer with request property
+export interface ServerSentEventResponseWriter<T> {
+  (event: string, data: T): void;
+  request?: express.Request;
+}
 
 export type ServerSentEventHandlerFunction<T> = (responseWriter: ServerSentEventResponseWriter<T>) => void
 
@@ -16,10 +20,14 @@ export const createServerSentEventHandler = <T>(handlerFunction: ServerSentEvent
     response.setHeader('Connection', 'keep-alive')
     response.flushHeaders()
 
-    const responseWriter = (event: string, data: T) => {
+    // Create the response writer function
+    const responseWriter: ServerSentEventResponseWriter<T> = (event: string, data: T): void => {
       const json = JSON.stringify(data)
       response.write(`event: ${event}\ndata: ${json}\n\n`);
     }
+
+    // Attach the request to the responseWriter function for access in the handler
+    responseWriter.request = request;
 
     handlerFunction(responseWriter);
 

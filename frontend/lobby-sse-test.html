@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lobby SSE Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    input, button {
+      padding: 8px;
+      margin: 5px 0;
+    }
+    
+    #events {
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      height: 400px;
+      overflow-y: auto;
+      background-color: #f9f9f9;
+    }
+    
+    .event {
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: white;
+      border-left: 4px solid #2196F3;
+    }
+    
+    .event-type {
+      font-weight: bold;
+      color: #2196F3;
+    }
+    
+    .event-time {
+      font-size: 0.8em;
+      color: #888;
+    }
+    
+    pre {
+      background-color: #f0f0f0;
+      padding: 8px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Lobby Server-Sent Events Test</h1>
+  
+  <div>
+    <h3>Connect to Lobby Events</h3>
+    <input type="text" id="lobby-id" placeholder="Enter lobby ID">
+    <button id="connect-btn">Connect</button>
+    <button id="disconnect-btn" disabled>Disconnect</button>
+  </div>
+  
+  <div id="events">
+    <p>Events will appear here...</p>
+  </div>
+  
+  <script>
+    let eventSource = null;
+    const lobbyIdInput = document.getElementById('lobby-id');
+    const connectBtn = document.getElementById('connect-btn');
+    const disconnectBtn = document.getElementById('disconnect-btn');
+    const eventsContainer = document.getElementById('events');
+    
+    function addEvent(type, data) {
+      const eventDiv = document.createElement('div');
+      eventDiv.className = 'event';
+      
+      const time = new Date().toLocaleTimeString();
+      eventDiv.innerHTML = `
+        <div class="event-time">${time}</div>
+        <div class="event-type">${type}</div>
+        <pre>${JSON.stringify(data, null, 2)}</pre>
+      `;
+      
+      eventsContainer.prepend(eventDiv);
+    }
+    
+    connectBtn.addEventListener('click', () => {
+      const lobbyId = lobbyIdInput.value.trim();
+      if (!lobbyId) {
+        alert('Please enter a lobby ID');
+        return;
+      }
+      
+      // Close any existing connection
+      if (eventSource) {
+        eventSource.close();
+      }
+      
+      try {
+        // Connect to SSE endpoint
+        eventSource = new EventSource(`http://localhost:5000/api/lobbies/${lobbyId}/events`);
+        
+        // Add event listeners
+        eventSource.addEventListener('lobby_state', (event) => {
+          const data = JSON.parse(event.data);
+          addEvent('Initial Lobby State', data);
+        });
+        
+        eventSource.addEventListener('lobby_update', (event) => {
+          const data = JSON.parse(event.data);
+          addEvent('Lobby Update', data);
+        });
+        
+        eventSource.addEventListener('error', (event) => {
+          console.error('SSE Error:', event);
+          addEvent('Error', { 
+            message: 'Connection error. Check console for details.',
+            readyState: eventSource.readyState
+          });
+          
+          if (event.target.readyState === EventSource.CLOSED) {
+            addEvent('Connection Closed', { time: new Date().toISOString() });
+            disconnectBtn.disabled = true;
+            connectBtn.disabled = false;
+          }
+        });
+        
+        // Connection opened successfully
+        eventSource.onopen = () => {
+          addEvent('Connection Opened', { time: new Date().toISOString() });
+          disconnectBtn.disabled = false;
+          connectBtn.disabled = true;
+        };
+        
+      } catch (error) {
+        console.error('Error creating EventSource:', error);
+        addEvent('Connection Error', { message: error.message });
+      }
+    });
+    
+    disconnectBtn.addEventListener('click', () => {
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+        addEvent('Connection Closed', { time: new Date().toISOString() });
+        disconnectBtn.disabled = true;
+        connectBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html> 
