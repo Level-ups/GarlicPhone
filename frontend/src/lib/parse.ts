@@ -1,8 +1,12 @@
+import { maybeBind, maybeSub, type MaybeReactive } from "../../../lib/signal";
+import { tryCall } from "../../../lib/types";
+
 //-------------------- Types --------------------//
 type ElemTree_Meta = {
-  "_"?: string | (() => string);
-  "@"?: AttrDict | (() => AttrDict);
-  "$"?: StyleDict | (() => StyleDict);
+  '_'?: TextContent;
+  '@'?: AttrDict;
+  '$'?: StyleDict;
+  '%'?: (el: HTMLElement) => void;
 };
 
 type ElemTree_Elems = (
@@ -21,12 +25,14 @@ type ElemData = {
     style: StyleDict;
     attributes: AttrDict;
     eventHandlers: EventHandlerDict;
-    textContent: string;
+    textContent: TextContent;
+    initFunc: (el: HTMLElement) => void;
 };
 
+export type TextContent = MaybeReactive<string>;
+export type StyleDict = { [key in keyof CSSStyleDeclaration]?: MaybeReactive<string> };
+export type AttrDict = { [key: string]: MaybeReactive<string> };
 export type EventHandler = (e: Event) => void;
-export type StyleDict = { [key in keyof CSSStyleDeclaration]?: string };
-export type AttrDict = { [key: string]: string };
 export type EventHandlerDict = { [eventName: string]: EventHandler; }
 
 
@@ -119,13 +125,6 @@ export function parseInto(parent: HTMLElement, tree: ElemTree) {
     parse(tree).forEach(c => parent.appendChild(c));
 }
 
-// If the object is a function, call it
-// Otherwise, return it's value
-function tryCall<T>(x: T, args: any[] = []) {
-    if (typeof x === "function") return x(...args);
-    return x;
-}
-
 // Parse an ElemTree into a set of HTMLElements
 export function parse(tree: ElemTree, par: ElemData = createEmptyElemData()): HTMLElement[] {
     const res: HTMLElement[] = [];
@@ -136,13 +135,18 @@ export function parse(tree: ElemTree, par: ElemData = createEmptyElemData()): HT
 
         switch(tok[0]) {
             // Set parent properties
-            case '_': par.textContent = tryCall(v);                        break; // content
-            case '$': par.style       = tryCall(v);                        break; // style
-            case '@': par.attributes  = tryCall(v);                        break; // attribute
-            case '%': par.eventHandlers[tok.slice(1)] = v as EventHandler; break; // event
+            case '_': par.textContent = (v as TextContent); break;              // content
+            case '$': par.style       = (v as StyleDict);   break;              // style
+            case '@': par.attributes  = (v as AttrDict);    break;              // attribute
+            case '%':
+                if (tok === '%')
+                    { par.initFunc    = v as (el: HTMLElement) => void; }       // init callback
+                else
+                    { par.eventHandlers[tok.slice(1)] = v as EventHandler; }    // event
+                break;
 
             // Create new child
-            default:                                                              // child
+            default:                                                            // child
                 const subtree : ElemTree = tryCall(tree[tok]);
 
                 // Create element data + physical HTML element
@@ -206,7 +210,8 @@ function createEmptyElemData(): ElemData {
     return {
         tag: "", id: "", classList: [],
         style: {}, attributes: {},
-        eventHandlers: {}, textContent: ""
+        eventHandlers: {}, textContent: "",
+        initFunc: (_: HTMLElement) => {}
     };
 }
 
@@ -215,18 +220,20 @@ function createDomElement(meta: ElemData, children: HTMLElement[] = []): HTMLEle
     const {
         tag, id, classList,
         style, attributes: attrs,
-        eventHandlers: evnts, textContent
+        eventHandlers: evnts, textContent,
+        initFunc
     } = meta;
 
     const elem = document.createElement(tag);
 
     if (id !== "") { elem.id = id; }
     if (classList.length > 0) elem.classList.add(...classList);
-    elem.textContent = textContent;
-    Object.entries(style).forEach(([key, val]) => { (elem.style as any)[key] = val; });
-    Object.entries(attrs).forEach(([attr, val]) => { elem.setAttribute(attr, val); });
+    maybeBind(elem, "textContent", textContent);
+    Object.entries(style).forEach(([key, val]) => { (elem.style as any)[key] = maybeBind(elem.style as any, key, val); });
+    Object.entries(attrs).forEach(([attr, val]) => { maybeSub(val, v => { elem.setAttribute(attr, v); }) });
     Object.entries(evnts).forEach(([eventName, handler]) => { elem.addEventListener(eventName, handler); })
-    children.forEach(c => elem.appendChild(c));
+    children.forEach(c => { elem.appendChild(c); });
+    initFunc(elem);
 
     return elem;
 }
