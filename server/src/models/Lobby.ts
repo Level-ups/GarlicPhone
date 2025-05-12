@@ -1,5 +1,7 @@
-import { randomBytes } from 'crypto';
+import { randomBytes, UUID } from 'crypto';
 import { ValidationResult } from "../library/types";
+import { Chain } from './Chain';
+import { GamePhase, GamePhaseList, PhasePlayerAssignment } from './GamePhase';
 
 export type Player = {
   id: string;
@@ -12,13 +14,18 @@ export type Player = {
 export type LobbyStatus = 'waiting' | 'started' | 'finished';
 
 export type Lobby = {
-  id: string;
+  id: UUID;
   code: string;
   players: Player[];
   maxPlayers: number;
   status: LobbyStatus;
   createdAt: Date;
   lastActivity: Date;
+  phases: GamePhaseList;
+  currentPhase: GamePhase;
+  nextPhase: GamePhase;
+  phasePlayerAssignments: PhasePlayerAssignment[];
+  chains: Chain[];
 };
 
 export function generateLobbyCode(): string {
