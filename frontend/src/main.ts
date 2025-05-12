@@ -4,7 +4,7 @@ import { parseInto } from './lib/parse';
 import { defineCustomComponents } from './components/custom-components';
 import { loginPage } from './pages/login';
 import { galleryPage } from './pages/gallery';
-import { drawPage } from './components/canvas/ui-draw-page';
+import { drawPage } from './pages/draw';
 
 //---------- Setup ----------//
 const pageContainer = document.getElementById("app")!;
