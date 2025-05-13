@@ -6,6 +6,7 @@ import pecilToolIcon from "/assets/canvas/pencil-tool.svg";
 import tickIcon from "/assets/canvas/tick.svg";
 import trashIcon from "/assets/canvas/trash.svg";
 import { drawLine, drawPixel, floodFill, resizeCanvasToDisplaySize } from "../lib/util/canvasUtils";
+import type { PageRenderer } from "../lib/router";
 
 type CanvasModes = {
   fill: boolean;
@@ -190,7 +191,7 @@ function getCanvasContext() {
   if (!canvasConfig.canvasContext) throw new Error("Canvas not supported");
   return canvasConfig.canvasContext;
 }
-export const drawPage = (par: HTMLElement) => {
+export const drawPage: PageRenderer = ({ app }) => {
   const colourButtons: ColourButtonConfig[] = [
     {colour: "rgb(255, 0, 0)"},
     {colour: "rgb(0, 0, 255)"},
@@ -262,31 +263,20 @@ export const drawPage = (par: HTMLElement) => {
     },
   ];
 
-  return parseInto(par, {
+  return parseInto(app, {
     "|section.draw-page": {
       "|div.draw-page-header-ctn": {
         "|div.draw-page-title-timer-ctn": {
-          "|h2.large-heading.draw-page-title": {
-            _: "Garlic Phone",
-          },
-          "|p.draw-page-timer": {
-            _: "00:00",
-          },
+          "|h2.large-heading.draw-page-title": { _: "Garlic Phone", },
+          "|p.draw-page-timer": { _: "00:00", },
         },
         "|img.draw-page-logo": {
-          "@": {
-            src: garlicPhoneLogo,
-            alt: "Garlic Phone Logo",
-          },
+          "@": { src: garlicPhoneLogo, alt: "Garlic Phone Logo", },
         },
       },
       "|div.draw-page-prompt-ctn": {
-        "|p": {
-          _: "Draw:",
-        },
-        "|h3.medium-heading": {
-          _: "Clown with pie on his face",
-        },
+        "|p": { _: "Draw:" },
+        "|h3.medium-heading": { _: "Clown with pie on his face", },
       },
       "|div.draw-page-controls": {
         ...forEl(colourButtons, (_, v) => generateCanvasColourButton(v)),

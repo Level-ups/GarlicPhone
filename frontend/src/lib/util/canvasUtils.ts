@@ -1,7 +1,7 @@
 export function drawPixel(x: number, y: number, ctx: CanvasRenderingContext2D, pixelSize: number) {
     ctx.fillRect(
-      x * pixelSize,
-      y * pixelSize,
+      x,
+      y,
       pixelSize,
       pixelSize
     );

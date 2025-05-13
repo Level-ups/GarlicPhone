@@ -25,6 +25,14 @@ export const GALLERY_FLEX_CONFIG: FlexConfig = {
   wrap: "wrap"
 };
 
+export const NAV_FLEX_CONFIG: FlexConfig = {
+  flexDirection: "row",
+  justifyContent: "center",
+  alignItems: "flex-start",
+  gap: "5em",
+  wrap: "wrap"
+};
+
 // Wrap the given tree inside a semantic flex container.
 export function wrapAsFlex(tree: ElemTree, config: FlexConfig = DEFAULT_FLEX_CONFIG): ElemTree {
   return {

@@ -1,4 +1,4 @@
-import { parse } from "../lib/parse";
+import { parse, type ElemTree } from "../lib/parse";
 
 export class UIButton extends HTMLElement {
   static get observedAttributes() {
@@ -7,13 +7,13 @@ export class UIButton extends HTMLElement {
 
   private elem: HTMLButtonElement;
 
-  constructor() {
+  constructor(label?: string) {
     super();
     const shadow = this.attachShadow({ mode: 'open' });
 
     this.elem = parse({
       "|button": {
-        _: this.getAttribute("label") || "Click me",
+        _: label ?? this.getAttribute("label") ?? "Click me",
 
         "%click": () => {
           this.dispatchEvent(new CustomEvent('button-click', {

@@ -115,7 +115,6 @@ html {
 body {
   margin: 0;
   display: flex;
-  place-items: center;
   box-sizing: border-box;
 }
 
@@ -138,8 +137,28 @@ a:hover { color: var(--link-hover) }
 #app {
   width: 100vw;
   height: 100vh;
+  min-height: fit-content;
   margin: 0 auto;
   text-align: center;
+  /* border: 1px solid red; */
+}
+
+#page {
+  --pageWidth: calc(min(100vw, 80em));
+  --topPad: 1em;
+  --botPad: 1em;
+
+  position: absolute;
+  top: 0;
+  left: calc(50vw - var(--pageWidth)/2);
+
+
+  width: var(--pageWidth);
+  height: 100vh;
+  padding-top: var(--topPad);
+  padding-bottom: var(--botPad);
+  min-height: fit-content;
+  border: 1px solid green;
 }
 
 .logo {

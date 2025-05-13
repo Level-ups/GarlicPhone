@@ -1,5 +1,6 @@
-export type PageRenderer = (container: HTMLElement) => void;
+export type PageRenderer = (containers: ContainerMap) => void;
 export type RedirectFn = (path: string) => string | null;
+export type ContainerMap = { [key: string]: HTMLElement } & { app: HTMLElement, page: HTMLElement };
 
 declare global {
   function visit(page: string): void;
@@ -7,18 +8,18 @@ declare global {
 
 interface RouterOptions {
   pages: Record<string, PageRenderer>;
-  container: HTMLElement;
+  containers: ContainerMap;
   redirects?: RedirectFn[];
 }
 
 export class PageRouter {
   private pages: Record<string, PageRenderer>;
-  private container: HTMLElement;
+  private containers: ContainerMap;
   private redirects: RedirectFn[];
 
   constructor(options: RouterOptions) {
     this.pages = options.pages;
-    this.container = options.container;
+    this.containers = options.containers;
     this.redirects = options.redirects || [];
 
     // Bind methods to this instance
@@ -65,11 +66,14 @@ export class PageRouter {
   // Clear page content & render new page
   private render(page: string): void {
     const renderer = this.pages[page];
+    Object.entries(this.containers).forEach(([_, v]) => { v.innerHTML = ""; });
+
     if (!renderer) {
-      this.container.innerHTML = `<h1>404: Page '${page}' Not Found</h1>`;
+      this.containers.app.innerHTML = `<h1>404: Page '${page}' Not Found</h1>`;
+      this.containers.nav.innerHTML = "";
       return;
     }
-    this.container.innerHTML = '';
-    renderer(this.container);
+
+    renderer(this.containers);
   }
 }

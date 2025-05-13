@@ -1,12 +1,14 @@
 import { wrapAsCard } from "../lib/card";
 import { GALLERY_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { parseInto, forEl, type StyleDict } from "../lib/parse";
-import { bind, der, eff, sig } from "../../../lib/signal";
+import { der, eff, sig } from "../../../lib/signal";
+import type { PageRenderer } from "../lib/router";
+import { menuNav } from "../components/menuNav";
 
 type GalleryItem = { title: string, imgUrl: string };
 
 const cardStyleOverrides: StyleDict = {
-    maxWidth: "28em",
+    maxWidth: "25em",
     padding: "0"
 };
 
@@ -24,13 +26,13 @@ function genGalleryCard(i: number, itm: GalleryItem) {
             },
             "|figcaption": {
                 _: itm.title,
-                $: { padding: "1em", fontSize: "1em" }
+                $: { padding: "1rem", fontSize: "1em" }
             }
         },
     });
 }
 
-export const galleryPage = (par: HTMLElement) => {
+export const galleryPage: PageRenderer = ({ page, app }) => {
     //----- Create signal -----//
     const count = sig<number>(0);                       // Create signal
     const countStr = der(() => String(count() * 2));    // Create derived signal
@@ -51,23 +53,28 @@ export const galleryPage = (par: HTMLElement) => {
     // Create reactive effect which runs when either `count` or `prog` changes
     eff(() => console.log("COUNT EFFECT:", count(), prog()));
 
-    return parseInto(par, {
-        "|button#progButton": {
-            "%": (el) =>    { bind(el, "innerText", prog); }, // Manually bind property to signal
-            "%click": () => { prog(prog().replace("[", "[=")); }
-        },
-        "|button#countButton": {
-            _: countStr,                                      // Use signal directly as a _/@/$
-            $: {
-                // @'s and $'s are individually and optionally reactive
-                color: der(() => count() % 2 == 0 ? "red" : "green"),   // reacts to current count
-                fontSize: "2em"                                         // not reactive
-            },
-            "%click": () => {
-                count(v => v + 1); // set new signal value
-            }
-        },
-    });
+
+    // parseInto(app, {
+    //     "|input": {
+    //         _: "asdf"
+    //     },
+    //     ...forEl(3, { "|br": {} }),
+    //     "|button#progButton": {
+    //         "%": (el) =>    { bind(el, "innerText", prog); }, // Manually bind property to signal
+    //         "%click": () => { prog(prog().replace("[", "[=")); }
+    //     },
+    //     "|button#countButton": {
+    //         _: countStr,                                      // Use signal directly as a _/@/$
+    //         $: {
+    //             // @'s and $'s are individually and optionally reactive
+    //             color: der(() => count() % 2 == 0 ? "red" : "green"),   // reacts to current count
+    //             fontSize: "2em"                                         // not reactive
+    //         },
+    //         "%click": () => {
+    //             count(v => v + 1); // set new signal value
+    //         }
+    //     },
+    // });
 
 
         // ...wrapAsFlex(forEl(items(), genGalleryCard), GALLERY_FLEX_CONFIG)
@@ -77,12 +84,18 @@ export const galleryPage = (par: HTMLElement) => {
         { title: "Item A", imgUrl: "https://picsum.photos/100" },
         { title: "Item B", imgUrl: "https://picsum.photos/150" },
         { title: "Item C", imgUrl: "https://picsum.photos/200" },
+        { title: "Item D", imgUrl: "https://picsum.photos/250" },
+        { title: "Item D", imgUrl: "https://picsum.photos/250" },
+        { title: "Item D", imgUrl: "https://picsum.photos/250" },
+        { title: "Item D", imgUrl: "https://picsum.photos/250" },
+        { title: "Item D", imgUrl: "https://picsum.photos/250" },
         { title: "Item D", imgUrl: "https://picsum.photos/250" }
     ]);
 
     // Render page
-    return parseInto(par, wrapAsFlex(
-        forEl(items(), genGalleryCard),
-        GALLERY_FLEX_CONFIG,
-    ));
+    return parseInto(page, {
+        ...menuNav(),
+
+        "|div": wrapAsFlex({ ...forEl(items(), genGalleryCard) }, GALLERY_FLEX_CONFIG)
+    });
 }
