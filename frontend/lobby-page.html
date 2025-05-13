@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Garlic Phone - Lobby</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cal+Sans&display=swap" rel="stylesheet">
+  <link href="styles/base.css" type="text/css" rel="stylesheet">
+  <link href="styles/lobby-page.css" type="text/css" rel="stylesheet">
+  <link href="styles/typography/typography.css" type="text/css" rel="stylesheet">
+</head>
+<body>
+  <header>
+    <nav class="main-nav">
+      <figure class="logo-container">
+        <img src="./public/assets/garlic-logo.svg" alt="Garlic Phone Logo" class="logo">
+      </figure>
+      <h1>Garlic Phone</h1>
+      <ul class="nav-links">
+        <li><a href="home-page.html">Home</a></li>
+        <li><a href="gallery.html">Gallery</a></li>
+      </ul>
+    </nav>
+  </header>
+  
+  <main>
+    <section class="lobby-container">
+      <article class="lobby-info">
+        <h2>Lobby</h2>
+        <section class="code-display">
+          <p>Your Lobby Code: <strong id="lobby-code-display">----</strong></p>
+          <button id="share-lobby-btn" type="button">Share Lobby Link</button>
+        </section>
+        
+        <section class="player-controls">
+          <h3>Game Controls</h3>
+          <button id="ready-btn" type="button">Set Ready</button>
+          <button id="leave-lobby-btn" type="button">Leave Lobby</button>
+          <button id="start-game-btn" type="button" disabled>Start Game</button>
+        </section>
+      </article>
+      
+      <article class="players-panel">
+        <h2>Players</h2>
+        <ol id="players-list" class="players-list">
+          <!-- Player list will be populated dynamically -->
+        </ol>
+      </article>
+    </section>
+  </main>
+  
+  <footer>
+    <p>&copy; 2023 Garlic Phone - A Drawing & Guessing Game</p>
+  </footer>
+
+  <template id="player-item-template">
+    <li class="player-item">
+      <figure class="player-avatar">
+        <img src="./public/assets/default-avatar.svg" alt="Player avatar">
+      </figure>
+      <section class="player-details">
+        <h3 class="player-name">Player Name</h3>
+        <p class="player-status">Waiting...</p>
+      </section>
+    </li>
+  </template>
+
+  <script src="./dist/lobby-page.js" type="module"></script>
+</body>
+</html> 

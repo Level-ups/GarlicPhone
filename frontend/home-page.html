@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Garlic Phone - Home</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cal+Sans&display=swap" rel="stylesheet">
+  <link href="styles/base.css" type="text/css" rel="stylesheet">
+  <link href="styles/home-page.css" type="text/css" rel="stylesheet">
+  <link href="styles/typography/typography.css" type="text/css" rel="stylesheet">
+</head>
+<body>
+  <header>
+    <nav class="main-nav">
+      <figure class="logo-container">
+        <img src="./public/assets/garlic-logo.svg" alt="Garlic Phone Logo" class="logo">
+      </figure>
+      <h1>Garlic Phone</h1>
+      <ul class="nav-links">
+        <li><a href="home-page.html" class="active">Home</a></li>
+        <li><a href="gallery.html">Gallery</a></li>
+      </ul>
+    </nav>
+  </header>
+  
+  <main>
+    <section class="game-entry">
+      <article class="player-setup">
+        <h2>Welcome to Garlic Phone</h2>
+        <form id="player-form">
+          <fieldset>
+            <legend>Enter Your Name</legend>
+            <label for="player-name">Your Name:</label>
+            <input type="text" id="player-name" placeholder="Enter your name" required>
+          </fieldset>
+        </form>
+      </article>
+      
+      <section class="game-options">
+        <article class="create-game">
+          <h3>Create a New Game</h3>
+          <p>Start a new lobby and invite your friends!</p>
+          <button id="create-lobby-btn" type="button">Create Game</button>
+        </article>
+        
+        <article class="join-game">
+          <h3>Join Existing Game</h3>
+          <form id="join-form">
+            <label for="lobby-code">Lobby Code:</label>
+            <input type="text" id="lobby-code" placeholder="Enter lobby code" maxlength="6">
+            <button id="join-lobby-btn" type="button">Join Game</button>
+          </form>
+        </article>
+      </section>
+    </section>
+  </main>
+  
+  <footer>
+    <p>&copy; 2023 Garlic Phone - A Drawing & Guessing Game</p>
+  </footer>
+
+  <script src="./dist/home-page.js" type="module"></script>
+</body>
+</html> 
