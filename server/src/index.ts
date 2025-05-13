@@ -29,34 +29,37 @@ app.use(cors());
 // the upload image route should not be parsed as JSON
 app.use('/api/prompt/:promptId/image', express.raw({ type: 'image/png', limit: '10mb' }));
 app.post('/api/prompt/:promptId/image', async (req, res) => {
-  const { promptId } = req.params;
-  const { userId } = req.query;
+  try {
+    const { promptId } = req.params;
+    const { userId } = req.query;
 
-  const validationResult = validateImageUploadDto({
-    userId: Number(userId),
-    promptId: Number(promptId),
-    image: req.body,
-  });
+    const validationResult = validateImageUploadDto({
+      userId: Number(userId),
+      promptId: Number(promptId),
+      image: req.body,
+    });
 
-  if (validationResult.length) {
-    res.status(400).json(new ValidationErrorDetails("Error uploading image", validationResult));
-  } else {
-    const imageBuffer = req.body;
-    const imageName = `prompts/${promptId}/image.png`;
-  
-    const [image, error] = await imageService.createImage({
-      userId: Number(userId), 
-      promptId: Number(promptId), 
-      image: imageBuffer
-    }, imageName);
-  
-    if (error) {
-      res.status(500).json(new ErrorDetails("Error uploading image", error.details));
+    if (validationResult.length) {
+      res.status(400).json(new ValidationErrorDetails("Error uploading image", validationResult));
     } else {
-      res.status(200).json(image);
+      const imageBuffer = req.body;
+      const imageName = `prompts/${promptId}/image.png`;
+    
+      const [image, error] = await imageService.createImage({
+        userId: Number(userId), 
+        promptId: Number(promptId), 
+        image: imageBuffer
+      }, imageName);
+    
+      if (error) {
+        res.status(500).json(new ErrorDetails("Error uploading image", error.details));
+      } else {
+        res.status(200).json(image);
+      }
     }
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
-
 });
 
 app.use(express.json());

@@ -8,7 +8,7 @@ export async function getAllPlayerGames(): Promise<Either<PlayerGame[], ErrorDet
   try {
     playerGames = await playerGameRepository.getPlayerGames();
   } catch (error: any) {
-    return [undefined, new ErrorDetails("Error fetching player-games", [error.message])];
+    return [undefined, new ErrorDetails("Error fetching player-games", [error.message], error.stack)];
   }
   return [playerGames, undefined];
 }
@@ -18,7 +18,7 @@ export async function addPlayerGame(playerGame: PlayerGameDto): Promise<Either<P
   try {
     insertedPlayerGame = await playerGameRepository.insertPlayerGame(playerGame);
   } catch (error: any) {
-    return [undefined, new ErrorDetails("Error adding player game", [error.message])];
+    return [undefined, new ErrorDetails("Error adding player game", [error.message], )];
   }
 
   if (insertedPlayerGame) {

@@ -1,20 +1,21 @@
 import { Router } from 'express';
 import { importJWK, JWK, jwtVerify } from 'jose';
+import { constants } from '../library/constants';
+import { ErrorDetails, ValidationErrorDetails } from '../library/error-types';
+import userService from '../services/userService';
 
 const router = Router();
 
 router.get('/start', (req, res) => {
-  const clientId = '789976131197-kn1hj43trbjkvaeodoqgrbhmrv05offp.apps.googleusercontent.com';
-  const redirectUri = 'http://localhost:5000/api/auth/callback';
-  const scope = 'openid profile email';
-  const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+  const clientId = constants.GOOGLE_CLIENT_ID;
+  const redirectUri = constants.GOOGLE_CLIENT_REDIRECT_URI;
+  const scope = constants.GOOGLE_CLIENT_SCOPES;
+  const authUrl = new URL(constants.GOOGLE_CLIENT_AUTH_URL);
 
   authUrl.searchParams.set('response_type', 'code');
   authUrl.searchParams.set('client_id', clientId);
   authUrl.searchParams.set('redirect_uri', redirectUri);
   authUrl.searchParams.set('scope', scope);
-
-  console.log(authUrl);
 
   return res.redirect(authUrl.toString());
 });
@@ -23,12 +24,12 @@ router.get('/callback', async (req, res) => {
   const code = req.query.code as string | undefined;
 
   if (!code) {
-    return res.status(400).send('Missing code');
+    return res.status(400).json(new ValidationErrorDetails('Missing code parameter'));
   }
 
-  const clientId = process.env.GOOGLE_CLIENT_ID || '';
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
-  const redirectUri = 'http://localhost:5000/api/auth/callback';
+  const clientId = constants.GOOGLE_CLIENT_ID;
+  const clientSecret = constants.GOOGLE_CLIENT_SECRET;
+  const redirectUri = constants.GOOGLE_CLIENT_REDIRECT_URI;
 
   try {
     // Exchange code for tokens
@@ -46,8 +47,7 @@ router.get('/callback', async (req, res) => {
 
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
-      console.error('Token exchange failed:', errorText);
-      return res.status(500).send('Failed to exchange code for tokens');
+      return res.status(500).json(new ErrorDetails('Token exchange failed', [errorText]));
     }
 
     const tokens = (await tokenResponse.json()) as {
@@ -58,8 +58,6 @@ router.get('/callback', async (req, res) => {
       token_type: string;
       id_token: string;
     };
-
-    console.log('Tokens:', tokens);
 
     const idToken = tokens.id_token;
 
@@ -73,8 +71,7 @@ router.get('/callback', async (req, res) => {
     const matchingKey = keys.find((k) => k.kid === kid);
     
     if (!matchingKey) {
-      console.error('No matching key found for kid:', kid);
-      return res.status(500).send('Unable to verify token: no matching key');
+      return res.status(500).json(new ErrorDetails(`No matching key found for kid: ${kid}`));
     }
 
     const key = await importJWK(matchingKey, 'RS256');
@@ -84,15 +81,18 @@ router.get('/callback', async (req, res) => {
       audience: clientId,
     });
 
-    console.log('Verified user:', payload);
-
     // TO-DO: Create user
+    userService.createUser({
+      googleSub: payload.sub!,
+      name: '',
+      avatarUrl: '',
+      roleName: ''
+    });
 
-    return res.redirect(`http://127.0.0.1:3000/congrats`);
+    return res.redirect(`${constants.FRONTEND_URL}/congrats`);
   }
-  catch (error) {
-    console.error('Error during OAuth callback handling:', error);
-    return res.status(500).send('Internal Server Error');
+  catch (error: any) {
+    return res.status(500).json(new ErrorDetails('Internal server error', [error.message], error.stack));
   }
 });
 

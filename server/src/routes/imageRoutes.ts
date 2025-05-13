@@ -16,20 +16,22 @@ router.get("/:id", async (req, res) => {
         isValid: false,
       }]
     ));
-  } else {
-    // continue with the rest of the function
   }
 
-  const [image, error] = await imageService.getImageById(id);
-
-  if (image) {
-    return res.status(200).json(image);
-  } else {
-    if (error.type === ErrorType.NotFound) {
-      return res.status(404).json(new NotFoundErrorDetails("Image not found", error.details));
+  try {
+    const [image, error] = await imageService.getImageById(id);
+  
+    if (image) {
+      return res.status(200).json(image);
     } else {
-      return res.status(500).json(new ErrorDetails("Error fetching image", error.details));
+      if (error.type === ErrorType.NotFound) {
+        return res.status(404).json(new NotFoundErrorDetails("Image not found", error.details));
+      } else {
+        return res.status(500).json(new ErrorDetails("Error fetching image", error.details));
+      }
     }
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
 });
 
@@ -45,16 +47,18 @@ router.get("/prompt/:promptId", async (req, res) => {
         isValid: false,
       }]
     ));
-  } else {
-    // continue with the rest of the function
   }
 
-  const [images, error] = await imageService.getImagesByPromptId(promptId);
-
-  if (error) {
-    return res.status(500).json(new ErrorDetails("Error fetching images", error.details));
-  } else {
-    return res.status(200).json(images);
+  try {
+    const [images, error] = await imageService.getImagesByPromptId(promptId);
+  
+    if (error) {
+      return res.status(500).json(new ErrorDetails("Error fetching images", error.details));
+    } else {
+      return res.status(200).json(images);
+    }
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
 });
 
