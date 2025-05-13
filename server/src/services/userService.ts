@@ -1,31 +1,71 @@
-import type { Either } from "../../../lib/types";
 import { ErrorDetails, InsertErrorDetails } from "../library/error-types";
-import { User } from '../models/User';
+import { Either } from '../library/types';
+import { User, UserDto } from '../models/User';
 import userRepository from '../repositories/userRepository';
 
-async function getAllUsers(): Promise<User[]> {
-  return userRepository.findAllUsers();
-}
-
-async function getUserById(id: string): Promise<User | null> {
-  return userRepository.findUserById(id);
-}
-
-async function createUser(userData: Omit<User, 'userId'>): Promise<Either<User, ErrorDetails>> {
-  const createdUser = await userRepository.insertUser(userData);
-  if (!createdUser) {
-    return [undefined, new InsertErrorDetails('Failed to create user')];
-  } else {
-    return [createdUser];
+async function getAllUsers(): Promise<Either<User[], ErrorDetails>> {
+  try {
+    const users = await userRepository.findAllUsers();
+    if (!users) {
+      return [undefined, new ErrorDetails('Failed to retrieve users')];
+    } else {
+      return [users, undefined];
+    }
+  } catch (error) {
+    return [undefined, new ErrorDetails('Failed to retrieve users')];
   }
 }
 
-async function updateUser(id: string, userData: Partial<User>): Promise<User | null> {
-  return userRepository.updateUser(id, userData);
+async function getUserById(id: string): Promise<Either<User, ErrorDetails>> {
+  try {
+    const user = await userRepository.findUserById(id);
+    if (!user) {
+      return [undefined, new ErrorDetails('User not found')];
+    } else {
+      return [user];
+    }
+  } catch (error) {
+    return [undefined, new ErrorDetails('Failed to retrieve user')];
+  }
 }
 
-async function deleteUser(id: string): Promise<boolean> {
-  return userRepository.deleteUser(id);
+async function createUser(userData: UserDto): Promise<Either<User, ErrorDetails>> {
+  try {
+    const createdUser = await userRepository.insertUser(userData);
+    if (!createdUser) {
+      return [undefined, new InsertErrorDetails('Failed to create user')];
+    } else {
+      return [createdUser];
+    }
+  } catch (error) {
+    return [undefined, new InsertErrorDetails('Failed to create user')];
+  }
+}
+
+async function updateUser(id: string, userData: UserDto): Promise<Either<User, ErrorDetails>> {
+  try {
+    const updatedUser = await userRepository.updateUser(id, userData);
+    if (!updatedUser) {
+      return [undefined, new ErrorDetails('Failed to update user')];
+    } else {
+      return [updatedUser];
+    }
+  } catch (error) {
+    return [undefined, new ErrorDetails('Failed to update user')];
+  }
+}
+
+async function deleteUser(id: string): Promise<Either<boolean, ErrorDetails>> {
+  try {
+    const deletedUser = await userRepository.deleteUser(id);
+    if (!deletedUser) {
+      return [undefined, new ErrorDetails('Failed to delete user')];
+    } else {
+      return [deletedUser];
+    }
+  } catch (error) {
+    return [undefined, new ErrorDetails('Failed to delete user')];
+  }
 }
 
 const userService = {

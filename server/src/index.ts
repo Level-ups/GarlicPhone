@@ -2,12 +2,18 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import path from 'path';
-import { userRouter } from './routes/userRoutes';
+import imageService from './services/imageService';
+import { ErrorDetails, ValidationErrorDetails } from './library/error-types';
 import { authRouter } from './routes/authRoutes';
-import { lobbyRouter } from './routes/lobbyRoutes';
-import { createServerSentEventHandler } from './library/serverSentEvents';
 import { cleanupExpiredLobbies } from './services/lobbyService';
 import { cleanupInactiveClients } from './library/lobbyEventBroadcaster';
+import { createServerSentEventHandler } from './library/serverSentEvents';
+import { fullChainDetailsRouter } from './routes/fullChainDetailsRoutes';
+import { imageRouter } from './routes/imageRoutes';
+import { lobbyRouter } from './routes/lobbyRoutes';
+import { promptRouter } from './routes/promptRoutes';
+import { userRouter } from './routes/userRoutes';
+import { validateImageUploadDto } from './models/Image';
 
 //---------- SETUP ----------//
 // Load environment variables
@@ -19,6 +25,40 @@ const PORT = Number(process.env.PORT) || 5000;
 
 // Middleware
 app.use(cors());
+
+// the upload image route should not be parsed as JSON
+app.use('/api/prompt/:promptId/image', express.raw({ type: 'image/png', limit: '10mb' }));
+app.post('/api/prompt/:promptId/image', async (req, res) => {
+  const { promptId } = req.params;
+  const { userId } = req.query;
+
+  const validationResult = validateImageUploadDto({
+    userId: Number(userId),
+    promptId: Number(promptId),
+    image: req.body,
+  });
+
+  if (validationResult.length) {
+    res.status(400).json(new ValidationErrorDetails("Error uploading image", validationResult));
+  } else {
+    const imageBuffer = req.body;
+    const imageName = `prompts/${promptId}/image.png`;
+  
+    const [image, error] = await imageService.createImage({
+      userId: Number(userId), 
+      promptId: Number(promptId), 
+      image: imageBuffer
+    }, imageName);
+  
+    if (error) {
+      res.status(500).json(new ErrorDetails("Error uploading image", error.details));
+    } else {
+      res.status(200).json(image);
+    }
+  }
+
+});
+
 app.use(express.json());
 
 
@@ -35,7 +75,9 @@ app.get('/', (_, res) => {
 app.use('/api/users', userRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/lobbies', lobbyRouter);
-
+app.use('/api/chains', fullChainDetailsRouter);
+app.use('/api/prompts', promptRouter);
+app.use('/api/images', imageRouter);
 
 //---------- INIT ----------//
 // Health check endpoint

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { ErrorDetails, ErrorType, NotFoundErrorDetails, ValidationErrorDetails } from "../library/error-types";
-import { validateCreateOrUpdateUser } from '../models/User';
+import { validateCreateUser } from '../models/User';
 import userService from '../services/userService';
 
 const router = Router();
@@ -12,16 +12,20 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
-  const user = await userService.getUserById(req.params.id);
-  if (!user) {
-    res.status(404).json(new NotFoundErrorDetails('User not found'));
+  const [user, error] = await userService.getUserById(req.params.id);
+  if (error) {
+    if (error.type === ErrorType.NotFound) {
+      return res.status(404).json(error);
+    } else {
+      return res.status(500).json(error);
+    }
   } else {
-    res.json(user);
+    return res.json(user);
   }
 });
 
 router.post('/', async (req, res) => {
-  const validationResult = validateCreateOrUpdateUser(req.body);
+  const validationResult = validateCreateUser(req.body);
   if (validationResult.length) {
     res.status(400).json(new ValidationErrorDetails('Invalid user data', validationResult));
   } else {
@@ -37,7 +41,7 @@ router.post('/', async (req, res) => {
 });
 
 router.put('/:id', (req, res) => {
-  const validationResult = validateCreateOrUpdateUser(req.body);
+  const validationResult = validateCreateUser(req.body);
   if (validationResult.length) {
     res.status(400).json(new ValidationErrorDetails('Invalid user data', validationResult));
   } else {
@@ -45,8 +49,50 @@ router.put('/:id', (req, res) => {
   }
 });
 
-router.delete('/:id', (req, res) => {
-  res.json(userService.deleteUser(req.params.id));
+router.post('/', async (req, res) => {
+  const validationResult = validateCreateUser(req.body);
+  if (validationResult.length) {
+    return res.status(400).json(new ValidationErrorDetails('Invalid user data', validationResult));
+  } else {
+    const [user, error] = await userService.createUser(req.body);
+    if (user) {
+      return res.status(201).json(user);
+    } else if (error && error.type === ErrorType.InsertionError) {
+      return res.status(500).json(error);
+    } else {
+      return res.status(500).json(new ErrorDetails('Failed to create user'));
+    }
+  }
+});
+
+// router.put('/:id', async (req, res) => {
+//   const validationResult = validateCreateUser(req.body);
+//   if (validationResult.length) {
+//     return res.status(400).json(new ValidationErrorDetails('Invalid user data', validationResult));
+//   } else {
+//     const [user, error] = await userService.updateUser(req.params.id, req.body);
+//     if (user) {
+//       return res.json(user);
+//     } else if (error && error.type === ErrorType.NotFound) {
+//       return res.status(404).json(error);
+//     } else {
+//       return res.status(500).json(new ErrorDetails('Failed to update user'));
+//     }
+//   }
+// });
+
+router.delete('/:id', async (req, res) => {
+  const [isDeleted, error] = await userService.deleteUser(req.params.id);
+  if (error) {
+    if (error.type === ErrorType.NotFound) {
+      return res.status(404).json(error);
+    } else {
+      return res.status(500).json(error);
+    }
+  } else {
+    return res.status(204).send();
+  }
 });
 
 export { router as userRouter };
+

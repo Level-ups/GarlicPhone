@@ -1,44 +1,46 @@
 import pool from '../library/db';
-import { toCamelCase } from '../library/utils';
-import { User } from '../models/User';
+import { userMapper } from '../library/mappers';
+import { User, UserDto } from '../models/User';
 
 async function findAllUsers(): Promise<User[]> {
   const query = `
     SELECT 
-      u.id,
+      u.id AS user_id,
       u.google_sub,
       u.name,
       u.avatar_url,
+      r.id AS role_id,
       r.name AS role_name 
     FROM users u
     INNER JOIN roles r ON u.role_id = r.id
   `;
 
   const result = await pool.query(query);
-  return toCamelCase(result.rows);
+  return result.rows.map((row) => userMapper.toDomain(row))
 }
 
 async function findUserById(id: string): Promise<User | null> {
   const query = `
     SELECT 
-      u.id,
+      u.id AS user_id,
       u.google_sub,
       u.name,
       u.avatar_url,
+      r.id AS role_id,
       r.name AS role_name 
     FROM users u
     INNER JOIN roles r ON u.role_id = r.id
-    WHERE users.id = $1
+    WHERE u.id = $1
   `;
 
   const result = await pool.query(
     query,
     [id]
   );
-  return result.rows.length > 0 ? toCamelCase(result.rows[0]) : null;
+  return result.rows.length > 0 ? userMapper.toDomain(result.rows[0]) : null;
 }
 
-async function insertUser(userData: Omit<User, 'id'>): Promise<User> {
+async function insertUser(userData: UserDto): Promise<User> {
   const query = `
     WITH target_role AS (
       SELECT id
@@ -52,10 +54,11 @@ async function insertUser(userData: Omit<User, 'id'>): Promise<User> {
       RETURNING id, google_sub, name, avatar_url, role_id
     )
     SELECT 
-      iu.id,
+      iu.id AS user_id,
       iu.google_sub,
       iu.name,
       iu.avatar_url,
+      r.id AS role_id,
       r.name AS role_name
     FROM inserted_user iu
     INNER JOIN roles r ON iu.role_id = r.id;
@@ -65,10 +68,10 @@ async function insertUser(userData: Omit<User, 'id'>): Promise<User> {
     query,
     [userData.roleName, userData.googleSub, userData.name, userData.avatarUrl]
   );
-  return toCamelCase(result.rows[0]);
+  return userMapper.toDomain(result.rows[0]);
 }
 
-async function updateUser(id: string, userData: Partial<Omit<User, 'id' | 'googleSub'>>): Promise<User | null> {
+async function updateUser(id: string, userData: UserDto): Promise<User | null> {
   const query = `
     WITH target_role AS (
       SELECT id
@@ -86,10 +89,11 @@ async function updateUser(id: string, userData: Partial<Omit<User, 'id' | 'googl
       RETURNING id, google_sub, name, avatar_url, role_id;
     )
     SELECT
-      uu.id,
+      uu.id AS user_id,
       uu.google_sub,
       uu.name,
       uu.avatar_url,
+      r.id AS role_id,
       r.name AS role_name
     FROM updated_user uu
     INNER JOIN roles r ON uu.role_id = r.id;
@@ -99,7 +103,7 @@ async function updateUser(id: string, userData: Partial<Omit<User, 'id' | 'googl
     query,
     [userData.roleName, userData.name, userData.avatarUrl, id]
   );
-  return result.rows.length > 0 ? toCamelCase(result.rows[0]) : null;
+  return result.rows.length > 0 ? userMapper.toDomain(result.rows[0]) : null;
 }
 
 async function deleteUser(id: string): Promise<boolean> {

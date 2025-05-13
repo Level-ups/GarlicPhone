@@ -17,7 +17,7 @@ router.get('/start', (req, res) => {
 
   console.log(authUrl);
 
-  res.redirect(authUrl.toString());
+  return res.redirect(authUrl.toString());
 });
 
 router.get('/callback', async (req, res) => {
@@ -89,11 +89,13 @@ router.get('/callback', async (req, res) => {
 
     // TO-DO: Create user
 
-    res.redirect(`http://127.0.0.1:3000/congrats`);
-  } catch (error) {
+    return res.redirect(`http://127.0.0.1:3000/congrats`);
+  }
+  catch (error) {
     console.error('Error during OAuth callback handling:', error);
-    res.status(500).send('Internal Server Error');
+    return res.status(500).send('Internal Server Error');
   }
 });
 
 export { router as authRouter };
+
