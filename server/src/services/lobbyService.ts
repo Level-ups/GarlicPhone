@@ -1,176 +1,140 @@
-import { UUID } from "crypto";
-import { ErrorDetails, InsertErrorDetails, NotFoundErrorDetails, UpdatedErrorDetails } from "../library/error-types";
-import { Either } from "../library/types";
-import { Chain } from "../models/Chain";
-import { Lobby, PhasePlayerAssignment } from "../models/Lobby";
-import { User } from "../models/User";
-import chainRepository from "../repositories/chainRepository";
-import lobbyRepository from "../repositories/lobbyRepository";
-import userRepository from "../repositories/userRepository";
-import gameService from "./gameService";
+import { UUID } from 'crypto';
+import { ErrorDetails, NotFoundErrorDetails } from '../library/error-types';
+import { Either } from '../library/types';
+import { PhasePlayerAssignment } from '../models/GamePhase';
+import { Lobby, validateLobbyCode } from '../models/Lobby';
+import * as lobbyRepository from '../repositories/lobbyRepository';
 
-export async function createLobby(ownerId: string, chainSize: number = 5): Promise<Either<Lobby, ErrorDetails>>  {
-  let owner: User | null;
-  try {
-    owner = await userRepository.findUserById(ownerId);
-  } catch (error: any) {
-    return [undefined, new ErrorDetails("Error finding user", [error.message])];
+// Create a new lobby
+export const createLobby = (hostId: string, hostName: string, hostAvatarUrl: string, maxPlayers = 10): Lobby => {
+  // Validate maxPlayers
+  if (maxPlayers < 2 || maxPlayers > 10) {
+    throw new Error('Maximum players must be between 2 and 10');
   }
-  if (!owner) {
-    return [undefined, new NotFoundErrorDetails("User not found")]
-  } else {
-    const lobby = lobbyRepository.createLobby(owner, chainSize);
-    if (lobby) {
-      return [lobby, undefined];
-    } else {
-      return [undefined, new InsertErrorDetails("Could not create lobby")];
-    }
-  }
-}
-
-export async function getAllLobbies(): Promise<Either<Lobby[], ErrorDetails>> {
-  const lobbies = lobbyRepository.getAllLobbies();
-  return [lobbies, undefined];
-}
-
-export async function getLobbyById(lobbyId: UUID): Promise<Either<Lobby, ErrorDetails>> {
-  const lobby = lobbyRepository.getLobbyById(lobbyId);
-  if (!lobby) {
-    return [undefined, new NotFoundErrorDetails("Lobby not found")];
-  } else {
-    return [lobby, undefined];
-  }
-}
-
-export async function addPlayerToLobby(lobbyId: UUID, userId: string): Promise<Either<Lobby, ErrorDetails>> {
-  let user: User | null;
   
-  try {
-    user = await userRepository.findUserById(userId);
-  } catch (error: any) {
-    return [undefined, new ErrorDetails("Error finding user", [error.message])];
-  }
+  return lobbyRepository.createLobby(hostId, hostName, hostAvatarUrl, maxPlayers);
+};
 
-  const lobby = lobbyRepository.getLobbyById(lobbyId);
-  if (!user) {
-    return [undefined, new NotFoundErrorDetails("User not found")];
-  } else if (!lobby) {
-    return [undefined, new NotFoundErrorDetails("Lobby not found")];
-  } else {
-    const joinedLobby = lobbyRepository.addPlayerToLobby(lobbyId, user);
-    if (!joinedLobby) {
-      return [undefined, new InsertErrorDetails("Could not add player to lobby")];
-    } else {
-      return [joinedLobby, undefined];
-    }
+// Join an existing lobby by code
+export const joinLobbyByCode = (code: string, playerId: string, playerName: string, playerAvatarUrl: string): Lobby => {
+  // Validate the lobby code format
+  if (!validateLobbyCode(code)) {
+    throw new Error('Invalid lobby code format');
   }
-}
-
-export async function updateLobbyPhase(lobbyCode: UUID): Promise<Either<Lobby, ErrorDetails>> {
-  const lobby = lobbyRepository.getLobbyById(lobbyCode);
+  
+  // Find the lobby by code
+  const lobby = lobbyRepository.getLobbyByCode(code);
   if (!lobby) {
-    return [undefined, new NotFoundErrorDetails("Lobby not found")];
-  } else {
-    // continue with the rest of the function
+    throw new Error('Lobby not found');
   }
-
-  if (lobby.nextPhase.phase === "Prompt") {
-    const [lobbyState, error] = await performGameStartActivities(lobby);
-    if (error) {
-      return [undefined, error];
-    } else {
-      // don't return yet
-    }
-  } else {
-    // no need to perform any actions
+  
+  // Check if the lobby is already at maximum capacity
+  if (lobby.players.length >= lobby.maxPlayers) {
+    throw new Error('Lobby is full');
   }
-
-  const updatedLobby = lobbyRepository.updateLobbyPhase(lobbyCode);
+  
+  // Check if the lobby has already started
+  if (lobby.status !== 'waiting') {
+    throw new Error('Game has already started');
+  }
+  
+  // Add player to the lobby
+  const updatedLobby = lobbyRepository.addPlayerToLobby(lobby.id, {
+    id: playerId,
+    name: playerName,
+    avatarUrl: playerAvatarUrl
+  });
   
   if (!updatedLobby) {
-    return [undefined, new UpdatedErrorDetails("Could not update lobby phase")];
-  } else {
-    return [updatedLobby, undefined];
-  }
-}
-
-async function performGameStartActivities(lobby: Lobby): Promise<Either<Lobby, ErrorDetails>> {
-  const [game, gameCreationError] = await gameService.createGame({
-    urlId: lobby.code,
-    startedAt: new Date(),
-  });
-
-  if (!game) {
-    return [undefined, gameCreationError];
-  } else {
-    // don't return yet 
+    throw new Error('Failed to join lobby');
   }
   
-  lobby.setGame(game);
+  return updatedLobby;
+};
 
-  if (!lobby.game) {
-    return [undefined, new ErrorDetails("Game already exists")];
-  } else {
-    // continue with the rest of the function
+// Leave a lobby
+export const leaveLobby = (lobbyId: string, playerId: string): Lobby | undefined => {
+  return lobbyRepository.removePlayerFromLobby(lobbyId, playerId);
+};
+
+// Set player ready status
+export const setPlayerReady = (lobbyId: string, playerId: string, isReady: boolean): Lobby => {
+  const updatedLobby = lobbyRepository.updatePlayerReadyStatus(lobbyId, playerId, isReady);
+  if (!updatedLobby) {
+    throw new Error('Failed to update player status');
   }
+  return updatedLobby;
+};
 
-  let chains: Chain[] = [];
-  for (const player of lobby.players) {
-    const chain = await chainRepository.insertChain({
-      gameId: lobby.game.id
-    });
-    if (!chain) {
-      return [undefined, new InsertErrorDetails("Could not create chain")];
-    } else {
-      chains.push(chain);
-    }
-  }
-
-  lobby.assignPlayersAndPhases(lobby.chainSize, chains);
-
-  return [lobby, undefined];
-}
-
-export async function removePlayerFromLobby(lobbyId: UUID, userId: string): Promise<Either<Lobby, ErrorDetails>> {
-  let user: User | null;
-  
-  try {
-    user = await userRepository.findUserById(userId);
-  } catch (error: any) {
-    return [undefined, new ErrorDetails("Error finding user", [error.message])];
-  }
-
-  const lobby = lobbyRepository.getLobbyById(lobbyId);
-  
-  if (!user) {
-    return [undefined, new NotFoundErrorDetails("User not found")];
-  } else if (!lobby) {
-    return [undefined, new NotFoundErrorDetails("Lobby not found")];
-  } else {
-    const removedLobby = lobbyRepository.removePlayerFromLobby(lobbyId, user);
-    if (!removedLobby) {
-      return [undefined, new UpdatedErrorDetails("Could not remove player from lobby")];
-    } else {
-      return [removedLobby, undefined];
-    }
-  }
-}
-
-export async function getLobbyPhaseByIndex(lobbyId: UUID, index: number): Promise<Either<PhasePlayerAssignment, ErrorDetails>> {
+// Start the game
+export const startGame = async (lobbyId: string, playerId: string): Promise<Lobby> => {
   const lobby = lobbyRepository.getLobbyById(lobbyId);
   if (!lobby) {
-    return [undefined, new NotFoundErrorDetails("Lobby not found")];
-  } else {
-    // continue with the rest of the function
+    throw new Error('Lobby not found');
   }
+  
+  // Check if the player is the host
+  const player = lobby.players.find(p => p.id === playerId);
+  if (!player || !player.isHost) {
+    throw new Error('Only the host can start the game');
+  }
+  
+  // Check if there are enough players (at least 2)
+  if (lobby.players.length < 2) {
+    throw new Error('Not enough players to start the game');
+  }
+  
+  // Check if all players are ready
+  const allPlayersReady = lobby.players.every(p => p.isReady || p.isHost);
+  if (!allPlayersReady) {
+    throw new Error('All players must be ready to start the game');
+  }
+  
+  // Update the lobby status
+  const updatedLobby = await lobbyRepository.updateLobbyStatus(lobbyId, 'started');
+  if (!updatedLobby) {
+    throw new Error('Failed to start the game');
+  }
+  
+  return updatedLobby;
+};
 
-  const phase = lobby.getPhaseByIndex(index);
-  if (!phase) {
-    return [undefined, new NotFoundErrorDetails("Phase not found")];
-  } else {
-    return [phase, undefined];
+// Get a lobby by ID
+export const getLobbyById = (lobbyId: string): Lobby => {
+  const lobby = lobbyRepository.getLobbyById(lobbyId);
+  if (!lobby) {
+    throw new Error('Lobby not found');
   }
-}
+  return lobby;
+};
+
+// Get a lobby by code
+export const getLobbyByCode = (code: string): Lobby => {
+  // Validate the lobby code format
+  if (!validateLobbyCode(code)) {
+    throw new Error('Invalid lobby code format');
+  }
+  
+  const lobby = lobbyRepository.getLobbyByCode(code);
+  if (!lobby) {
+    throw new Error('Lobby not found');
+  }
+  return lobby;
+};
+
+// End a game
+export const endGame = async (lobbyId: string): Promise<Lobby | undefined> => {
+  const updatedLobby = lobbyRepository.updateLobbyStatus(lobbyId, 'finished');
+  if (!updatedLobby) {
+    throw new Error('Failed to end the game');
+  }
+  return updatedLobby;
+};
+
+// Clean up expired lobbies
+export const cleanupExpiredLobbies = (): void => {
+  lobbyRepository.cleanupExpiredLobbies();
+}; 
 
 export async function getLobbyPhases(lobbyId: UUID): Promise<Either<PhasePlayerAssignment[], ErrorDetails>> {
   const lobby = lobbyRepository.getLobbyById(lobbyId);
@@ -188,13 +152,18 @@ export async function getLobbyPhases(lobbyId: UUID): Promise<Either<PhasePlayerA
   }
 }
 
-export default {
-  createLobby,
-  getAllLobbies,
-  getLobbyById,
-  addPlayerToLobby,
-  updateLobbyPhase,
-  removePlayerFromLobby,
-  getLobbyPhaseByIndex,
-  getLobbyPhases
+export async function updateLobbyPhase(lobbyId: UUID): Promise<Either<Lobby, ErrorDetails>> {
+  const lobby = lobbyRepository.getLobbyById(lobbyId);
+  if (!lobby) {
+    return [undefined, new NotFoundErrorDetails("Lobby not found")];
+  } else {
+    // continue with the rest of the function
+  }
+
+  lobby.phases.moveToNextPhase();
+  lobby.currentPhase = lobby.phases.getCurrentPhase();
+  lobby.nextPhase = lobby.phases.peekNextPhase();
+
+  
+  return [lobby, undefined];
 }

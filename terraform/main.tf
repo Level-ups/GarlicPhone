@@ -153,6 +153,12 @@ resource "aws_instance" "ec2_instance" {
               source ~/.bashrc
               nvm install 22
               nvm use 22
+
+              wget https://download.red-gate.com/maven/release/com/redgate/flyway/flyway-commandline/11.2.0/flyway-commandline-11.2.0-linux-x64.tar.gz
+              tar -xvf flyway-commandline-11.2.0-linux-x64.tar.gz
+              sudo mv flyway-11.2.0 /opt/flyway
+              export PATH=$PATH:/opt/flyway/flyway-11.2.0
+              source ~/.bashrc
               EOF
 
   tags = {
