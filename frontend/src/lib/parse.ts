@@ -1,20 +1,20 @@
-import { maybeBind, maybeSub, type MaybeReactive } from "../../../lib/signal";
+import { bind, der, eff, maybeBind, maybeSub, sig, type MaybeReactive } from "../../../lib/signal";
 import { tryCall } from "../../../lib/types";
 
 //-------------------- Types --------------------//
-type ElemTree_Meta = {
+export type ElemTree_Meta = {
   '_'?: TextContent;
   '@'?: AttrDict;
   '$'?: StyleDict;
   '%'?: (el: HTMLElement) => void;
 };
 
-type ElemTree_Elems = (
+export type ElemTree_Elems = (
     { [key in `|${keyof HTMLElementTagNameMap}`]?: ElemTree | (() => ElemTree); } &
     { [key in `${string}|${string}`]?: ElemTree | (() => ElemTree); }
 );
 
-type ElemTree_Events = { [key in `%${keyof HTMLElementEventMap}`]?: (e: Event) => void; };
+export type ElemTree_Events = { [key in `%${keyof HTMLElementEventMap}`]?: (e: Event) => void; };
 
 export type ElemTree = ElemTree_Meta & ElemTree_Events & ElemTree_Elems;
 
@@ -35,47 +35,6 @@ export type AttrDict = { [key: string]: MaybeReactive<string> };
 export type EventHandler = (e: Event) => void;
 export type EventHandlerDict = { [eventName: string]: EventHandler; }
 
-
-//-------------------- Spec --------------------//
-const spec: ElemTree = {
-  // Key names starting with | followed by alphanumeric characters are parsed as element types
-  // # and . can be appended to set classnames and id's
-  "|h1#mainHeader": {
-        // _ Sets the element's innerHTML
-        _: "Header text content goes here"
-  },
-
-  "|p.content": {
-
-    // $ allows CSS overrides to set styling
-    $: {
-        fontFamily: "Nuva Sans",
-        color: "red"
-    },
-
-    // %<event> allows calling functions on HTML element events
-    "%click": (_: Event) => { console.log("Do something here"); },
-
-    // @ allows arbitrary attribute overrides
-    // Setting the `style`, `class`, and `id` attributes here is forbidden
-    "@": {
-        "attr": "value"
-    },
-  },
-
-  "|div": {
-    _: "asdf",
-
-    "|span": {
-        "|p": {
-            "|asdf": {},
-            _: "fdsa"
-        }
-    },
-    "|span.1": {
-    }
-  }
-};
 
 
 //-------------------- Trinkets --------------------//
@@ -240,6 +199,19 @@ function createDomElement(meta: ElemData, children: HTMLElement[] = []): HTMLEle
 
 //-------------------- Utils --------------------//
 
+// Filter only elements from an ElemTree, discarding all meta properties
+export function getElems(tree: ElemTree): [ElemTree_Elems, number] {
+    const res: ElemTree_Elems = {};
+    let i = 0;
+    for (let key in tree) {
+        if (!key.includes("|")) continue; // skip meta elements
+        const k = key as keyof ElemTree_Elems;
+        res[k] = tree[k];
+        i++;
+    }
+    return [res, i];
+}
+
 // Repeat a tree's elements N times
 export function forEl<T>(it: number | T[], tree: ElemTree | ((i: number, x: T) => ElemTree)): ElemTree_Elems {
     let res = {};
@@ -247,7 +219,7 @@ export function forEl<T>(it: number | T[], tree: ElemTree | ((i: number, x: T) =
     const getArg = typeof it === "number" ? (i: number) => [i] : (i: number) => [i, it[i]];
 
     for (let i = 0; i < n; i++) {
-        const t = tryCall(tree, getArg(i));
+        const t: ElemTree = tryCall(tree, getArg(i));
         for (let k in t) {
             if (!k.includes("|")) continue; // skip meta elements
             res = { ...res, [`${i}|${k}`]: t[k as keyof ElemTree] }
@@ -256,9 +228,79 @@ export function forEl<T>(it: number | T[], tree: ElemTree | ((i: number, x: T) =
     return res;
 }
 
+
+
+//-------------------- Spec : ElemTree --------------------//
+
+const elemTreeSpec: ElemTree = {
+  // Key names starting with | followed by alphanumeric characters are parsed as element types
+  // # and . can be appended to set classnames and id's
+  "|h1#mainHeader.customHeader": {
+        // _ Sets the element's innerHTML
+        _: "Header text content goes here"
+  },
+
+  "|p.content": {
+    // $ allows CSS overrides to set styling
+    $: {
+        fontFamily: "Nuva Sans",
+        color: "red"
+    },
+
+    // %<event> allows calling functions on HTML element events
+    "%click": (_: Event) => { console.log("Do something here"); },
+
+    // @ allows arbitrary attribute overrides
+    // Setting the `style`, `class`, and `id` attributes here is forbidden
+    "@": { value: "myvalue" },
+  }
+};
+
 // { ...repeat(3, { _: "hello world", "asdf": {}, "fdsa": {} }) }
 // {
 //     "0|asdf": {}, "0|fdsa": {}
 //     "1|asdf": {}, "1|fdsa": {}
 //     "2|asdf": {}, "2|fdsa": {}
 // }
+
+//----- Create signal -----//
+function signalSpec(): ElemTree {
+    //----- Create signals -----//
+    const count = sig<number>(0);                       // Create signal
+    const countStr = der(() => String(count() * 2));    // Create derived signal
+    const prog = sig<string>("[]");                     // Create another signal
+
+    //----- Signal R/W -----//
+    // Get current signal value by calling it without arguments
+    const currCount = count(); // returns 0
+
+    // Set new value and update all subscribers
+    count(5);               // New value is 5
+    count(x => x * 2)       // New value is 10
+
+    // Create reactive effect which runs when either `count` or `prog` changes
+    eff(() => console.log("COUNT EFFECT:", count(), prog()));
+
+    return {
+        "|input": { _: "asdf" }, // TODO: two-way input binding
+
+        ...forEl(3, { "|br": {} }),
+
+        "|button#progButton": {
+            "%": (el) =>    { bind(el, "innerText", prog); }, // Manually bind property to signal
+            "%click": () => { prog(prog().replace("[", "[=")); }
+        },
+
+        "|button#countButton": {
+            _: countStr,                                      // Use signal directly as a _/@/$
+            $: {
+                // @'s and $'s are individually and optionally reactive
+                color: der(() => count() % 2 == 0 ? "red" : "green"),   // reacts to current count
+                fontSize: "2em"                                         // not reactive
+            },
+            "%click": () => {
+                count(v => v + 1); // set new signal value
+            }
+        },
+    };
+}

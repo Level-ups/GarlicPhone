@@ -22,7 +22,7 @@ function createLink({ name, url }: Link): ElemTree {
 
 export function menuNav(): ElemTree {
     const links: Link[] = [
-        { name: "Play", url: "/game" },
+        { name: "Play", url: "/play" },
         { name: "Gallery", url: "/gallery" }
     ];
 
@@ -33,3 +33,16 @@ export function menuNav(): ElemTree {
         }
     };
 }
+
+export function titleCard(title: string): ElemTree {
+    return {
+        "|nav.nav.card": {
+            "|h1": { _: title },
+            $: {
+                marginBottom: "2em",
+                textAlign: "center"
+            },
+        }
+    };
+}
+

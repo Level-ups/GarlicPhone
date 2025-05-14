@@ -1,7 +1,5 @@
 //----- Type utils -----//
 
-import { isReactive, type MaybeReactive } from "./signal";
-
 export type Either<A, B> = [A, undefined?] | [undefined, B];
 
 export type IfEquals<X, Y, A=X, B=never> =

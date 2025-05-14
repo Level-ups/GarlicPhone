@@ -3,9 +3,14 @@ import { PageRouter, type ContainerMap, type PageRenderer, type RedirectFn } fro
 import { parseInto } from './lib/parse';
 import { defineCustomComponents } from './components/custom-components';
 import { loginPage } from './pages/login';
-import { galleryPage } from './pages/gallery';
+import { menuGalleryPage } from './pages/menuGallery';
 import { drawPage } from './pages/draw';
-import { gamePage } from './pages/game';
+import { menuPlayPage } from './pages/menuPlay';
+import { lobbyPage } from './pages/lobby';
+import { promptPage } from './pages/prompt';
+import { guessPage } from './pages/guess';
+import { reviewPage } from './pages/review';
+import { homePage } from './pages/home';
 
 //---------- Setup ----------//
 const containers: ContainerMap = {
@@ -17,43 +22,31 @@ defineCustomComponents();
 
 //---------- Page routing ----------//
 const pages: { [key: string]: PageRenderer } = {
-  // "home": c => { c.innerHTML = '<h1>Home</h1>'; },
-  "home": ({ app }) => parseInto(app, {
-    "|h1 #someid.someclass1 .someclass2": {
-      _: "Home",
-      $: {
-        color: "red",
-      },
-      "|div": {
-        _: "hello world",
-        $: {
-          color: "var(--asdf)",
-          border: "1px solid blue",
-          fontSize: "0.5em",
-        },
-        "%click": () => {
-          console.log("CLICKED!")
-        }
-      },
-      "|ui-button": { _: "asdf" }
-    },
-  }),
-  "about": ({ app }) => { app.innerHTML = '<h1>About</h1>'; },
-  "contact": ({ app }) => { app.innerHTML = '<h1>Contact</h1>'; },
-
+  "home": c => homePage(c),
   "login": c => loginPage(c),
-  "game": c => gamePage(c),
-  "gallery": c => galleryPage(c),
-  "draw": c => drawPage(c)
+  "menuGallery": c => menuGalleryPage(c),
+  "menuPlay": c => menuPlayPage(c),
+  "lobby": c => lobbyPage(c),
+  "prompt": c => promptPage(c),
+  "draw": c => drawPage(c),
+  "guess": c => guessPage(c),
+  "review": c => reviewPage(c)
 };
-
+ 
 const redirects: RedirectFn[] = [
   path => path === '/'        ? 'home' : null,
   path => path === '/login'   ? 'login' : null,
-  path => path === '/game'    ? 'game' : null,
-  path => path === '/gallery' ? 'gallery' : null,
+  path => path === '/play'    ? 'menuPlay' : null,
+  path => path === '/gallery' ? 'menuGallery' : null,
+
+  path => path === '/game'    ? 'menuPlay' : null,
+
+  path => path === '/lobby'   ? 'lobby' : null,
+  path => path === '/prompt'  ? 'prompt' : null,
+  path => path === '/guess'   ? 'guess' : null,
   path => path === '/draw'    ? 'draw' : null,
-  path => path.startsWith('/about') ? 'about' : null,
+
+  path => path === '/review'  ? 'review' : null
 ];
 
 const router = new PageRouter({ pages, redirects, containers });
