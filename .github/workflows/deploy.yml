@@ -57,7 +57,7 @@ jobs:
 
       - name: Setup and reload NGINX
         run: |
-          ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << EOF
+          ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
           sudo cp /home/$USER/server/nginx/garlic-phone.conf /etc/nginx/conf.d/garlic-phone.conf
           sudo nginx -t && sudo systemctl reload nginx
           EOF
