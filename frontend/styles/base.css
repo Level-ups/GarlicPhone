@@ -9,12 +9,23 @@
   --red:    #D50B8B;
   --navy:   #2A4759;
   --black:rgb(20, 30, 36);
+  /* Adjusted Colors */
+  --plush_pink: #E6DBE9;
+  --plush_purple: #8A4FFF; 
+  --white_white: #ffffff;
+  --purple_pink: #DFC5E6; 
+
+  --dark_lightblue: #3377A2;
+  --dark_navyblue: #132C3C;
+  --dark_turquios: #6EB9AD;  
+
 }
 
 /* Dark theme */
 :root {
-  --bg:         var(--black);
-  --text:       var(--grey);
+  --bg:         linear-gradient(to bottom, var(--dark_navyblue), var(--dark_lightblue));
+  --text:       var(--white_white);
+  --header_text: var(var(--dark_turquios));
   --card:       var(--navy);
   --border:     var(--green);
   --header:     var(--white);
