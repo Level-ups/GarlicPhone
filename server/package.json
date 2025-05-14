@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev": "ts-node-dev --watch --poll --respawn --transpile-only src/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint . --ext .ts",
@@ -26,7 +26,6 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "jose": "^6.0.10",
-    "node-fetch": "^3.3.2",
     "pg": "^8.15.6"
   },
   "devDependencies": {

@@ -31,7 +31,7 @@ export function generateLobbyCode(): string {
 
 export function validateLobbyJoinCode(code?: string): ValidationResult[] {
   // Lobby code must be a 6-character alphanumeric string
-  const LOBBY_CODE_LENGTH = Number(process.env.LOBBY_CODE_LENGTH) ?? 6;
+  const LOBBY_CODE_LENGTH = Number(constants.LOBBY_CODE_LENGTH) ?? 6;
   const alphanumericRegex = new RegExp(`^[A-Za-z0-9]{${LOBBY_CODE_LENGTH}}$`);
 
   const lobbyJoinCodeValidations: ValidationResult[] = [

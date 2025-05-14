@@ -15,7 +15,7 @@ const cardStyleOverrides: StyleDict = {
 function genGalleryCard(i: number, itm: GalleryItem) {
     return wrapAsCard({
         $: cardStyleOverrides,
-        "|figure": {
+        "|figure.galleryItem": {
             "|img": {
                 "@": { src: itm.imgUrl },
                 $: {

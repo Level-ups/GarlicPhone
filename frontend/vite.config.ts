@@ -21,8 +21,8 @@ export default defineConfig({
 
     // Proxy API requests to server
     proxy: {
-      '/api': 'http://localhost:3000',
-      '/health': 'http://localhost:3000'
+      '/api': 'http://localhost:5000',
+      '/health': 'http://localhost:5000'
     }
   }
 });

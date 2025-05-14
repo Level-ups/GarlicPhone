@@ -3,7 +3,7 @@ import express, { Request, Response } from 'express';
 import { registerClient, removeClient } from '../library/lobbyEventBroadcaster';
 import { ErrorDetails, ErrorType, NotFoundErrorDetails, ValidationErrorDetails } from '../library/error-types';
 import { createServerSentEventHandler } from '../library/serverSentEvents';
-import { validateLobbyUrlId } from "../models/Lobby";
+import { validateLobbyJoinCode, validateLobbyUrlId } from "../models/Lobby";
 import { UUID } from 'crypto';
 
 export const lobbyRouter = express.Router();
@@ -12,7 +12,10 @@ export const lobbyRouter = express.Router();
 lobbyRouter.post('/', (req: Request, res: Response) => {
   try {
     const { hostId, hostName, hostAvatarUrl, maxPlayers } = req.body;
-    if (!hostId || !hostName) {
+
+    // console.log("BODY:", req.body);
+
+    if (hostId == null || hostName == null) {
       // TODO: use ValidationResults to let the user know what fields are missing.
       return res.status(400).json(new ValidationErrorDetails(
         "Missing required fields",
@@ -28,7 +31,7 @@ lobbyRouter.post('/', (req: Request, res: Response) => {
       ));
     }
     
-    const lobby = lobbyService.createLobby(hostId, hostName, hostAvatarUrl || '', maxPlayers);
+    const [lobby, error] = lobbyService.createLobby(hostId, hostName, hostAvatarUrl || '', maxPlayers);
     
     return res.status(201).json(lobby);
   } catch (error: any) {
@@ -41,7 +44,7 @@ lobbyRouter.post('/join', (req: Request, res: Response) => {
   try {
     const { code, playerId, playerName, playerAvatarUrl } = req.body;
     
-    if (!code || !playerId || !playerName) {
+    if (code == null || playerId == null || playerName == null) {
       return res.status(400).json(new ValidationErrorDetails(
         "Missing required fields",
         [{

@@ -1,6 +1,5 @@
 import './style.css'
 import { PageRouter, type ContainerMap, type PageRenderer, type RedirectFn } from './lib/router'
-import { parseInto } from './lib/parse';
 import { defineCustomComponents } from './components/custom-components';
 import { loginPage } from './pages/login';
 import { menuGalleryPage } from './pages/menuGallery';
@@ -11,6 +10,7 @@ import { promptPage } from './pages/prompt';
 import { guessPage } from './pages/guess';
 import { reviewPage } from './pages/review';
 import { homePage } from './pages/home';
+import { updateSSEHandler } from './lib/sse';
 
 //---------- Setup ----------//
 const containers: ContainerMap = {
@@ -41,7 +41,7 @@ const redirects: RedirectFn[] = [
 
   path => path === '/game'    ? 'menuPlay' : null,
 
-  path => path === '/lobby'   ? 'lobby' : null,
+  path => path.startsWith('/lobby')   ? 'lobby' : null,
   path => path === '/prompt'  ? 'prompt' : null,
   path => path === '/guess'   ? 'guess' : null,
   path => path === '/draw'    ? 'draw' : null,
@@ -54,3 +54,5 @@ const router = new PageRouter({ pages, redirects, containers });
 // Trigger navigation via buttons:
 document.getElementById('toAbout')?.addEventListener('click', () => visit('about'));
 document.getElementById('toContact')?.addEventListener('click', () => visit('contact'));
+
+updateSSEHandler()
