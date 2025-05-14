@@ -38,6 +38,26 @@ async function findUserById(id: string): Promise<User | null> {
   return result.rows.length > 0 ? toCamelCase(result.rows[0]) : null;
 }
 
+async function findUserByGoogleId(id: string): Promise<User | null> {
+  const query = `
+    SELECT 
+      u.id,
+      u.google_sub,
+      u.name,
+      u.avatar_url,
+      r.name AS role_name 
+    FROM users u
+    INNER JOIN roles r ON u.role_id = r.id
+    WHERE u.google_sub = $1
+  `;
+
+  const result = await pool.query(
+    query,
+    [id]
+  );
+  return result.rows.length > 0 ? toCamelCase(result.rows[0]) : null;
+}
+
 async function insertUser(userData: Omit<User, 'id'>): Promise<User> {
   const query = `
     WITH target_role AS (
@@ -113,6 +133,7 @@ const userRepository = {
   insertUser,
   updateUser,
   deleteUser,
+  findUserByGoogleId
 };
 
 export default userRepository;

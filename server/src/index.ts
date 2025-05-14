@@ -7,6 +7,7 @@ import { lobbyRouter } from './routes/lobbyRoutes';
 import { createServerSentEventHandler } from './library/serverSentEvents';
 import { cleanupExpiredLobbies } from './services/lobbyService';
 import { cleanupInactiveClients } from './library/lobbyEventBroadcaster';
+import { authenticateRequest, requireRole } from './library/authMiddleware';
 
 // Load environment variables
 dotenv.config();
@@ -24,7 +25,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/lobbies', lobbyRouter);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', authenticateRequest, requireRole(['player', 'admin']), (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
@@ -43,7 +44,7 @@ const MINUTE_IN_MS = 60 * 1000;
 setInterval(() => {
   try {
     cleanupExpiredLobbies();
-  } catch (err) {
+  } catch (err) { 
     console.error('Error cleaning up expired lobbies:', err);
   }
 }, HOUR_IN_MS);
@@ -52,7 +53,7 @@ setInterval(() => {
 setInterval(() => {
   try {
     cleanupInactiveClients();
-  } catch (err) {
+  } catch (err) { 
     console.error('Error cleaning up inactive clients:', err);
   }
 }, 15 * MINUTE_IN_MS);

@@ -33,7 +33,7 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ vars.AWS_REGION }}
 
-    - name: Copy server folder to EC2 via SCP
+    - name: Copy server and frontend to EC2 via SCP
       env:
         PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
         HOST: ${{ vars.EC2_HOST }}
@@ -52,7 +52,7 @@ jobs:
         echo "export PG_HOST=$PG_HOST" >> .env
         echo "export PG_DATABASE=$PG_DATABASE" >> .env
         echo "export PG_PORT=$PG_PORT" >> .env
-        scp -i key.pem -o StrictHostKeyChecking=no -r ./server .env $USER@$HOST:/home/$USER/
+        scp -i key.pem -o StrictHostKeyChecking=no -r ./ .env $USER@$HOST:/home/$USER/
 
     - name: Install packages, build, and run
       env:

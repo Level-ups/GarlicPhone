@@ -16,8 +16,6 @@ router.get('/start', (req, res) => {
   authUrl.searchParams.set('scope', scope);
   authUrl.searchParams.set('prompt', 'consent select_account');
 
-  console.log(authUrl);
-
   res.redirect(authUrl.toString());
 });
 
@@ -84,12 +82,12 @@ router.get('/callback', async (req, res) => {
       issuer: ['https://accounts.google.com', 'accounts.google.com'],
       audience: clientId,
     });
-
-    console.log('Verified user:', payload);
+ 
+    
 
     // TO-DO: Create user
 
-    res.status(200).send("Great Success!");
+    res.status(200).json({token: idToken});
   } catch (error) {
     console.error('Error during OAuth callback handling:', error);
     res.status(500).send('Internal Server Error');
