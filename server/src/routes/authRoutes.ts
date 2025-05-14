@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import fetch from 'node-fetch';
 import { jwtVerify, importJWK, JWK } from 'jose';
+import userService from '../services/userService';
 
 const router = Router();
 
@@ -59,8 +60,6 @@ router.get('/callback', async (req, res) => {
       id_token: string;
     };
 
-    console.log('Tokens:', tokens);
-
     const idToken = tokens.id_token;
 
     const certsResponse = await fetch('https://www.googleapis.com/oauth2/v3/certs');
@@ -84,9 +83,20 @@ router.get('/callback', async (req, res) => {
       audience: clientId,
     });
  
-    
-
-    // TO-DO: Create user
+    if(payload.sub){
+      const user = userService.getUserByGoogleId(payload.sub);
+      if (!user) {
+        const newUser = await userService.createUser({
+          googleSub: payload.sub,
+          name: payload.name as string,
+          avatarUrl: payload.picture as string,
+          roleName: 'player',
+        });
+        if (!newUser) {
+          return res.status(500).send('Failed to create user');
+        }
+      }
+    }
 
     res.status(200).json({token: idToken});
   } catch (error) {

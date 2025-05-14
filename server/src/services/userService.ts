@@ -16,11 +16,22 @@ async function getAllUsers(): Promise<Either<User[], ErrorDetails>> {
   }
 }
 
-///
-
 async function getUserById(id: string): Promise<Either<User, ErrorDetails>> {
   try {
     const user = await userRepository.findUserById(id);
+    if (!user) {
+      return [undefined, new ErrorDetails('User not found')];
+    } else {
+      return [user];
+    }
+  } catch (error) {
+    return [undefined, new ErrorDetails('Failed to retrieve user')];
+  }
+}
+
+async function getUserByGoogleId(id: string): Promise<Either<User, ErrorDetails>> {
+  try {
+    const user = await userRepository.findUserByGoogleId(id);
     if (!user) {
       return [undefined, new ErrorDetails('User not found')];
     } else {
@@ -76,6 +87,7 @@ const userService = {
   createUser,
   updateUser,
   deleteUser,
+  getUserByGoogleId
 };
 
 export default userService;

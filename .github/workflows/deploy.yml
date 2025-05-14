@@ -54,12 +54,24 @@ jobs:
         echo "export PG_PORT=$PG_PORT" >> .env
         scp -i key.pem -o StrictHostKeyChecking=no -r ./ .env $USER@$HOST:/home/$USER/
 
+    - name: Install Certbot and Get SSL Certificate
+      env:
+        HOST: ${{ vars.EC2_HOST }}
+        USER: ${{ vars.EC2_USER }}
+      run: |
+        # Install Certbot on EC2
+        ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
+        sudo apt update
+        sudo apt install -y certbot
+        # Request SSL certificate
+        sudo certbot certonly --standalone -d ${{ env.EC2_HOST }}
+        EOF
+
     - name: Install packages, build, and run
       env:
         HOST: ${{ env.EC2_HOST }}
         USER: ${{ env.EC2_USER }}
       run: |
-        echo "$USER@$HOST"
         ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
         source ~/.env
         cd server
@@ -70,6 +82,8 @@ jobs:
         cd ..
         npm install
         npm run build
+        # Ensure the old process is stopped before starting the new one
         fuser -k ${PORT}/tcp || true
+        # Start the server, which is now handling HTTPS
         nohup $(which npm) start > server.log 2>&1 &
         EOF

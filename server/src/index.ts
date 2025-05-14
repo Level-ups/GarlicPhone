@@ -15,8 +15,10 @@ import { promptRouter } from './routes/promptRoutes';
 import { userRouter } from './routes/userRoutes';
 import { validateImageUploadDto } from './models/Image';
 import { authenticateRequest, requireRole } from './library/authMiddleware';
+import https from 'https';
+import fs from 'fs';
 
-//---------- SETUP ----------//import { authenticateRequest, requireRole } from './library/authMiddleware';
+//---------- SETUP ----------//
 
 // Load environment variables
 dotenv.config();
@@ -24,6 +26,7 @@ dotenv.config();
 // Initialize express app
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
+const EC2_HOST =  process.env.EC2_HOST
 
 // Middleware
 app.use(cors());
@@ -87,8 +90,8 @@ app.get('/events/health', createServerSentEventHandler<string>(sendEvent => {
 
 
 //---------- FRONTEND ----------//
-
-const fePath = path.join(__dirname, '..', '..', 'public');
+// const fePath = path.join(__dirname, '..', '..', 'public');
+const fePath = path.join(__dirname, '..', 'dist', 'public');
 app.use(express.static(fePath));
 app.get('/*', (_, res) => {
   res.sendFile(path.join(fePath, 'index.html'));
@@ -116,9 +119,18 @@ setInterval(() => {
   }
 }, 15 * MINUTE_IN_MS);
 
-// Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on http://${process.env.EC2_HOST}:${PORT}`);
+// // Start server
+// app.listen(PORT, '0.0.0.0', () => {
+//   console.log(`Server running on http://${EC2_HOST}:${PORT}`);
+// });
+
+const options = {
+  key: fs.readFileSync('/etc/letsencrypt/live/your-domain/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/your-domain/fullchain.pem')
+};
+
+https.createServer(options, app).listen(443, () => {
+  console.log('HTTPS server running on port 443');
 });
 
 export default app;
