@@ -4,7 +4,7 @@
   "description": "Minimal Express API server using TypeScript",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' tsc",
     "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "test": "vitest run",
