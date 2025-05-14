@@ -16,6 +16,8 @@ async function getAllUsers(): Promise<Either<User[], ErrorDetails>> {
   }
 }
 
+///
+
 async function getUserById(id: string): Promise<Either<User, ErrorDetails>> {
   try {
     const user = await userRepository.findUserById(id);
