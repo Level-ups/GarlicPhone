@@ -1,5 +1,7 @@
-import express, { Request, Response } from 'express';
 import * as lobbyService from '../services/lobbyService';
+import express, { Request, Response } from 'express';
+import { ErrorDetails, ErrorType, NotFoundErrorDetails } from '../library/error-types';
+import { UUID } from 'crypto';
 import { createServerSentEventHandler } from '../library/serverSentEvents';
 import { registerClient, removeClient } from '../library/lobbyEventBroadcaster';
 
@@ -9,8 +11,8 @@ export const lobbyRouter = express.Router();
 lobbyRouter.post('/', (req: Request, res: Response) => {
   try {
     const { hostId, hostName, hostAvatarUrl, maxPlayers } = req.body;
-    
     if (!hostId || !hostName) {
+      // TODO: use ValidationResults to let the user know what fields are missing.
       return res.status(400).json({ error: 'Missing required fields' });
     }
     
@@ -84,7 +86,7 @@ lobbyRouter.post('/:lobbyId/ready', (req: Request, res: Response) => {
 });
 
 // Start the game
-lobbyRouter.post('/:lobbyId/start', (req: Request, res: Response) => {
+lobbyRouter.post('/:lobbyId/start', async (req: Request, res: Response) => {
   try {
     const { lobbyId } = req.params;
     const { playerId } = req.body;
@@ -93,7 +95,7 @@ lobbyRouter.post('/:lobbyId/start', (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Missing player ID' });
     }
     
-    const updatedLobby = lobbyService.startGame(lobbyId, playerId);
+    const updatedLobby = await lobbyService.startGame(lobbyId, playerId);
     
     return res.status(200).json(updatedLobby);
   } catch (error) {
@@ -102,12 +104,14 @@ lobbyRouter.post('/:lobbyId/start', (req: Request, res: Response) => {
   }
 });
 
+// TODO: add code for moving to next phase
+
 // End the game
-lobbyRouter.post('/:lobbyId/end', (req: Request, res: Response) => {
+lobbyRouter.post('/:lobbyId/end', async (req: Request, res: Response) => {
   try {
     const { lobbyId } = req.params;
     
-    const updatedLobby = lobbyService.endGame(lobbyId);
+    const updatedLobby = await lobbyService.endGame(lobbyId);
     
     return res.status(200).json(updatedLobby);
   } catch (error) {
@@ -183,3 +187,75 @@ lobbyRouter.get('/:lobbyId/events', createServerSentEventHandler(sendEvent => {
     sendEvent('error', { message: 'An unexpected error occurred' });
   }
 })); 
+
+lobbyRouter.get("/:lobbyId/current-phase/assignments", async (req, res) => {
+  const { lobbyId } = req.params;
+
+  try {
+    const lobby = lobbyService.getLobbyById(lobbyId as UUID);
+    // it is safe to alias lobbyCode as UUID at this point as it has been checked in the validateLobbyCode function.
+    const [phaseAssignments, getPhaseAssignmentsError] = await lobbyService.getLobbyPhases(lobbyId as UUID);
+
+    if (phaseAssignments) {
+      const currentPhaseAssignments = phaseAssignments.filter((phase) => phase.phase.index === lobby.currentPhase.index);
+      return res.status(200).json(currentPhaseAssignments);
+    } else if (getPhaseAssignmentsError) {
+      if (getPhaseAssignmentsError.type === ErrorType.NotFound) {
+        return res.status(404).json(getPhaseAssignmentsError);
+      } else {
+        return res.status(500).json(getPhaseAssignmentsError);
+      }
+    }
+  } catch (error) {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }  
+})
+
+lobbyRouter.get("/:lobbyId/current-phase", async (req, res) => {
+  const { lobbyId } = req.params;
+
+  try {
+    const lobby = await lobbyService.getLobbyById(lobbyId as UUID);
+  
+    if (lobby) {
+      return res.status(200).json(lobby.currentPhase);
+    } else {
+      return res.status(404).json(new NotFoundErrorDetails("Lobby not found"));
+    }
+  } catch (error) {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+})
+
+lobbyRouter.put("/:lobbyCode/phase", async (req, res) => {
+  const { lobbyCode } = req.params;
+
+  try {
+    const foundLobby = await lobbyService.getLobbyById(lobbyCode as UUID);
+
+    if (!foundLobby) {
+      return res.status(404).json(new NotFoundErrorDetails("Lobby not found"));
+    } else if (foundLobby && foundLobby.currentPhase.phase === "Complete") {
+      return res.status(403).json(new ErrorDetails("This game is already completed."));
+    }
+  
+    // it is safe to alias lobbyCode as UUID at this point as it has been checked in the validateLobbyCode function.
+    const [lobby, error] = await lobbyService.updateLobbyPhase(lobbyCode as UUID);
+  
+    if (lobby) {
+      return res.status(200).json(lobby);
+    } else {
+      if (error.type === ErrorType.NotFound) {
+        return res.status(404).json(error);
+      } else if (error.type === ErrorType.UpdatedError) {
+        return res.status(400).json(error);
+      } else {
+        return res.status(500).json(error);
+      }
+    }
+    
+  } catch (error) {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+  
+});

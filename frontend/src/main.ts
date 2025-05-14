@@ -1,0 +1,56 @@
+import './style.css'
+import { PageRouter, type ContainerMap, type PageRenderer, type RedirectFn } from './lib/router'
+import { parseInto } from './lib/parse';
+import { defineCustomComponents } from './components/custom-components';
+import { loginPage } from './pages/login';
+import { menuGalleryPage } from './pages/menuGallery';
+import { drawPage } from './pages/draw';
+import { menuPlayPage } from './pages/menuPlay';
+import { lobbyPage } from './pages/lobby';
+import { promptPage } from './pages/prompt';
+import { guessPage } from './pages/guess';
+import { reviewPage } from './pages/review';
+import { homePage } from './pages/home';
+
+//---------- Setup ----------//
+const containers: ContainerMap = {
+  "app": document.getElementById("app")!,
+  "page": document.getElementById("page")!
+};
+
+defineCustomComponents();
+
+//---------- Page routing ----------//
+const pages: { [key: string]: PageRenderer } = {
+  "home": c => homePage(c),
+  "login": c => loginPage(c),
+  "menuGallery": c => menuGalleryPage(c),
+  "menuPlay": c => menuPlayPage(c),
+  "lobby": c => lobbyPage(c),
+  "prompt": c => promptPage(c),
+  "draw": c => drawPage(c),
+  "guess": c => guessPage(c),
+  "review": c => reviewPage(c)
+};
+ 
+const redirects: RedirectFn[] = [
+  path => path === '/'        ? 'home' : null,
+  path => path === '/login'   ? 'login' : null,
+  path => path === '/play'    ? 'menuPlay' : null,
+  path => path === '/gallery' ? 'menuGallery' : null,
+
+  path => path === '/game'    ? 'menuPlay' : null,
+
+  path => path === '/lobby'   ? 'lobby' : null,
+  path => path === '/prompt'  ? 'prompt' : null,
+  path => path === '/guess'   ? 'guess' : null,
+  path => path === '/draw'    ? 'draw' : null,
+
+  path => path === '/review'  ? 'review' : null
+];
+
+const router = new PageRouter({ pages, redirects, containers });
+
+// Trigger navigation via buttons:
+document.getElementById('toAbout')?.addEventListener('click', () => visit('about'));
+document.getElementById('toContact')?.addEventListener('click', () => visit('contact'));

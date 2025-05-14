@@ -1,6 +1,13 @@
 import { randomBytes } from 'crypto';
 import { Lobby, Player, generateLobbyCode } from '../models/Lobby';
 import { broadcastLobbyUpdate } from '../library/lobbyEventBroadcaster';
+import { ErrorDetails, InsertErrorDetails } from '../library/error-types';
+import { Either } from '../library/types';
+import { deepCloneWithPrototype } from '../library/utils';
+import { Chain } from '../models/Chain';
+import { GamePhaseList, PhasePlayerAssignment } from '../models/GamePhase';
+import gameService from '../services/gameService';
+import chainRepository from './chainRepository';
 
 // In-memory storage for lobbies
 const lobbies: Map<string, Lobby> = new Map();
@@ -13,7 +20,7 @@ function generateUniqueId(): string {
 }
 
 export const createLobby = (hostId: string, hostName: string, hostAvatarUrl: string, maxPlayers = 10): Lobby => {
-  const id = generateUniqueId();
+  const id = crypto.randomUUID();
   const code = generateUniqueCode();
   
   const host: Player = {
@@ -23,6 +30,8 @@ export const createLobby = (hostId: string, hostName: string, hostAvatarUrl: str
     isHost: true,
     isReady: false
   };
+
+  const phases: GamePhaseList = new GamePhaseList();
   
   const lobby: Lobby = {
     id,
@@ -31,7 +40,12 @@ export const createLobby = (hostId: string, hostName: string, hostAvatarUrl: str
     maxPlayers,
     status: 'waiting',
     createdAt: new Date(),
-    lastActivity: new Date()
+    lastActivity: new Date(),
+    phases: phases,
+    currentPhase: phases.getCurrentPhase(),
+    nextPhase: phases.peekNextPhase(),
+    phasePlayerAssignments: [],
+    chains: [],
   };
   
   lobbies.set(id, lobby);
@@ -130,19 +144,100 @@ export const updatePlayerReadyStatus = (lobbyId: string, playerId: string, isRea
   return lobby;
 };
 
-export const updateLobbyStatus = (lobbyId: string, status: Lobby['status']): Lobby | undefined => {
+export const updateLobbyStatus = async (lobbyId: string, status: Lobby['status']): Promise<Lobby | undefined> => {
   const lobby = lobbies.get(lobbyId);
   if (!lobby) return undefined;
   
   lobby.status = status;
   lobby.lastActivity = new Date();
   lobbies.set(lobbyId, lobby);
+
+  if (lobby.nextPhase.phase === "Prompt") {
+    const [lobbyState, error] = await performGameStartActivities(lobby);
+    if (error) {
+      return undefined
+    } else {
+      lobby.phases.moveToNextPhase();
+      lobby.currentPhase = lobby.phases.getCurrentPhase();
+      lobby.nextPhase = lobby.phases.peekNextPhase();
+    }
+  } else {
+    // no need to perform any actions
+  }
   
   // Broadcast the lobby update to all connected clients
   broadcastLobbyUpdate(lobby);
   
   return lobby;
 };
+
+async function performGameStartActivities(lobby: Lobby): Promise<Either<Lobby, ErrorDetails>> {
+  const [game, gameCreationError] = await gameService.createGame({
+    urlId: lobby.id,
+    startedAt: new Date(),
+  });
+
+  if (!game) {
+    return [undefined, gameCreationError];
+  } else {
+    // don't return yet 
+  }
+
+  lobby.players.forEach((player) => {
+    lobby.phases.addDrawAndGuessPhase();
+  });
+
+  let chains: Chain[] = [];
+  for (const player of lobby.players) {
+    const chain = await chainRepository.insertChain({
+      gameId: game.id
+    });
+    if (!chain) {
+      return [undefined, new InsertErrorDetails("Could not create chain")];
+    } else {
+      chains.push(chain);
+    }
+  }
+
+  lobby.chains = chains;
+
+  assignPlayersAndPhases(lobby);
+
+  return [lobby, undefined];
+}
+
+function assignPlayersAndPhases(lobby: Lobby) {
+  const phases = deepCloneWithPrototype(lobby.phases);
+    
+    while (phases.getCurrentPhase().phase !== "Prompt") {
+      phases.moveToNextPhase();
+    }
+
+    let chainPhases: GamePhaseList[] = [];
+    lobby.phasePlayerAssignments = lobby.chains.flatMap((chain, chainIndex) => {
+      const phasesForChain = deepCloneWithPrototype(phases);
+      chainPhases.push(phasesForChain);
+      const chainPlayers = lobby.players;
+      const assignments: PhasePlayerAssignment[] = [];
+
+      for (let phaseIndex = 0; phaseIndex < lobby.players.length; phaseIndex++) {
+        const drawerIndex = (chainIndex * lobby.players.length + phaseIndex) % chainPlayers.length;
+        const guesserIndex = (drawerIndex + 1) % chainPlayers.length;
+        
+        assignments.push(new PhasePlayerAssignment(
+          phasesForChain.getCurrentPhase(),
+          lobby.players[drawerIndex],
+          lobby.players[guesserIndex],
+          chain
+        ));
+        phasesForChain.moveToNextPhase();
+      }
+      return assignments;
+    });
+
+    lobby.phases.addReviewAndCompletePhase();
+}
+
 
 export const getAllLobbies = (): Lobby[] => {
   return Array.from(lobbies.values());

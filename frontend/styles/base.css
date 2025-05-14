@@ -1,12 +1,230 @@
+/* ---------- Theme ---------- */
+/* Colors */
+:root {
+  --white:  #EEEEEE;
+  --grey:   #DDDDDD;
+  --yellow: #FBF3C1;
+  --green:  #64E2B7;
+  --purple: #DC8BE0;
+  --red:    #D50B8B;
+  --navy:   #2A4759;
+  --black:rgb(20, 30, 36);
+}
+
+/* Dark theme */
+:root {
+  --bg:         var(--black);
+  --text:       var(--grey);
+  --card:       var(--navy);
+  --border:     var(--green);
+  --header:     var(--white);
+  --link:       var(--purple);
+  --link-hover: color-mix(in hsl, var(--purple), black 15%);
+}
+
+/* Light theme */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg:     var(--white);
+    --card:   var(--grey);
+    --text:   var(--black);
+    --header: var(--navy);
+    --link:   var(--purple);
+  }
+}
+
+/* Global config */
+:root {
+  color-scheme: light dark;
+
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color: var(--text);
+  background-color: var(--bg);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+/* ---------- Elements ---------- */
+
+html {
+  font-size: 16px; 
+}
+
+
+html {
+  font-size: clamp(10px, 2vw + 1rem, 16px); /* 10px to 16px scaling based on viewport width */
+}
+
+/* Medium screens (tablet) */
+@media (max-width: 1200px) {
+  html {
+      font-size: clamp(9px, 2vw + 1rem, 15px);
+  }
+}
+
+/* Small screens (large phones) */
+@media (max-width: 992px) {
+  html {
+      font-size: clamp(8px, 2vw + 1rem, 14px);
+  }
+}
+
+/* Extra small screens (small phones) */
+@media (max-width: 768px) {
+  html {
+      font-size: clamp(7px, 2vw + 1rem, 13px);
+  }
+}
+
+/* Tiny screens (very small devices) */
+@media (max-width: 576px) {
+  html {
+      font-size: clamp(6px, 2vw + 1rem, 12px);
+  }
+}
+
+@media (max-width: 375px) {
+  html {
+      font-size: clamp(5px, 2vw + 1rem, 11px);
+  }
+}
+
+@media (max-width: 345px) {
+  html {
+      font-size: clamp(4px, 2vw + 1rem, 10px);
+  }
+}
+
+
 *,
 *::after,
 *::before{
-    margin: 0;
-    padding: 0;
-    box-sizing: inherit;
-    font-family: inherit;
+  margin: 0;
+  padding: 0;
+  box-sizing: inherit;
+  font-family: inherit;
 }
 
-body{
-    box-sizing: border-box;
+body {
+  margin: 0;
+  display: flex;
+  box-sizing: border-box;
 }
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+
+  color: var(--header);
+}
+
+a {
+  font-weight: 500;
+  text-decoration: inherit;
+
+  color: var(--link);
+}
+a:hover { color: var(--link-hover) }
+
+
+#app {
+  width: 100vw;
+  height: 100vh;
+  min-height: fit-content;
+  margin: 0 auto;
+  text-align: center;
+  /* border: 1px solid red; */
+}
+
+#page {
+  --pageWidth: calc(min(100vw, 80em));
+  --topPad: 1em;
+  --botPad: 1em;
+
+  position: absolute;
+  top: 0;
+  left: calc(50vw - var(--pageWidth)/2);
+
+
+  width: var(--pageWidth);
+  height: 100vh;
+  padding-top: var(--topPad);
+  padding-bottom: var(--botPad);
+  min-height: fit-content;
+  border: 1px solid green;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.vanilla:hover {
+  filter: drop-shadow(0 0 2em #3178c6aa);
+}
+
+.card {
+  display: block;
+  width: 100%;
+  min-height: 5em;
+  padding: 2em;
+  background: var(--card);
+  /* border: 1px solid green; */
+  border-radius: 1em;
+  overflow: hidden;
+  filter: drop-shadow(0 0 1em black);
+}
+
+.list {
+  list-style-type: none;
+  spacing: 1em;
+}
+
+.item {
+  border: none;
+  width: 100%;
+  font-size: 2em;
+  border-radius: 1em;
+  margin: 0.4em 0;
+  padding: 0.2em 0.6em;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.item:hover {
+  transform: scale(1.05);
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+} */
