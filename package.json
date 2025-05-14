@@ -1,0 +1,11 @@
+{
+  "name": "GarlicPhone",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix frontend\"",
+    "build": "concurrently \"npm run build --prefix server\" \"npm run build --prefix frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

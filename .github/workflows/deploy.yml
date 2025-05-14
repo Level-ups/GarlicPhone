@@ -33,7 +33,7 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ vars.AWS_REGION }}
 
-    - name: Copy server and frontend to EC2 via SCP
+    - name: Copy server folder to EC2 via SCP
       env:
         PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
         HOST: ${{ vars.EC2_HOST }}
@@ -64,7 +64,11 @@ jobs:
         source ~/.env
         cd server
         npm install
+        cd ../frontend
+        npm install
+        cd ..
         npm run build
         fuser -k ${PORT}/tcp || true
+        cd server
         nohup $(which npm) start > server.log 2>&1 &
         EOF

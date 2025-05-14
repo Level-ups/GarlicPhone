@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import fetch from 'node-fetch';
 import { jwtVerify, importJWK, JWK } from 'jose';
 
 const router = Router();
@@ -90,8 +91,9 @@ router.get('/callback', async (req, res) => {
     res.status(200).json({token: idToken});
   } catch (error) {
     console.error('Error during OAuth callback handling:', error);
-    res.status(500).send('Internal Server Error');
+    return res.status(500).send('Internal Server Error');
   }
 });
 
 export { router as authRouter };
+
