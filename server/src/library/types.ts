@@ -3,3 +3,5 @@ export type ValidationResult = {
   message: string;
   isValid: boolean;
 }
+
+export type Either<A, B> = [A, undefined?] | [undefined, B];

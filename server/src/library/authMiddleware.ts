@@ -20,7 +20,7 @@ export async function authenticateRequest(req: Request, res: Response, next: Nex
     let userRole
     if (payload.sub) {
         const userFromDB = await userRepository.findUserByGoogleId(payload.sub);
-        userRole = userFromDB?.roleName
+        userRole = userFromDB?.role.name
     } else{
         res.status(500).json({error: "Internal server error"})
     }
