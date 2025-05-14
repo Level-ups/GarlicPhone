@@ -65,7 +65,7 @@ app.use(express.json());
 
 
 //---------- FRONTEND ----------//
-const fePath = path.join(__dirname, '..', '..', 'dist', 'public');
+const fePath = path.join(__dirname, '..', 'public');
 app.use(express.static(fePath));
 app.get('/', (_, res) => {
   res.sendFile(path.join(fePath, 'index.html'));
