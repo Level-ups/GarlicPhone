@@ -17,74 +17,76 @@ env:
   PG_HOST: ${{ vars.PG_HOST }}
   PG_DATABASE: ${{ vars.PG_DATABASE }}
   PG_PORT: ${{ vars.PG_PORT }}
+  CERTBOT_EMAIL: ${{ vars.CERTBOT_EMAIL }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ vars.AWS_REGION }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
 
-    - name: Copy server folder to EC2 via SCP
-      env:
-        PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-        HOST: ${{ vars.EC2_HOST }}
-        USER: ${{ vars.EC2_USER }}
-      run: |
-        touch key.pem
-        echo "$PRIVATE_KEY" > key.pem
-        chmod 600 key.pem
-        echo "export PORT=$PORT" > .env
-        echo "export EC2_HOST=$EC2_HOST" >> .env
-        echo "export EC2_USER=$EC2_USER" >> .env
-        echo "export GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID" >> .env
-        echo "export GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET" >> .env
-        echo "export PG_USER=$PG_USER" >> .env
-        echo "export PG_PASSWORD=$PG_PASSWORD" >> .env
-        echo "export PG_HOST=$PG_HOST" >> .env
-        echo "export PG_DATABASE=$PG_DATABASE" >> .env
-        echo "export PG_PORT=$PG_PORT" >> .env
-        scp -i key.pem -o StrictHostKeyChecking=no -r ./ .env $USER@$HOST:/home/$USER/
+      - name: Copy server folder to EC2 via SCP
+        env:
+          PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          HOST: ${{ vars.EC2_HOST }}
+          USER: ${{ vars.EC2_USER }}
+        run: |
+          touch key.pem
+          echo "$PRIVATE_KEY" > key.pem
+          chmod 600 key.pem
+          echo "export PORT=$PORT" > .env
+          echo "export EC2_HOST=$EC2_HOST" >> .env
+          echo "export EC2_USER=$EC2_USER" >> .env
+          echo "export GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID" >> .env
+          echo "export GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET" >> .env
+          echo "export PG_USER=$PG_USER" >> .env
+          echo "export PG_PASSWORD=$PG_PASSWORD" >> .env
+          echo "export PG_HOST=$PG_HOST" >> .env
+          echo "export PG_DATABASE=$PG_DATABASE" >> .env
+          echo "export PG_PORT=$PG_PORT" >> .env
+          scp -i key.pem -o StrictHostKeyChecking=no -r ./ .env $USER@$HOST:/home/$USER/
 
-    - name: Install Certbot on Amazon Linux 2 and Get SSL Certificate
-      env:
-        HOST: ${{ vars.EC2_HOST }}
-        USER: ${{ vars.EC2_USER }}
-      run: |
-        # Connect to EC2 and install Certbot
-        ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
-        sudo yum update -y
-        sudo amazon-linux-extras install -y epel
-        sudo yum install -y certbot
-        # Request SSL certificate (adjust with your domain name or EC2 DNS)
-        sudo certbot certonly --standalone -d ${{ vars.EC2_HOST }}
-        EOF
+      - name: Install Certbot on Amazon Linux 2 and Get SSL Certificate
+        env:
+          HOST: ${{ vars.EC2_HOST }}
+          USER: ${{ vars.EC2_USER }}
+        run: |
+          # Connect to EC2 and install Certbot
+          ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
+          sudo dnf install -y certbot
+          sudo certbot certonly --standalone \
+            --non-interactive \
+            --agree-tos \
+            --email ${{vars.CERTBOT_EMAIL}} \
+            -d ${{ env.EC2_HOST }}
+          EOF
 
-    - name: Install packages, build, and run
-      env:
-        HOST: ${{ env.EC2_HOST }}
-        USER: ${{ env.EC2_USER }}
-      run: |
-        ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
-        source ~/.env
-        cd server
-        npm run clean
-        npm install
-        cd ../frontend
-        npm install
-        cd ..
-        npm install
-        npm run build
-        # Ensure the old process is stopped before starting the new one
-        fuser -k ${PORT}/tcp || true
-        # Start the server, which is now handling HTTPS
-        nohup $(which npm) start > server.log 2>&1 &
-        EOF
+      - name: Install packages, build, and run
+        env:
+          HOST: ${{ env.EC2_HOST }}
+          USER: ${{ env.EC2_USER }}
+        run: |
+          ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
+          source ~/.env
+          cd server
+          npm run clean
+          npm install
+          cd ../frontend
+          npm install
+          cd ..
+          npm install
+          npm run build
+          # Ensure the old process is stopped before starting the new one
+          fuser -k ${PORT}/tcp || true
+          # Start the server, which is now handling HTTPS
+          nohup $(which npm) start > server.log 2>&1 &
+          EOF
