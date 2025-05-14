@@ -1,20 +1,69 @@
+import { der, sig } from "../../../lib/signal";
 import { titleCard } from "../components/menuNav";
-import { wrapAsRowCards } from "../lib/card";
-import { parseInto } from "../lib/parse";
+import { wrapAsCard, wrapAsRowCards } from "../lib/card";
+import { wrapAsFlex } from "../lib/flex";
+import { forEl, parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 
+type ChainPrompt = { type: "prompt", prompt: string };
+type ChainImage = { type: "image", url: string };
+type ChainLink = ChainPrompt | ChainImage;
+export type ChainInfo = {
+    name: string,
+    links: ChainLink[]
+};
+
 export const reviewPage: PageRenderer = ({ page }) => {
+    const selectedChain = sig<number>(0);
+    const scStr = der<string>(() => selectedChain().toString());
+
+    function chainItem(index: number, { name }: ChainInfo): ElemTree {
+        return {
+            "|button.item": {
+                _: `Item: ${name}`,
+                "%click": () => { selectedChain(index); },
+                $: { cursor: "pointer" }
+            }
+        };
+    }
+
+    function chainLink({}: ChainInfo): ElemTree {
+        return {};
+    }
+
+    const chains: ChainInfo[] = [
+        { name: "Chain 1", links: [
+            { type: "prompt", prompt: "Rudolph eating a vegetarian burger" },
+            { type: "image", url: "https://picsum.photos/250" },
+            { type: "prompt", prompt: "A chicken crossing a road" },
+            { type: "image", url: "https://picsum.photos/50" },
+            { type: "prompt", prompt: "Probably something fished out of the Bermuda triangle" },
+        ] },
+        { name: "Chain 2", links: [] },
+        { name: "Chain 3", links: [
+            { type: "prompt", prompt: "Rudolph eating a vegetarian burger" },
+            { type: "image", url: "https://picsum.photos/250" },
+            { type: "prompt", prompt: "A chicken crossing a road" },
+            { type: "image", url: "https://picsum.photos/300" },
+            { type: "prompt", prompt: "Probably something fished out of the Bermuda triangle" },
+        ] },
+    ]
+
     // Render page
     return parseInto(page, {
         ...titleCard("Review"),
         ...wrapAsRowCards({
-            "0|div": { _: "asdf", $: { border: "1px solid red" } },
-            "1|div": {
-                "|h1": { _: "fdsa" },
-                "|h2": { _: "fldjsalkfjdkslks" },
-                $: { border: "1px solid red" }
+            "|ul#chainList .list": {
+                ...forEl(chains, (i, info) => chainItem(i, info))
             },
-            // "2|div": { _: "hjkl", $: { border: "1px solid red" } }
-        }, [3], "1em"),
+            "|p": { _: scStr },
+            "|section#currChain": wrapAsFlex({
+                ...forEl(chains, (_, info) => chainLink(info))
+            })
+        }, [1, 2], "1em"),
+        "|br": {},
+        ...wrapAsCard({
+            _: "asdf"
+        }),
     });
 }

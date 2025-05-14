@@ -186,6 +186,26 @@ a:hover { color: var(--link-hover) }
   filter: drop-shadow(0 0 1em black);
 }
 
+.list {
+  list-style-type: none;
+  spacing: 1em;
+}
+
+.item {
+  border: 1px solid red;
+  width: 100%;
+  font-size: 2em;
+  border-radius: 100em;
+  margin: 0.4em 0;
+  padding: 0.2em;
+  padding-left: 1em;
+  text-align: left;
+}
+
+.item:hover {
+  transform: scale(1.05);
+}
+
 .read-the-docs {
   color: #888;
 }
