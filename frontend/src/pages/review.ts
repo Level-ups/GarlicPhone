@@ -39,7 +39,7 @@ export const reviewPage: PageRenderer = ({ page }) => {
             { type: "image", url: "https://picsum.photos/50" },
             { type: "prompt", prompt: "Probably something fished out of the Bermuda triangle" },
         ] },
-        { name: "Chain 2", links: [] },
+        { name: "lasdjfklasjdfklsafkldsajf", links: [] },
         { name: "Chain 3", links: [
             { type: "prompt", prompt: "Rudolph eating a vegetarian burger" },
             { type: "image", url: "https://picsum.photos/250" },

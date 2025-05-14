@@ -192,13 +192,13 @@ a:hover { color: var(--link-hover) }
 }
 
 .item {
-  border: 1px solid red;
+  border: none;
   width: 100%;
   font-size: 2em;
-  border-radius: 100em;
+  border-radius: 1em;
   margin: 0.4em 0;
-  padding: 0.2em;
-  padding-left: 1em;
+  padding: 0.2em 0.6em;
+  overflow-wrap: anywhere;
   text-align: left;
 }
 
