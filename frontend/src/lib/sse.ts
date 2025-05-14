@@ -1,4 +1,9 @@
-export type SSEHandlers = Record<string, (e: any) => void>;
+import type { Lobby } from "../services/lobbyService";
+
+export type SSEHandlers = (
+  { [key: string]: (e: any) => void } &
+  { "lobby_update": (e: Lobby) => void }
+);
 
 declare global {
   let sseHandler: EventSource | null;
@@ -7,6 +12,15 @@ declare global {
 export const sseHandlers: SSEHandlers = {
   "lobby_update": (data) => {
     console.log("RECEIVED EVENT:", data);
+
+    switch(data.phases.phase) {
+      // case "Waiting": break;
+      case "Prompt":  visit("prompt");    break;
+      case "Draw":    visit("draw");      break;
+      case "Guess":   visit("guess");     break;
+      case "Review":  visit("review");    break;
+      case "Complete": visit("menuPlay"); break;
+    }
     // visit("prompt");
   },
   "health": (data) => {
