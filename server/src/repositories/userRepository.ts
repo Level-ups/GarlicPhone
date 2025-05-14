@@ -16,7 +16,7 @@ async function findAllUsers(): Promise<User[]> {
   `;
 
   const result = await pool.query(query);
-  return result.rows.map((row) => userMapper.toDomain(row))
+  return result.rows.map((row: any) => userMapper.toDomain(row))
 }
 
 async function findUserById(id: string): Promise<User | null> {
