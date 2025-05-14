@@ -119,18 +119,18 @@ setInterval(() => {
   }
 }, 15 * MINUTE_IN_MS);
 
-// // Start server
-// app.listen(PORT, '0.0.0.0', () => {
-//   console.log(`Server running on http://${EC2_HOST}:${PORT}`);
-// });
-
-const options = {
-  key: fs.readFileSync('/etc/letsencrypt/live/your-domain/privkey.pem'),
-  cert: fs.readFileSync('/etc/letsencrypt/live/your-domain/fullchain.pem')
-};
-
-https.createServer(options, app).listen(443, () => {
-  console.log('HTTPS server running on port 443');
+// Start server
+app.listen(PORT, '127.0.0.1', () => {
+  console.log(`Server running on http://${EC2_HOST}:${PORT}`);
 });
+
+// const options = {
+//   key: fs.readFileSync('/etc/letsencrypt/live/your-domain/privkey.pem'),
+//   cert: fs.readFileSync('/etc/letsencrypt/live/your-domain/fullchain.pem')
+// };
+
+// https.createServer(options, app).listen(443, () => {
+//   console.log('HTTPS server running on port 443');
+// });
 
 export default app;
