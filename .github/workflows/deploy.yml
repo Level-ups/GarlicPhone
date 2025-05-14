@@ -56,6 +56,9 @@ jobs:
           scp -i key.pem -o StrictHostKeyChecking=no -r ./ .env $USER@$HOST:/home/$USER/
 
       - name: Setup and reload NGINX
+        env:
+          HOST: ${{ vars.EC2_HOST }}
+          USER: ${{ vars.EC2_USER }}
         run: |
           ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
           sudo cp /home/$USER/server/nginx/garlic-phone.conf /etc/nginx/conf.d/garlic-phone.conf
