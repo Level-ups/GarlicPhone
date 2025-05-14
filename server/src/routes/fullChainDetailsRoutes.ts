@@ -33,7 +33,7 @@ router.get("/game/:gameId", async (req, res) => {
       }
     }
   } catch (error: any) {
-    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message]));
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
 });
 

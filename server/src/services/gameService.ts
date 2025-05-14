@@ -8,7 +8,7 @@ async function getAllGames(): Promise<Either<Game[], ErrorDetails>> {
   try {
     games = await gameRepository.getGames();
   } catch (error: any) {
-    return [undefined, new ErrorDetails("Error fetching games", [error.message])];
+    return [undefined, new ErrorDetails("Error fetching games", [error.message], error.stack)];
   }
 
   return [games, undefined]
@@ -19,7 +19,7 @@ async function getGameById(id: number): Promise<Either<Game, ErrorDetails>> {
   try {
     game = await gameRepository.getGameById(id);
   } catch (error: any) {
-    return [undefined, new ErrorDetails("Error fetching games", [error.message])];
+    return [undefined, new ErrorDetails("Error fetching games", [error.message], error.stack)];
   }
 
   if (game) {
@@ -34,7 +34,7 @@ async function createGame(game: GameDto): Promise<Either<Game, ErrorDetails>> {
   try {
     createdGame = await gameRepository.insertGame(game);
   } catch (error: any) {
-    return [undefined, new ErrorDetails("Error creating game")];
+    return [undefined, new ErrorDetails("Error creating game", [error.message], error.stack)];
   }
 
   if (createdGame) {

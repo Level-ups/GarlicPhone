@@ -124,7 +124,7 @@ async function uploadImageToS3(image: Buffer, filename: string): Promise<Either<
     const data = await s3.upload(params).promise();
     return [data];
   } catch (error: any) {
-    return [undefined, new ErrorDetails('Error uploading image to S3', [error.message])];
+    return [undefined, new ErrorDetails('Error uploading image to S3', [error.message], error.stack)];
   }
 }
 

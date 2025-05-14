@@ -1,25 +1,24 @@
-import { randomBytes } from 'crypto';
-import { Lobby, Player, generateLobbyCode } from '../models/Lobby';
+import { UUID } from 'crypto';
+import { constants } from '../library/constants';
+import { ErrorDetails, InsertErrorDetails, NotFoundErrorDetails } from '../library/error-types';
 import { broadcastLobbyUpdate } from '../library/lobbyEventBroadcaster';
-import { ErrorDetails, InsertErrorDetails } from '../library/error-types';
-import { Either } from '../library/types';
 import { deepCloneWithPrototype } from '../library/utils';
 import { Chain } from '../models/Chain';
-import { GamePhaseList, PhasePlayerAssignment } from '../models/GamePhase';
+import { GamePhaseList } from '../models/GamePhase';
+import { generateLobbyCode, Lobby, LobbyStatus } from '../models/Lobby';
+import { PhasePlayerAssignment } from "../models/PhasePlayerAssignment";
+import { Player } from '../models/Player';
 import gameService from '../services/gameService';
 import chainRepository from './chainRepository';
+import { Either } from '../../../lib/types';
 
 // In-memory storage for lobbies
 const lobbies: Map<string, Lobby> = new Map();
 // Map from lobby code to lobby id for quick lookup
 const lobbyCodeMap: Map<string, string> = new Map();
+const lobbyTimers = new Map<string, NodeJS.Timeout>();
 
-// Generate a unique ID using Node's built-in crypto module
-function generateUniqueId(): string {
-  return randomBytes(16).toString('hex');
-}
-
-export const createLobby = (hostId: string, hostName: string, hostAvatarUrl: string, maxPlayers = 10): Lobby => {
+export const createLobby = (hostId: number, hostName: string, hostAvatarUrl: string, maxPlayers = 10): Lobby => {
   const id = crypto.randomUUID();
   const code = generateUniqueCode();
   
@@ -42,10 +41,7 @@ export const createLobby = (hostId: string, hostName: string, hostAvatarUrl: str
     createdAt: new Date(),
     lastActivity: new Date(),
     phases: phases,
-    currentPhase: phases.getCurrentPhase(),
-    nextPhase: phases.peekNextPhase(),
     phasePlayerAssignments: [],
-    chains: [],
   };
   
   lobbies.set(id, lobby);
@@ -64,18 +60,18 @@ export const getLobbyByCode = (code: string): Lobby | undefined => {
   return lobbies.get(id);
 };
 
-export const addPlayerToLobby = (lobbyId: string, player: Omit<Player, 'isHost' | 'isReady'>): Lobby | undefined => {
+export const addPlayerToLobby = (lobbyId: UUID, player: Omit<Player, 'isHost' | 'isReady'>): Either<Lobby, ErrorDetails> => {
   const lobby = lobbies.get(lobbyId);
-  if (!lobby) return undefined;
+  if (!lobby) return [undefined, new NotFoundErrorDetails(`Lobby with ID ${lobbyId} not found`)];
   
   // Check if lobby is full
   if (lobby.players.length >= lobby.maxPlayers) {
-    return undefined;
+    return [undefined, new ErrorDetails(`Lobby is full (max players: ${lobby.maxPlayers})`)];
   }
   
   // Check if player is already in the lobby
   if (lobby.players.some(p => p.id === player.id)) {
-    return undefined;
+    return [undefined, new InsertErrorDetails(`Player with ID ${player.id} is already in the lobby`)];
   }
   
   const newPlayer: Player = {
@@ -91,15 +87,15 @@ export const addPlayerToLobby = (lobbyId: string, player: Omit<Player, 'isHost' 
   // Broadcast the lobby update to all connected clients
   broadcastLobbyUpdate(lobby);
   
-  return lobby;
+  return [lobby, undefined];
 };
 
-export const removePlayerFromLobby = (lobbyId: string, playerId: string): Lobby | undefined => {
+export const removePlayerFromLobby = (lobbyId: UUID, playerId: number): Either<Lobby, ErrorDetails> => {
   const lobby = lobbies.get(lobbyId);
-  if (!lobby) return undefined;
+  if (!lobby) return [undefined, new NotFoundErrorDetails(`Lobby with ID ${lobbyId} not found`)];
   
   const playerIndex = lobby.players.findIndex(p => p.id === playerId);
-  if (playerIndex === -1) return undefined;
+  if (playerIndex === -1) return [undefined, new NotFoundErrorDetails(`Player with ID ${playerId} not found in lobby`)];
   
   const isHost = lobby.players[playerIndex].isHost;
   
@@ -114,9 +110,13 @@ export const removePlayerFromLobby = (lobbyId: string, playerId: string): Lobby 
   
   // If no players left, remove the lobby
   if (lobby.players.length === 0) {
+    if (lobbyTimers.has(lobbyId)) {
+      clearInterval(lobbyTimers.get(lobbyId)!);
+      lobbyTimers.delete(lobbyId);
+    }
     lobbies.delete(lobbyId);
     lobbyCodeMap.delete(lobby.code);
-    return undefined;
+    return [undefined, new NotFoundErrorDetails(`Lobby with ID ${lobbyId} not found`)];
   }
   
   lobbies.set(lobbyId, lobby);
@@ -124,15 +124,15 @@ export const removePlayerFromLobby = (lobbyId: string, playerId: string): Lobby 
   // Broadcast the lobby update to all connected clients
   broadcastLobbyUpdate(lobby);
   
-  return lobby;
+  return [lobby, undefined];
 };
 
-export const updatePlayerReadyStatus = (lobbyId: string, playerId: string, isReady: boolean): Lobby | undefined => {
+export const updatePlayerReadyStatus = (lobbyId: UUID, playerId: number, isReady: boolean): Either<Lobby, ErrorDetails> => {
   const lobby = lobbies.get(lobbyId);
-  if (!lobby) return undefined;
+  if (!lobby) return [undefined, new NotFoundErrorDetails(`Lobby with ID ${lobbyId} not found`)];
   
   const player = lobby.players.find(p => p.id === playerId);
-  if (!player) return undefined;
+  if (!player) return [undefined, new NotFoundErrorDetails(`Player with ID ${playerId} not found in lobby`)];
   
   player.isReady = isReady;
   lobby.lastActivity = new Date();
@@ -141,33 +141,47 @@ export const updatePlayerReadyStatus = (lobbyId: string, playerId: string, isRea
   // Broadcast the lobby update to all connected clients
   broadcastLobbyUpdate(lobby);
   
-  return lobby;
+  return [lobby, undefined];
 };
 
-export const updateLobbyStatus = async (lobbyId: string, status: Lobby['status']): Promise<Lobby | undefined> => {
+
+export const updateLobbyStatus = async (lobbyId: UUID, status: LobbyStatus): Promise<Lobby | undefined> => {
   const lobby = lobbies.get(lobbyId);
   if (!lobby) return undefined;
-  
-  lobby.status = status;
-  lobby.lastActivity = new Date();
-  lobbies.set(lobbyId, lobby);
 
-  if (lobby.nextPhase.phase === "Prompt") {
+  if (lobbyTimers.has(lobbyId)) {
+    clearInterval(lobbyTimers.get(lobbyId)!);
+    lobbyTimers.delete(lobbyId);
+  }
+
+  if (status === 'started') {
+    const intervalId = setInterval(() => {
+      const updatedLobby = lobbies.get(lobbyId);
+      if (!updatedLobby?.phases.peekNextPhase()) return;
+
+      updatedLobby.phases.moveToNextPhase();
+      broadcastLobbyUpdate(updatedLobby);
+
+      if (updatedLobby.phases.getCurrentPhase().phase === 'Review') {
+        clearInterval(intervalId);
+        lobbyTimers.delete(lobbyId);
+      }
+    }, constants.ROUND_LENGTH_MILLISECONDS);
+    
+    lobbyTimers.set(lobbyId, intervalId);
+  }
+  
+  if (lobby.phases.peekNextPhase()?.phase === "Prompt") {
     const [lobbyState, error] = await performGameStartActivities(lobby);
     if (error) {
       return undefined
     } else {
       lobby.phases.moveToNextPhase();
-      lobby.currentPhase = lobby.phases.getCurrentPhase();
-      lobby.nextPhase = lobby.phases.peekNextPhase();
     }
-  } else {
-    // no need to perform any actions
   }
-  
-  // Broadcast the lobby update to all connected clients
+
+  lobbies.set(lobbyId, lobby);
   broadcastLobbyUpdate(lobby);
-  
   return lobby;
 };
 
@@ -199,43 +213,51 @@ async function performGameStartActivities(lobby: Lobby): Promise<Either<Lobby, E
     }
   }
 
-  lobby.chains = chains;
-
-  assignPlayersAndPhases(lobby);
+  assignPlayersAndPhases(lobby, chains);
 
   return [lobby, undefined];
 }
 
-function assignPlayersAndPhases(lobby: Lobby) {
+function assignPlayersAndPhases(lobby: Lobby, chains: Chain[]) {
+  // We clone the phases so that we can traverse them (which will modify the object) without affecting the lobby's phases
   const phases = deepCloneWithPrototype(lobby.phases);
+  
+  // Move to the Prompt phase
+  while (phases.getCurrentPhase().phase !== "Prompt") {
+    phases.moveToNextPhase();
+  }
+
+  let chainPhases: GamePhaseList[] = [];
+  // Each chain gets a list of phases, and each player gets a phase in that list
+  lobby.phasePlayerAssignments = chains.flatMap((chain, chainIndex) => {
+    // We clone again to avoid modifying the lobby's phases and to avoid modifying the phases for other chains
+    const phasesForChain = deepCloneWithPrototype(phases);
     
-    while (phases.getCurrentPhase().phase !== "Prompt") {
-      phases.moveToNextPhase();
+    chainPhases.push(phasesForChain);
+    
+    const chainPlayers = lobby.players;
+    const assignments: PhasePlayerAssignment[] = [];
+
+    // Assign each player a phase in the chain
+    for (let phaseIndex = 0; phaseIndex < lobby.players.length; phaseIndex++) {
+      // offset by the chain index (so that there is a circular pattern)
+      const playerIndex = (phaseIndex + chainIndex) % chainPlayers.length;
+      
+      // Assign the player to the current phase in the chain
+      assignments.push(new PhasePlayerAssignment(
+        phasesForChain.getCurrentPhase(),
+        lobby.players[playerIndex],
+        chain
+      ));
+
+      // Move to the next phase in the chain before assigning the next player
+      phasesForChain.moveToNextPhase();
     }
 
-    let chainPhases: GamePhaseList[] = [];
-    lobby.phasePlayerAssignments = lobby.chains.flatMap((chain, chainIndex) => {
-      const phasesForChain = deepCloneWithPrototype(phases);
-      chainPhases.push(phasesForChain);
-      const chainPlayers = lobby.players;
-      const assignments: PhasePlayerAssignment[] = [];
+    return assignments;
+  });
 
-      for (let phaseIndex = 0; phaseIndex < lobby.players.length; phaseIndex++) {
-        const drawerIndex = (chainIndex * lobby.players.length + phaseIndex) % chainPlayers.length;
-        const guesserIndex = (drawerIndex + 1) % chainPlayers.length;
-        
-        assignments.push(new PhasePlayerAssignment(
-          phasesForChain.getCurrentPhase(),
-          lobby.players[drawerIndex],
-          lobby.players[guesserIndex],
-          chain
-        ));
-        phasesForChain.moveToNextPhase();
-      }
-      return assignments;
-    });
-
-    lobby.phases.addReviewAndCompletePhase();
+  lobby.phases.addReviewAndCompletePhase();
 }
 
 
@@ -265,7 +287,7 @@ function generateUniqueCode(): string {
 // Clean up expired lobbies (those with no activity for more than 24 hours)
 export const cleanupExpiredLobbies = (): void => {
   const now = new Date();
-  const expirationTime = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+  const expirationTime = process.env.LOBBY_EXPIRATION_TIME_MILLISECOND ? parseInt(process.env.LOBBY_EXPIRATION_TIME_MILLISECOND) : 24 * 60 * 60 * 1000;
   
   for (const [id, lobby] of lobbies.entries()) {
     const timeSinceLastActivity = now.getTime() - lobby.lastActivity.getTime();
@@ -274,4 +296,4 @@ export const cleanupExpiredLobbies = (): void => {
       lobbyCodeMap.delete(lobby.code);
     }
   }
-}; 
+};

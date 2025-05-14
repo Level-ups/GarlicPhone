@@ -9,7 +9,7 @@ export async function getFullChainDetailsByGameId(gameId: UUID): Promise<Either<
     const chainDetails = await fullChainDetailsRepository.getFullChainDetailsByGameId(gameId);
     return [chainDetails, undefined];
   } catch (error: any) {
-    return [undefined, new ErrorDetails("Error fetching chain details", [error.message])];
+    return [undefined, new ErrorDetails("Error fetching chain details", [error.message], error.stack)];
   }
 }
 
@@ -22,7 +22,7 @@ export async function getFullChainDetailByChainId(chainId: number): Promise<Eith
       return [chainDetail, undefined];
     }
   } catch (error: any) {
-    return [undefined, new ErrorDetails("Error fetching chain detail", [error.message])];
+    return [undefined, new ErrorDetails("Error fetching chain detail", [error.message], error.stack)];
   }
 }
 

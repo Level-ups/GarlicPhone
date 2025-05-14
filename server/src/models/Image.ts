@@ -9,6 +9,13 @@ export type Image = {
   user: User;
 }
 
+export type ImageQueryResult = {
+  image_id: number;
+  s3_url: string;
+  prompt_id: number;
+  user_id: number;
+} & PromptQueryResult & UserQueryResult;
+
 export type ImageUploadDto = {
   promptId: number;
   userId: number;
@@ -22,38 +29,23 @@ export type InsertImageDto = {
 }
 
 export function validateImageUploadDto(imageUploadDto: Partial<ImageUploadDto>): ValidationResult[] {
-  const errors: ValidationResult[] = [];
-
-  if (!imageUploadDto.promptId) {
-    errors.push({
+  const imageUploadValidations: ValidationResult[] = [
+    {
       field: "promptId",
       message: "promptId is required",
-      isValid: false,
-    });
-  }
-
-  if (!imageUploadDto.userId) {
-    errors.push({
+      isValid: !imageUploadDto.promptId,
+    },
+    {
       field: "userId",
       message: "userId is required",
-      isValid: false,
-    });
-  }
-
-  if (!imageUploadDto.image) {
-    errors.push({
+      isValid: !imageUploadDto.userId,
+    },
+    {
       field: "image",
       message: "image is required",
-      isValid: false,
-    });
-  }
+      isValid: !imageUploadDto.image,
+    }
+  ];
 
-  return errors;
+  return imageUploadValidations.filter((field) =>!field.isValid);
 }
-
-export type ImageQueryResult = {
-  image_id: number;
-  s3_url: string;
-  prompt_id: number;
-  user_id: number;
-} & PromptQueryResult & UserQueryResult;

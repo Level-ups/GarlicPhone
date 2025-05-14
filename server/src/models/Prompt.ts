@@ -11,6 +11,17 @@ export type Prompt = {
   createdAt: Date;
 }
 
+
+export type PromptQueryResult = {
+  prompt_id: number;
+  chain_id: number;
+  index: number;
+  text: string;
+  user_id: number;
+  created_at: Date;
+} & ChainQueryResult & UserQueryResult;
+
+
 export type PromptDto = {
   chainId: number;
   index: number;
@@ -19,7 +30,7 @@ export type PromptDto = {
 }
 
 export function validateCreatePrompt(prompt: Partial<PromptDto>): ValidationResult[] {
-  const invalidFields: ValidationResult[] = [
+  const createPromptValidations: ValidationResult[] = [
     {
       field: "userId",
       isValid: !!prompt.userId,
@@ -40,15 +51,7 @@ export function validateCreatePrompt(prompt: Partial<PromptDto>): ValidationResu
       isValid: !!prompt.text,
       message: "Text must be a non-empty string",
     }
-  ].filter((field) => !field.isValid);
-  return invalidFields;
+  ];
+  
+  return createPromptValidations;
 }
-
-export type PromptQueryResult = {
-  prompt_id: number;
-  chain_id: number;
-  index: number;
-  text: string;
-  user_id: number;
-  created_at: Date;
-} & ChainQueryResult & UserQueryResult;
