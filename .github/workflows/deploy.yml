@@ -54,17 +54,18 @@ jobs:
         echo "export PG_PORT=$PG_PORT" >> .env
         scp -i key.pem -o StrictHostKeyChecking=no -r ./ .env $USER@$HOST:/home/$USER/
 
-    - name: Install Certbot and Get SSL Certificate
+    - name: Install Certbot on Amazon Linux 2 and Get SSL Certificate
       env:
         HOST: ${{ vars.EC2_HOST }}
         USER: ${{ vars.EC2_USER }}
       run: |
-        # Install Certbot on EC2
+        # Connect to EC2 and install Certbot
         ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
-        sudo apt update
-        sudo apt install -y certbot
-        # Request SSL certificate
-        sudo certbot certonly --standalone -d ${{ env.EC2_HOST }}
+        sudo yum update -y
+        sudo amazon-linux-extras install -y epel
+        sudo yum install -y certbot
+        # Request SSL certificate (adjust with your domain name or EC2 DNS)
+        sudo certbot certonly --standalone -d ${{ vars.EC2_HOST }}
         EOF
 
     - name: Install packages, build, and run
