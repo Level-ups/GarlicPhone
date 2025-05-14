@@ -65,6 +65,8 @@ app.use(express.json());
 
 
 //---------- FRONTEND ----------//
+console.log('Frontend path:', path.join(__dirname, '..', '..', 'public'));
+
 const fePath = path.join(__dirname, '..', 'public');
 app.use(express.static(fePath));
 app.get('/', (_, res) => {
