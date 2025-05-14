@@ -9,12 +9,27 @@
   --red:    #D50B8B;
   --navy:   #2A4759;
   --black:rgb(20, 30, 36);
+
+  /* Adjusted Colors */
+
+  /*Light*/
+  --plush_pink: #FD9EE0;
+  --plush_purple: #A62DC7;
+  --white_white: #ffffff;
+  --purple_pink: #DFC5E6; 
+  --gold_yellow: #FBBC05;
+
+  /*Dark*/
+  --dark_lightblue: #3377A2;
+  --dark_navyblue: #132C3C;
+  --dark_turquios: #6EB9AD; 
 }
 
 /* Dark theme */
 :root {
-  --bg:         var(--black);
-  --text:       var(--grey);
+  --bg:         linear-gradient(to bottom, var(--dark_navyblue), var(--dark_lightblue));
+  --text:       var(--white_white);
+  --header_text: var(--dark_turquios);
   --card:       var(--navy);
   --border:     var(--green);
   --header:     var(--white);
@@ -25,7 +40,9 @@
 /* Light theme */
 @media (prefers-color-scheme: light) {
   :root {
-    --bg:     var(--white);
+    --bg:     linear-gradient(to bottom, var(--plush_purple), var(--plush_pink));
+    --text:   var(--white_white);
+    --header_text: var(--gold_yellow);
     --card:   var(--grey);
     --text:   var(--black);
     --header: var(--navy);
@@ -209,6 +226,49 @@ a:hover { color: var(--link-hover) }
 .read-the-docs {
   color: #888;
 }
+
+.galleryCard{
+  width: "100%";
+  height: "100%";
+  border-color: var(--dark_turquios);
+  border-radius: 12px;
+  background-color: #2E4D60; 
+  color: var(--white_white);
+  text-align: left;
+  font-family: 'Rosario', sans-serif;
+}
+
+.galleryCard:hover{
+  background-color: rgb(4, 114, 86); 
+}
+
+.gallerBlock {
+  background-color: var(--dark_turquios);
+  color: #fff;
+  border-radius: 12px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  display: inline-block;
+  margin-bottom: 0.2rem;
+}
+
+.header{
+  opacity: 0.13;
+  border-radius: 12px; 
+  font-size: 1.5rem;
+}
+
+.btnGuess {
+  background-color: var(--gold_yellow);   
+  color: var(--white_white); 
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.btnGuess:hover{
+  border-color: #817503;
+}
+
 
 /* button {
   border-radius: 8px;
