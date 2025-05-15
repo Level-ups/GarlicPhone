@@ -1,9 +1,8 @@
-import { UserInfo } from './UserInfo'; // or define inline if simpler
-
+import { User } from "../models/User";
 declare global {
   namespace Express {
     interface Request {
-      user?: UserInfo;
+      user?: User;
     }
   }
 }

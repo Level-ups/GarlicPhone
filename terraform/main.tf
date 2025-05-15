@@ -162,7 +162,7 @@ resource "aws_instance" "ec2_instance" {
               EOF
 
   tags = {
-    Name = "EC2 Instance"
+    Name = "GarlicPhone"
   }
 }
 

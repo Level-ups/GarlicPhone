@@ -13,13 +13,25 @@ export const sseHandlers: SSEHandlers = {
   "lobby_update": (data) => {
     console.log("RECEIVED EVENT:", data);
 
+    if (!localStorage.getItem("gameId")) {
+      localStorage.setItem("gameId", data.id);
+    }
+
+    if (!localStorage.getItem("playerId")) {
+      localStorage.setItem("playerId", data.players[data.clientIndex].id);
+    }
+
     switch(data.phases.phase) {
       // case "Waiting": break;
       case "Prompt":  visit("prompt");    break;
       case "Draw":    visit("draw");      break;
       case "Guess":   visit("guess");     break;
       case "Review":  visit("review");    break;
-      case "Complete": visit("menuPlay"); break;
+      case "Complete": () => {
+        localStorage.removeItem("gameId");
+        visit("menuPlay");
+      } 
+      break;
     }
     // visit("prompt");
   },
@@ -38,7 +50,7 @@ export function updateSSEHandler(url?: string) {
   //   url = localStorage.getItem(STORAGE_KEY) || undefined;
   // }
 
-  // if (!url) { throw new Error("No URL provided and none found in localStorage."); }
+  if (!url) { return; throw new Error("No URL provided and none found in localStorage."); }
 
   (window as any).sseHandler = null; // Cleanup old event handler
 

@@ -64,14 +64,20 @@ router.get("/chain/:chainId", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { chainId, index, text, userId } = req.body;
+    const { chainId, index, text } = req.body;
+    const userId = req.user?.id;
 
-    const validationResult = validateCreatePrompt(req.body);
+    const validationResult = validateCreatePrompt({
+      chainId,
+      index,
+      text,
+      userId,
+    });
 
     if (validationResult.length) {
       return res.status(400).json(new ValidationErrorDetails("Invalid prompt data", validationResult));
-    } else {
-      // continue with the rest of the function
+    } else if (userId === undefined) {
+      return res.status(401).json(new ErrorDetails("User not authenticated", ["User ID is undefined"]));
     }
 
     const [createdPrompt, error] = await promptService.createPrompt({
@@ -92,8 +98,9 @@ router.post("/", async (req, res) => {
 });
 
 // Get the latest prompt by chain ID
-router.get("/chain/:chainId", async (req, res) => {
-  try {  const chainId = parseInt(req.params.chainId);
+router.get("/chain/:chainId/latest", async (req, res) => {
+  try {  
+    const chainId = parseInt(req.params.chainId);
 
     if (isNaN(chainId)) {
       return res.status(400).json(new ValidationErrorDetails(

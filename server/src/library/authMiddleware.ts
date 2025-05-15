@@ -21,26 +21,23 @@ export async function authenticateRequest(req: Request, res: Response, next: Nex
     if (payload.sub) {
         const userFromDB = await userRepository.findUserByGoogleId(payload.sub);
         userRole = userFromDB?.role.name
+        console.log("USER FROM DB", userFromDB)
+        req.user = userFromDB!;
     } else{
         res.status(500).json({error: "Internal server error"})
     }
 
-    req.user = {
-      id: payload.sub as string,
-      email: payload.email as string,
-      name: payload.name as string,
-      role: userRole || "player" // Default to lowest clearance role
-    };
 
     next();
   } catch (error) {
+    console.error(error);
     res.status(401).json({ error: 'Invalid Token' });
   }
 }
 
 export function requireRole(roles: string[]){
     return (req: Request, res: Response, next: NextFunction) => {
-        if(!roles.includes(req?.user?.role  ?? "")){
+        if(!roles.includes(req?.user?.role.name  ?? "")){
             return res.status(403).json({error: 'Forbidden: insufficient permissions'})
         }
         next()

@@ -86,7 +86,7 @@ router.get('/callback', async (req, res) => {
     });
  
     if(payload.sub){
-      const user = userService.getUserByGoogleId(payload.sub);
+      const [user, error] = await userService.getUserByGoogleId(payload.sub);
       if (!user) {
         const newUser = await userService.createUser({
           googleSub: payload.sub,
