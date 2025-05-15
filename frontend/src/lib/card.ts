@@ -1,5 +1,5 @@
 import { tryCall } from "../../../lib/types";
-import { GALLERY_FLEX_CONFIG, ROW_FLEX_CONFIG, wrapAsFlex } from "./flex";
+import { ROW_FLEX_CONFIG, wrapAsFlex } from "./flex";
 import { getElems, type ElemTree, type ElemTree_Elems } from "./parse";
 
 // Wrap the given tree as a card element
@@ -21,7 +21,6 @@ export function wrapAsRowCards(tree: ElemTree, ratios: number[] = [], gap: strin
   let tot = ratiosTrimmed.reduce((acc, x) => acc + x);
   const rs = ratiosTrimmed.map(x => Math.floor(100 * (x / tot)));
 
-  console.log("RATIOS:", rs);
 
   let res: ElemTree = {};
   let i = 0;

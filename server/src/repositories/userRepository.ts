@@ -90,8 +90,6 @@ async function insertUser(userData: UserDto): Promise<User> {
     [userData.roleName, userData.googleSub, userData.name, userData.avatarUrl]
   );
 
-  console.log("INSERTED USER:", result.rows) // Add this line for debugging purposes
-
   return userMapper.toDomain(result.rows[0]);
 }
 
