@@ -1,17 +1,44 @@
-export function drawPixel(x: number, y: number, ctx: CanvasRenderingContext2D, pixelSize: number) {
-    ctx.fillRect(
-      x,
-      y,
-      1,
-      1
-    );
+export function paint(x: number, y: number, size: number, ctx: CanvasRenderingContext2D) {
+  if (size === 1) { ctx.fillRect(x, y, size, size); return }
+
+  let r = size-1;
+  const d = 2*r;
+
+  const startX = x - r;
+  const startY = y - r;
+
+  // Get the existing pixels in the area we will draw to
+  const imageData = ctx.getImageData(startX, startY, d, d);
+  const data = imageData.data;
+  const center = r;
+
+  const [cr, cg, cb, ca] = cssColorToRgba(ctx.fillStyle.toString());
+
+  for (let py = 0; py < d; py++) {
+    for (let px = 0; px < d; px++) {
+      const dx = px - center;
+      const dy = py - center;
+      const distanceSquared = dx * dx + dy * dy;
+
+      if (distanceSquared <= r * r) {
+        const index = (py * d + px) * 4;
+        data[index] = cr;     // Red
+        data[index + 1] = cg; // Green
+        data[index + 2] = cb; // Blue
+        data[index + 3] = ca; // Alpha
+      }
+    }
   }
+
+  ctx.putImageData(imageData, startX, startY);
+}
+
   
   export function resizeCanvasToDisplaySize(ctx: CanvasRenderingContext2D) {
     
     const dpr = window.devicePixelRatio || 1;
-    const width = ctx.canvas.clientWidth;
-    const height = ctx.canvas.clientHeight;
+    // const width = ctx.canvas.clientWidth;
+    // const height = ctx.canvas.clientHeight;
   
     ctx.canvas.width = 64;
     ctx.canvas.height = 64;
@@ -34,7 +61,7 @@ export function drawPixel(x: number, y: number, ctx: CanvasRenderingContext2D, p
     let err = dx - dy;
   
     while (true) {
-      drawPixel(x0, y0, ctx, pixelSize);
+      paint(x0, y0, pixelSize, ctx);
   
       if (x0 === x1 && y0 === y1) break;
       const e2 = 2 * err;
@@ -57,6 +84,7 @@ export function floodFill(
 ) {
   const fillColor = cssColorToRgba(currentColour); // [r, g, b, a]
   const { width: canvasWidth, height: canvasHeight } = ctx.canvas;
+
   const imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
   const data = imageData.data;
 

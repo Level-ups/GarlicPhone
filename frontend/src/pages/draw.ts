@@ -7,7 +7,7 @@ import tickIcon from "/assets/canvas/tick.svg";
 import trashIcon from "/assets/canvas/trash.svg";
 import {
   drawLine,
-  drawPixel,
+  paint,
   floodFill,
   resizeCanvasToDisplaySize,
 } from "../lib/util/canvasUtils";
@@ -43,7 +43,7 @@ type ColourButtonConfig = { colour: string; initiallyActive?: boolean };
 
 const canvasConfig: CanvasConfig = {
   pencilContext: {
-    pixelSize: 10,
+    pixelSize: 1,
     colour: "black",
   },
   canvasContext: undefined,
@@ -129,9 +129,19 @@ function generateCanvasToolButton(button: ToolButtonConfig) {
   };
 }
 
+function getXYS(event: MouseEvent): [number, number, number] {
+  const { clientWidth: cw, clientHeight: ch } = canvasConfig.canvasContext?.canvas!;
+  const { width: pw, height: ph } = canvasConfig.canvasContext?.canvas!;
+
+  const x = Math.floor(pw * event.offsetX / cw);
+  const y = Math.floor(ph * event.offsetY / ch);
+  const size = Math.floor(canvasConfig.pencilContext.pixelSize);
+
+  return [x, y, size];
+}
+
 function mousedownEvent(event: MouseEvent, ctx: CanvasRenderingContext2D) {
-  const x = Math.floor(event.offsetX / canvasConfig.pencilContext.pixelSize);
-  const y = Math.floor(event.offsetY / canvasConfig.pencilContext.pixelSize);
+  const [x, y, size] = getXYS(event);
 
   if (canvasConfig.modes.fill) {
     const rect = getCanvasContext().canvas.getBoundingClientRect();
@@ -141,25 +151,25 @@ function mousedownEvent(event: MouseEvent, ctx: CanvasRenderingContext2D) {
     const canvasX = Math.floor((event.clientX - rect.left) * scaleX);
     const canvasY = Math.floor((event.clientY - rect.top) * scaleY);
 
-    floodFill(ctx, canvasX, canvasY, canvasConfig.pencilContext.colour);
+    floodFill(ctx, x, y, canvasConfig.pencilContext.colour);
   } else if (canvasConfig.modes.erase) {
     isDrawing = true;
     lastX = x;
     lastY = y;
-    drawPixel(x, y, ctx, canvasConfig.pencilContext.pixelSize);
+    paint(x, y, size, ctx);
   } else if (canvasConfig.modes.draw) {
     isDrawing = true;
     lastX = x;
     lastY = y;
-    drawPixel(x, y, ctx, canvasConfig.pencilContext.pixelSize);
+    paint(x, y, size, ctx);
   }
 }
 
 function mousemoveEvent(event: MouseEvent, ctx: CanvasRenderingContext2D) {
   if (!isDrawing) return;
-  const x = Math.floor(event.offsetX / canvasConfig.pencilContext.pixelSize);
-  const y = Math.floor(event.offsetY / canvasConfig.pencilContext.pixelSize);
-  drawLine(lastX, lastY, x, y, ctx, canvasConfig.pencilContext.pixelSize);
+  const [x, y, size] = getXYS(event);
+
+  drawLine(lastX, lastY, x, y, ctx, size);
   lastX = x;
   lastY = y;
 }
@@ -185,12 +195,12 @@ function touchstartEvent(event: TouchEvent, ctx: CanvasRenderingContext2D) {
     isDrawing = true;
     lastX = x;
     lastY = y;
-    drawPixel(x, y, ctx, canvasConfig.pencilContext.pixelSize);
+    paint(x, y, canvasConfig.pencilContext.pixelSize, ctx);
   } else if (canvasConfig.modes.draw) {
     isDrawing = true;
     lastX = x;
     lastY = y;
-    drawPixel(x, y, ctx, canvasConfig.pencilContext.pixelSize);
+    paint(x, y, canvasConfig.pencilContext.pixelSize, ctx);
   }
 }
 
@@ -346,14 +356,15 @@ export const drawPage: PageRenderer = ({ app }) => {
             "@": {
               name: "pixel slider",
               type: "range",
-              min: "3",
-              max: "100",
-              value: "10",
+              min: "1",
+              max: "5",
+              value: "1",
             },
           },
           "%input": (event: Event) => {
             const inputEvent = event.target as HTMLInputElement;
             const newSize = parseInt(inputEvent.value, 10);
+
             canvasConfig.pencilContext = {
               ...canvasConfig.pencilContext,
               pixelSize: newSize,
