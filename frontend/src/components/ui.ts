@@ -135,3 +135,17 @@ export function createToggleSwitch(
     }
   };
 }
+
+
+export function createImage(
+  src: Reactive<string>,
+  alt: string = ''
+): ElemTree {
+  return {
+    '|div.image-wrapper': {
+      '|img.responsive-img': {
+        '@': { src, alt },
+      }
+    }
+  };
+}

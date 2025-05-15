@@ -19,7 +19,9 @@ export const homePage: PageRenderer = ({ page }) => {
             ...wrapAsCard({
                 "|p": { _: der(() => `${inpStr()} - ${inpNum()} - ${inpBool()}`) },
                 ...createButton("Login", () => { visit("login"); }),
+
                 ...createInput("Input here", inpStr),
+
                 ...createRadioboxList("asdf", [
                     { label: "Hearts", value: "hearts" },
                     { label: "Diamonds", value: "diamonds" },

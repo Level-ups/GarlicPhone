@@ -1,7 +1,9 @@
-import { sig } from "../../../lib/signal";
+import { der, sig, type Reactive } from "../../../lib/signal";
+import { titleCard } from "../components/menuNav";
+import { createButton, createImage, createInput } from "../components/ui";
 import { apiFetch } from "../lib/fetch";
-import { GALLERY_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
-import { parseInto } from "../lib/parse";
+import { GALLERY_FLEX_CONFIG, LIST_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
+import { parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 
 export type Image = {
@@ -16,10 +18,28 @@ async function getImage(chainId: number): Promise<Image> {
     return data;
 }
 
-export const guessPage: PageRenderer = ({ page }) => {
-    const imgSrc = sig<string>("");
+export function createGuessPage(
+    title: string,
+    promptInput: Reactive<string>,
+    callBack: () => void,
+    imgSrc?: Reactive<string>
+): ElemTree {
+    return {
+        "|div": wrapAsFlex({
+            ...titleCard(title),
+            ...(imgSrc == null ? {} : createImage(imgSrc, "")),
+            ...createInput("Enter a prompt", promptInput),
+            ...createButton("Submit", () => { visit("draw"); }),
+            "|p": { _: der(() => `PROMPT: ${promptInput()}`) }
+        }, LIST_FLEX_CONFIG)
+    };
+}
 
-    const chainId = 1;
+export const guessPage: PageRenderer = ({ page }) => {
+    const promptInput = sig<string>("");
+    const imgSrc = sig<string>("https://picsum.photos/200");
+
+    const chainId = 1; // TODO
 
     // Wait a bit for the other guy to upload his shit
     setTimeout(async () => {
@@ -30,11 +50,10 @@ export const guessPage: PageRenderer = ({ page }) => {
     // Render page
     isolateContainer("page");
 
-    return parseInto(page, {
-        "|div": wrapAsFlex({
-            "|img": { "@": { src: imgSrc } },
-            "|h1": { _: "Guess" },
-            "|input": {}
-        }, GALLERY_FLEX_CONFIG)
-    });
+    return parseInto(page, createGuessPage(
+        "Time to guess - take a swing!",
+        promptInput,
+        () => { visit("draw") },
+        imgSrc
+    ));
 }
