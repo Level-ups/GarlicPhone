@@ -24,7 +24,7 @@ export function menuNav(): ElemTree {
 
   return {
     "|nav.nav.card": {
-        "|p.nav-title": { _: "Garlic Phone" },
+      "|p.nav-title": { _: "Garlic Phone" },
       "|img.nav-logo": {
         "@": { src: garlicPhoneLogo, alt: "Garlic Phone" },
       },
@@ -39,7 +39,13 @@ export function menuNav(): ElemTree {
 
 export function titleCard(title: string): ElemTree {
   return {
-    "|nav.nav.card": {
+    "|nav.nav.card.title-card": {
+      "|div.title-and-logo": {
+        "|p.nav-title": { _: "Garlic Phone" },
+        "|img.nav-logo": {
+          "@": { src: garlicPhoneLogo, alt: "Garlic Phone" },
+        },
+      },
       "|h1": { _: title },
       $: {
         marginBottom: "2em",

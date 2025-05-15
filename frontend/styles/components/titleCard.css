@@ -1,0 +1,16 @@
+.title-card{
+    color: black;
+    display: flex;
+    align-items: center;
+
+}
+
+.title-card > h1{
+    color: black;
+    margin-left: auto;
+}
+
+.title-and-logo{
+    display: flex;
+    align-items: center;
+}

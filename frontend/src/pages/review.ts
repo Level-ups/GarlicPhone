@@ -37,7 +37,7 @@ export const reviewPage: PageRenderer = ({ page }) => {
             ...react([selectedChain], () => createChainDisplay(chains[selectedChain()].links))
         }, [1, 2], "1em"),
         "|br": {},
-        ...wrapAsCard({
-        }),
+        // ...wrapAsCard({
+        // }),
     });
 }

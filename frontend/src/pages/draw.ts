@@ -294,17 +294,17 @@ export const drawPage: PageRenderer = ({ app }) => {
     },
   ];
 
-  sseHandler?.addEventListener("before_lobby_update", async (e) => {
-    const lobby: WithClient<Lobby> = JSON.parse(e.data);
-    const canvas = document.getElementById("canvas") as HTMLCanvasElement;  
-    const uploadedImage = await uploadCanvasImage(canvas, lobby.phasePlayerAssignments[0].chain.id, lobby.players[lobby.clientIndex].id);
-  });
+  // sseHandler?.addEventListener("before_lobby_update", async (e) => {
+  //   const lobby: WithClient<Lobby> = JSON.parse(e.data);
+  //   const canvas = document.getElementById("canvas") as HTMLCanvasElement;  
+  //   const uploadedImage = await uploadCanvasImage(canvas, lobby.phasePlayerAssignments[0].chain.id, lobby.players[lobby.clientIndex].id);
+  // });
 
-  sseHandler?.addEventListener("after_lobby_update", async (e) => {
-    const lobby: WithClient<Lobby> = JSON.parse(e.data);
-    const promptForPlayer = await getPromptForPLayer(lobby.phasePlayerAssignments[0].chain.id);
-    prompt(promptForPlayer.text);
-  });
+  // sseHandler?.addEventListener("after_lobby_update", async (e) => {
+  //   const lobby: WithClient<Lobby> = JSON.parse(e.data);
+  //   const promptForPlayer = await getPromptForPLayer(lobby.phasePlayerAssignments[0].chain.id);
+  //   prompt(promptForPlayer.text);
+  // });
 
   isolateContainer("app");
 
