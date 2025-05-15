@@ -33,19 +33,19 @@ export function validateImageUploadDto(imageUploadDto: Partial<ImageUploadDto>):
     {
       field: "chainId",
       message: "chainId is required",
-      isValid: !imageUploadDto.chainId,
+      isValid: !!imageUploadDto.chainId,
     },
     {
       field: "userId",
       message: "userId is required",
-      isValid: !imageUploadDto.userId,
+      isValid: !!imageUploadDto.userId,
     },
     {
       field: "image",
       message: "image is required",
-      isValid: !imageUploadDto.image,
+      isValid: !!imageUploadDto.image,
     }
   ];
 
-  return imageUploadValidations.filter((field) =>!field.isValid);
+  return imageUploadValidations.filter((field) => !field.isValid);
 }

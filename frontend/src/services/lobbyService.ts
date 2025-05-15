@@ -21,6 +21,27 @@ export interface Lobby {
   createdAt: string;
   phases: { index: number, phase: GamePhaseName };
   lastActivity: string;
+  phasePlayerAssignments: {
+    phase: {
+      index: number;
+      phase: GamePhaseName;
+    },
+    player: {
+      id: number;
+      name: string;
+      avatarUrl?: string;
+      isHost?: boolean;
+      isReady?: boolean;
+    },
+    chain: {
+      id: number,
+      game: {
+        id: number;
+        urlId: string;
+        startedAt: string;
+      }
+    }
+  }[]
 }
 
 // API base URL - adjust this based on your environment

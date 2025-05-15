@@ -43,7 +43,7 @@ export function removeClient(lobbyId: string, sendEvent: ServerSentEventResponse
 
 
 // Broadcast a lobby update to all connected clients for that lobby 
-export function broadcastLobbyUpdate(lobby: Lobby): void {
+export function broadcastLobbyUpdate(lobby: Lobby, eventName: string = "lobby_update"): void {
   const { id: lobbyId } = lobby;
   
   if (!lobbyClients.has(lobbyId)) {
@@ -71,7 +71,7 @@ export function broadcastLobbyUpdate(lobby: Lobby): void {
         clientIndex: i
       };
 
-      client.sendEvent('lobby_update', payload);
+      client.sendEvent(eventName, payload);
 
       client.lastActivity = new Date();
     } catch (error) {

@@ -1,4 +1,5 @@
 import { UUID } from 'crypto';
+import { Either } from '../../../lib/types';
 import { constants } from '../library/constants';
 import { ErrorDetails, InsertErrorDetails, NotFoundErrorDetails } from '../library/error-types';
 import { broadcastLobbyUpdate } from '../library/lobbyEventBroadcaster';
@@ -10,7 +11,6 @@ import { PhasePlayerAssignment } from "../models/PhasePlayerAssignment";
 import { Player } from '../models/Player';
 import gameService from '../services/gameService';
 import chainRepository from './chainRepository';
-import { Either } from '../../../lib/types';
 
 // In-memory storage for lobbies
 const lobbies: Map<string, Lobby> = new Map();
@@ -155,15 +155,29 @@ export const updateLobbyStatus = async (lobbyId: UUID, status: LobbyStatus): Pro
   if (status === 'started') {
     const intervalId = setInterval(() => {
       const updatedLobby = lobbies.get(lobbyId);
-      if (!updatedLobby?.phases.peekNextPhase()) return;
 
-      updatedLobby.phases.moveToNextPhase();
-      broadcastLobbyUpdate(updatedLobby);
+      // Schedule the pre-callback 5 seconds before the main one
+      setTimeout(() => {
+        if (updatedLobby) broadcastLobbyUpdate(updatedLobby, 'before_lobby_update');
+      }, 0);
+  
+      // Schedule the main callback at the actual interval
+      setTimeout(() => {
+        if (!updatedLobby?.phases.peekNextPhase()) return;
 
-      if (updatedLobby.phases.getCurrentPhase().phase === 'Review') {
-        clearInterval(intervalId);
-        lobbyTimers.delete(lobbyId);
-      }
+        updatedLobby.phases.moveToNextPhase();
+        broadcastLobbyUpdate(updatedLobby);
+
+        if (updatedLobby.phases.getCurrentPhase().phase === 'Review') {
+          clearInterval(intervalId);
+          lobbyTimers.delete(lobbyId);
+        }
+      }, constants.UPLOAD_LENGTH_MILLISECONDS);
+
+      setTimeout(() => {
+        if (updatedLobby) broadcastLobbyUpdate(updatedLobby, 'after_lobby_update');
+      }, 2 * constants.UPLOAD_LENGTH_MILLISECONDS);
+  
     }, constants.ROUND_LENGTH_MILLISECONDS);
     
     lobbyTimers.set(lobbyId, intervalId);
