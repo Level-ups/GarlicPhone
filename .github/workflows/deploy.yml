@@ -83,7 +83,7 @@ jobs:
             --non-interactive \
             --agree-tos \
             --email ${{ vars.CERTBOT_EMAIL }} \
-            -d garlic-phone.com -d www.garlic-phone.com
+            -d garlic-phone.com
           EOF
 
       - name: Install packages, build, and run
