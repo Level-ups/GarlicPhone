@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 import userRepository from '../repositories/userRepository';
 
@@ -21,7 +21,6 @@ export async function authenticateRequest(req: Request, res: Response, next: Nex
     if (payload.sub) {
         const userFromDB = await userRepository.findUserByGoogleId(payload.sub);
         userRole = userFromDB?.role.name
-        console.log("USER FROM DB", userFromDB)
         req.user = userFromDB!;
     } else{
         res.status(500).json({error: "Internal server error"})

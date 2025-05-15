@@ -2,7 +2,7 @@ import { der, sig, type Reactive } from "../../../lib/signal";
 import { titleCard } from "../components/menuNav";
 import { createButton, createImage, createInput } from "../components/ui";
 import { apiFetch } from "../lib/fetch";
-import { GALLERY_FLEX_CONFIG, LIST_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
+import { LIST_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 
@@ -14,7 +14,6 @@ export type Image = {
 async function getImage(chainId: number): Promise<Image> {
     const res = await apiFetch("get", `/api/images/chain/${chainId}`, undefined);
     const data = await res.json() as Image;
-    console.log("GET IMAGE:", data);
     return data;
 }
 
@@ -29,7 +28,7 @@ export function createGuessPage(
             ...titleCard(title),
             ...(imgSrc == null ? {} : createImage(imgSrc, "")),
             ...createInput("Enter a prompt", promptInput),
-            ...createButton("Submit", () => { visit("draw"); }),
+            // ...createButton("Submit", () => { /* visit("draw"); */ }),
             "|p": { _: der(() => `PROMPT: ${promptInput()}`) }
         }, LIST_FLEX_CONFIG)
     };
@@ -53,7 +52,7 @@ export const guessPage: PageRenderer = ({ page }) => {
     return parseInto(page, createGuessPage(
         "Time to guess - take a swing!",
         promptInput,
-        () => { visit("draw") },
+        () => { /* visit("draw") */ },
         imgSrc
     ));
 }
