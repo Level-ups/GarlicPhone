@@ -71,10 +71,7 @@ async function refreshLobbyState(gameCode: string, players: Signal<PlayerInfo[]>
 }
 
 export const lobbyPage: PageRenderer = ({ page }) => {
-    const players = sig<PlayerInfo[]>([
-        { id: 1, name: "Player 1" },
-        { id: 2, name: "Player 2" }
-    ]);
+    const players = sig<PlayerInfo[]>([]);
     const message = sig<string | null>(null);
 
     const playerId = Number(localStorage.getItem("playerId") ?? randId());
