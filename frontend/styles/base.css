@@ -158,12 +158,6 @@ body {
   box-sizing: border-box;
 }
 
-body {
-	/* background: linear-gradient(-45deg, #FEF3E2, #C7D9DD, #CCE0AC, #C8AAAA, #FEF3E2);
-	background-size: 700% 700%; */
-	animation: back-colour-fade 50s ease infinite;
-}
-
 @keyframes gradient {
 	0% {
 		background-position: 0% 50%;
@@ -362,7 +356,7 @@ button:focus-visible {
 
 /*----- Button -----*/
 .gradient-btn {
-  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  background-color: white;
   border: none;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -550,12 +544,13 @@ button:focus-visible {
 
 /* Uses the same .gradient-btn class as the main buttons */
 .gradient-btn {
-  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  background-color: white;
   border: none;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border-radius: 1rem;
+  box-shadow: .1rem .2rem black;
+  border: 2px solid black;
   padding: 0.75em 1.5em;
-  color: white;
+  color: black;
   font-size: 1rem;
   cursor: pointer;
   width: 100%;
@@ -563,9 +558,9 @@ button:focus-visible {
 }
 .gradient-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    box-shadow: .15rem .25rem black;
 }
 .gradient-btn:active {
   transform: translateY(0);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: .05rem .1rem black;
 }
