@@ -17,6 +17,7 @@ export const constants = {
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID!,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET!,
   GOOGLE_CLIENT_REDIRECT_URI: process.env.GOOGLE_CLIENT_REDIRECT_URI!,
+  APP_URL: process.env.APP_URL!,
   GOOGLE_CLIENT_SCOPES: process.env.GOOGLE_CLIENT_SCOPES ?? 'openid profile email',
   GOOGLE_CLIENT_AUTH_URL: process.env.GOOGLE_CLIENT_AUTH_URL ?? 'https://accounts.google.com/o/oauth2/v2/auth',
   FRONTEND_URL: process.env.FRONTEND_URL!,

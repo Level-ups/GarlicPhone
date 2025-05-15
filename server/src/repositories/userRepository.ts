@@ -16,10 +16,31 @@ async function findAllUsers(): Promise<User[]> {
   `;
 
   const result = await pool.query(query);
-  return result.rows.map((row) => userMapper.toDomain(row))
+  return result.rows.map((row: any) => userMapper.toDomain(row))
 }
 
 async function findUserById(id: string): Promise<User | null> {
+  const query = `
+    SELECT 
+      u.id AS user_id,
+      u.google_sub,
+      u.name,
+      u.avatar_url,
+      r.id AS role_id,
+      r.name AS role_name 
+    FROM users u
+    INNER JOIN roles r ON u.role_id = r.id
+    WHERE u.id = $1
+  `;
+
+  const result = await pool.query(
+    query,
+    [id]
+  );
+  return result.rows.length > 0 ? userMapper.toDomain(result.rows[0]) : null;
+}
+
+async function findUserByGoogleId(id: string): Promise<User | null> {
   const query = `
     SELECT 
       u.id AS user_id,
@@ -117,6 +138,7 @@ const userRepository = {
   insertUser,
   updateUser,
   deleteUser,
+  findUserByGoogleId
 };
 
 export default userRepository;

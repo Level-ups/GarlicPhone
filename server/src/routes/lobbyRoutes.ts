@@ -167,6 +167,8 @@ lobbyRouter.post('/:lobbyId/start', async (req: Request, res: Response) => {
   }
 });
 
+// TODO: add code for moving to next phase
+
 // End the game
 lobbyRouter.post('/:lobbyId/end', async (req: Request, res: Response) => {
   try {

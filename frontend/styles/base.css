@@ -167,7 +167,6 @@ a:hover { color: var(--link-hover) }
   top: 0;
   left: calc(50vw - var(--pageWidth)/2);
 
-
   width: var(--pageWidth);
   height: 100vh;
   padding-top: var(--topPad);
