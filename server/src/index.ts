@@ -22,7 +22,7 @@ import { authenticateRequest, requireRole } from './library/authMiddleware';
 import { validateLobbyUrlId } from './models/Lobby';
 
 //---------- SETUP ----------//
-
+//
 // Load environment variables
 dotenv.config();
 // Initialize express app
