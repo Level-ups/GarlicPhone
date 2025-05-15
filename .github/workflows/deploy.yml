@@ -95,16 +95,22 @@ jobs:
         run: |
           ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
           source ~/.env
+
+          # Install Node.js (Amazon Linux 2023 compatible)
+          curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+          sudo yum install -y nodejs
+
           cd server
           npm run clean
           npm install
+
           cd ../frontend
           npm install
-          cd ..
-          npm install
           npm run build
-          # Ensure the old process is stopped before starting the new one
+
+          cd ..
           fuser -k ${PORT}/tcp || true
-          # Start the server, which is now handling HTTPS
-          nohup $(which npm) start > server.log 2>&1 &
+
+          # Start the server
+          PORT=${PORT} nohup npm start --prefix server > server.log 2>&1 &
           EOF
