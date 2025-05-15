@@ -106,9 +106,9 @@ jobs:
 
           cd ../frontend
           npm install
-          npm run build
 
           cd ..
+          npm run build
           fuser -k ${PORT}/tcp || true
 
           # Start the server
