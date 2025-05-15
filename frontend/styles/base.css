@@ -59,7 +59,6 @@
   font-weight: 400;
 
   color: var(--text);
-  background-color: var(--bg);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -71,18 +70,18 @@
 /* ---------- Elements ---------- */
 
 html {
-  font-size: 16px; 
-}
-
-
-html {
   font-size: clamp(10px, 2vw + 1rem, 16px); /* 10px to 16px scaling based on viewport width */
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+
+  background: var(--bg);
 }
 
 /* Medium screens (tablet) */
 @media (max-width: 1200px) {
   html {
-      font-size: clamp(9px, 2vw + 1rem, 15px);
+    font-size: clamp(9px, 2vw + 1rem, 15px);
   }
 }
 
@@ -232,7 +231,7 @@ a:hover { color: var(--link-hover) }
   height: "100%";
   border-color: var(--dark_turquios);
   border-radius: 12px;
-  background-color: #2E4D60; 
+  background-color: var(--navy); 
   color: var(--white_white);
   text-align: left;
   font-family: 'Rosario', sans-serif;
