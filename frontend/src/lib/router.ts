@@ -4,10 +4,7 @@ export type ContainerMap = { [key: string]: HTMLElement } & { app: HTMLElement, 
 
 declare global {
   function visit(page: string): void;
-<<<<<<< HEAD
-=======
   function isolateContainer(container: string): void;
->>>>>>> 92c160dbd84b06a2c6379104202e94abef4f884d
 }
 
 interface RouterOptions {
