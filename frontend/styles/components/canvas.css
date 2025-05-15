@@ -108,15 +108,6 @@
     border-radius: 1.5rem;
   }
   
-  .draw-page-timer {
-    padding-right: 4rem;
-    font-size: 2rem;
-    padding: 1rem 2rem;
-    background-color: black;
-    color: white;
-    border-radius: 1.5rem;
-  }
-  
   .canvas-button,
   .colour-button {
     width: 100%;

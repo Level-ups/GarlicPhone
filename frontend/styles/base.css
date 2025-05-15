@@ -255,6 +255,16 @@ a:hover { color: var(--link-hover) }
   border-radius: 12px; 
   font-size: 1.5rem;
 }
+  
+.timer {
+  font-size: 2rem;
+  background-color: black;
+
+  color: white;
+  border-radius: 1.5rem;
+
+  padding: 1rem 2rem;
+}
 
 .btnGuess {
   background-color: var(--gold_yellow);   

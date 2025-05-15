@@ -8,6 +8,8 @@ import trashIcon from "/assets/canvas/trash.svg";
 import { drawLine, drawPixel, floodFill, resizeCanvasToDisplaySize } from "../lib/util/canvasUtils";
 import type { PageRenderer } from "../lib/router";
 import { apiFetch } from "../lib/fetch";
+import { der, sig } from "../../../lib/signal";
+import { timer } from "../lib/timer";
 
 type CanvasModes = {
   fill: boolean;
@@ -193,6 +195,8 @@ function getCanvasContext() {
   return canvasConfig.canvasContext;
 }
 export const drawPage: PageRenderer = ({ app }) => {
+  const prompt = sig<string>("Clown with a pie on his face");
+
   const colourButtons: ColourButtonConfig[] = [
     {colour: "rgb(255, 0, 0)"},
     {colour: "rgb(0, 0, 255)"},
@@ -271,7 +275,7 @@ export const drawPage: PageRenderer = ({ app }) => {
       "|div.draw-page-header-ctn": {
         "|div.draw-page-title-timer-ctn": {
           "|h2.large-heading.draw-page-title": { _: "Garlic Phone", },
-          "|p.draw-page-timer": { _: "00:00", },
+          ...timer(30)
         },
         "|img.draw-page-logo": {
           "@": { src: garlicPhoneLogo, alt: "Garlic Phone Logo", },
@@ -279,7 +283,7 @@ export const drawPage: PageRenderer = ({ app }) => {
       },
       "|div.draw-page-prompt-ctn": {
         "|p": { _: "Draw:" },
-        "|h3.medium-heading": { _: "Clown with pie on his face", },
+        "|h3.medium-heading": { _: prompt },
       },
       "|div.draw-page-controls": {
         ...forEl(colourButtons, (_, v) => generateCanvasColourButton(v)),
