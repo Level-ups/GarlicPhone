@@ -121,7 +121,7 @@ export const homePage: PageRenderer = ({ page }) => {
                 "|h2": { _: "Welcome to Garlic Phone" },
                 "|form#player-form": {
                     "|fieldset": {
-                        "|legend": { _: "Enter Your Name" },
+                        //"|legend": { _: "Enter Your Name" },
                         "|label": { 
                             _: "Your Name:",
                             "@": { for: "player-name" }
@@ -162,7 +162,7 @@ export const homePage: PageRenderer = ({ page }) => {
                 },
                 "|article.create-game.card": {
                     "|h3": { _: "Create a New Game" },
-                    "|p": { _: "Start a new lobby and invite your friends!" },
+                    //"|p": { _: "Start a new lobby and invite your friends!" },
                     "|button#create-lobby-btn": {
                         _: "Create Game",
                         "@": { type: "button" },
@@ -176,12 +176,12 @@ export const homePage: PageRenderer = ({ page }) => {
                     }
                 },
                 "|article.join-game.card": {
-                    "|h3": { _: "Join Existing Game" },
+                    "|h3": { _: "Join a Lobby:" },
                     "|form#join-form": {
-                        "|label": { 
+                        /*"|label": { 
                             _: "Lobby Code:",
                             "@": { for: "lobby-code" }
-                        },
+                        },*/
                         "|input#lobby-code": {
                             "@": { 
                                 type: "text", 

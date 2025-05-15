@@ -144,9 +144,17 @@ export const lobbyPage: PageRenderer = ({ page }) => {
         // Update players list
         const playersList = document.getElementById('players-list');
         if (playersList) {
-            playersList.innerHTML = '';
+            // Create a document fragment to hold all new player items
+            const fragment = document.createDocumentFragment();
             
+            // Remove all existing children from playersList
+            while (playersList.firstChild) {
+                playersList.removeChild(playersList.firstChild);
+            }
+            
+            // Create player items
             lobby.players.forEach((player) => {
+                // Create player item container
                 const playerItem = document.createElement('li');
                 playerItem.className = 'player-item';
                 
@@ -187,9 +195,12 @@ export const lobbyPage: PageRenderer = ({ page }) => {
                 playerItem.appendChild(playerAvatar);
                 playerItem.appendChild(playerDetails);
                 
-                // Add the player item to the list
-                playersList.appendChild(playerItem);
+                // Add the player item to the fragment
+                fragment.appendChild(playerItem);
             });
+            
+            // Add all player items to the players list at once
+            playersList.appendChild(fragment);
         }
         
         // Check if current player is ready
