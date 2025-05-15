@@ -135,6 +135,12 @@ export const lobbyPage: PageRenderer = ({ page }) => {
     const updateUI = (lobby: lobbyService.Lobby): void => {
         currentLobby = lobby;
         
+        // Update lobby capacity
+        const lobbyCapacity = document.querySelector('.lobby-capacity');
+        if (lobbyCapacity) {
+            lobbyCapacity.textContent = `${lobby.players.length}/${lobby.maxPlayers || 10} players`;
+        }
+        
         // Update players list
         const playersList = document.getElementById('players-list');
         if (playersList) {
@@ -193,7 +199,7 @@ export const lobbyPage: PageRenderer = ({ page }) => {
         // Update ready button
         const readyBtn = document.getElementById('ready-btn') as HTMLButtonElement;
         if (readyBtn) {
-            readyBtn.textContent = isReady ? 'Set Not Ready' : 'Set Ready';
+            readyBtn.textContent = 'Ready';
             if (isReady) {
                 readyBtn.classList.add('ready');
             } else {
@@ -254,6 +260,15 @@ export const lobbyPage: PageRenderer = ({ page }) => {
     // Connect to lobby events when page loads
     setTimeout(() => {
         connectToLobbyEvents();
+        
+        // Initialize ready button class based on player status
+        const readyBtn = document.getElementById('ready-btn');
+        if (readyBtn && currentLobby) {
+            const currentPlayer = currentLobby.players.find(p => p.id === playerId);
+            if (currentPlayer?.isReady) {
+                readyBtn.classList.add('ready');
+            }
+        }
     }, 0);
 
     // Render page
@@ -304,11 +319,10 @@ export const lobbyPage: PageRenderer = ({ page }) => {
                             padding: "0"
                         },
                         "|button#ready-btn": {
-                            _: "Set Ready",
+                            _: "Ready",
                             "@": { type: "button" },
                             "%click": handleReadyClick,
                             $: {
-                                backgroundColor: "var(--not-ready-color)",
                                 display: isHost ? "none" : "block",
                                 flex: "1",
                                 minWidth: "100px"
@@ -342,6 +356,15 @@ export const lobbyPage: PageRenderer = ({ page }) => {
             },
             "|article.players-panel.card": {
                 "|h2": { _: "Players" },
+                "|p.lobby-capacity": {
+                    $: {
+                        fontSize: "0.9rem",
+                        color: "var(--secondary-color)",
+                        marginTop: "-0.5rem",
+                        marginBottom: "1rem"
+                    },
+                    _: "Loading..."
+                },
                 "|ol#players-list.players-list": {
                     $: {
                         listStyle: "none",
