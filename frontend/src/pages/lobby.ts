@@ -4,6 +4,63 @@ import type { PageRenderer } from "../lib/router";
 import { menuNav, titleCard } from "../components/menuNav";
 import * as lobbyService from "../services/lobbyService";
 import type { Player } from "../services/lobbyService";
+import { der, sig, type Signal } from "../../../lib/signal";
+import { wrapAsCard } from "../lib/card";
+import { apiFetch } from "../lib/fetch";
+import { GALLERY_FLEX_CONFIG} from "../lib/flex";
+import { updateSSEHandler } from "../lib/sse";
+import type { Lobby, WithClient } from "../services/lobbyService";
+
+type PlayerInfo = {
+    id: number;
+    name: string;
+    avatarUrl?: string;
+    isHost?: boolean;
+    isReady?: boolean
+};
+
+async function createLobby(playerId: number) {
+    const res = await apiFetch("post", "/api/lobbies", {
+        hostId: playerId,
+        hostName: "Host Player"
+    });
+
+    const data = await res.json()
+    console.log("CREATE LOBBY:", data);
+
+    return data;
+}
+
+async function joinLobby(gameCode: string, playerId: number, players: Signal<PlayerInfo[]>) {
+    const res = await apiFetch("post", "/api/lobbies/join", {
+        playerId,
+        playerName: "Joined Player",
+        code: gameCode
+    });
+
+    const data = await res.json();
+    console.log("JOIN LOBBY:", data);
+    players(data.players);
+
+    return data;
+}
+
+// Set the current player as ready
+async function setAsReady(lobbyId: string, playerId: number, players: Signal<PlayerInfo[]>) {
+    const res = await apiFetch("post", `/api/lobbies/${lobbyId}/ready`, { playerId, isReady: true });
+    const data = await res.json();
+    console.log("SET AS READY:", res);
+
+    players(data.players);
+}
+
+async function startGame(gameId: string, playerId: number) {
+    const res = await apiFetch("post", `/api/lobbies/${gameId}/start`, { playerId });
+
+    const data = await res.json();
+    console.log("START GAME:", data);
+}
+
 
 export const lobbyPage: PageRenderer = ({ page }) => {
     // State
