@@ -19,9 +19,10 @@ type PlayerInfo = {
     isReady?: boolean
 };
 
-async function createLobby(playerId: number) {
+async function createLobby(playerId: string | number) {
+    const playerIdNum = typeof playerId === 'string' ? parseInt(playerId, 10) : playerId;
     const res = await apiFetch("post", "/api/lobbies", {
-        hostId: playerId,
+        hostId: playerIdNum,
         hostName: "Host Player"
     });
 
@@ -31,9 +32,10 @@ async function createLobby(playerId: number) {
     return data;
 }
 
-async function joinLobby(gameCode: string, playerId: number, players: Signal<PlayerInfo[]>) {
+async function joinLobby(gameCode: string, playerId: string | number, players: Signal<PlayerInfo[]>) {
+    const playerIdNum = typeof playerId === 'string' ? parseInt(playerId, 10) : playerId;
     const res = await apiFetch("post", "/api/lobbies/join", {
-        playerId,
+        playerId: playerIdNum,
         playerName: "Joined Player",
         code: gameCode
     });
@@ -46,16 +48,18 @@ async function joinLobby(gameCode: string, playerId: number, players: Signal<Pla
 }
 
 // Set the current player as ready
-async function setAsReady(lobbyId: string, playerId: number, players: Signal<PlayerInfo[]>) {
-    const res = await apiFetch("post", `/api/lobbies/${lobbyId}/ready`, { playerId, isReady: true });
+async function setAsReady(lobbyId: string, playerId: string | number, players: Signal<PlayerInfo[]>) {
+    const playerIdNum = typeof playerId === 'string' ? parseInt(playerId, 10) : playerId;
+    const res = await apiFetch("post", `/api/lobbies/${lobbyId}/ready`, { playerId: playerIdNum, isReady: true });
     const data = await res.json();
     console.log("SET AS READY:", res);
 
     players(data.players);
 }
 
-async function startGame(gameId: string, playerId: number) {
-    const res = await apiFetch("post", `/api/lobbies/${gameId}/start`, { playerId });
+async function startGame(gameId: string, playerId: string | number) {
+    const playerIdNum = typeof playerId === 'string' ? parseInt(playerId, 10) : playerId;
+    const res = await apiFetch("post", `/api/lobbies/${gameId}/start`, { playerId: playerIdNum });
 
     const data = await res.json();
     console.log("START GAME:", data);
@@ -91,10 +95,11 @@ export const lobbyPage: PageRenderer = ({ page }) => {
                 readyBtn.disabled = true;
             }
             
-            const currentPlayer = currentLobby.players.find(p => p.id === playerId);
-            if (currentPlayer) {
-                await lobbyService.setPlayerReady(lobbyId, playerId, !currentPlayer.isReady);
-            }
+            // Create a signal with the current players
+            const playersSignal = sig<PlayerInfo[]>(currentLobby.players as unknown as PlayerInfo[]);
+            
+            // Use local setAsReady function instead of lobbyService.setPlayerReady
+            await setAsReady(lobbyId, playerId, playersSignal);
             
         } catch (error) {
             alert(`Error updating ready status: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -116,7 +121,8 @@ export const lobbyPage: PageRenderer = ({ page }) => {
                 startGameBtn.textContent = 'Starting...';
             }
             
-            await lobbyService.startGame(lobbyId, playerId);
+            // Use local startGame function instead of lobbyService.startGame
+            await startGame(lobbyId, playerId);
             
         } catch (error) {
             alert(`Error starting game: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -138,6 +144,7 @@ export const lobbyPage: PageRenderer = ({ page }) => {
                 leaveLobbyBtn.disabled = true;
             }
             
+            // Use string version of player ID for lobbyService
             await lobbyService.leaveLobby(lobbyId, playerId);
             disconnectAndRedirectHome();
             
@@ -229,7 +236,8 @@ export const lobbyPage: PageRenderer = ({ page }) => {
                 
                 const playerNameEl = document.createElement('h3');
                 playerNameEl.className = 'player-name';
-                playerNameEl.textContent = player.name + (player.id === playerId ? ' (You)' : '');
+                // Compare player IDs as strings to handle both string and number IDs
+                playerNameEl.textContent = player.name + (String(player.id) === playerId ? ' (You)' : '');
                 
                 const playerStatus = document.createElement('p');
                 playerStatus.className = 'player-status';
@@ -261,7 +269,8 @@ export const lobbyPage: PageRenderer = ({ page }) => {
         }
         
         // Check if current player is ready
-        const currentPlayer = lobby.players.find(p => p.id === playerId);
+        // Compare player IDs as strings to handle both string and number IDs
+        const currentPlayer = lobby.players.find(p => String(p.id) === playerId);
         const isReady = currentPlayer?.isReady || false;
         
         // Update ready button
@@ -332,7 +341,8 @@ export const lobbyPage: PageRenderer = ({ page }) => {
         // Initialize ready button class based on player status
         const readyBtn = document.getElementById('ready-btn');
         if (readyBtn && currentLobby) {
-            const currentPlayer = currentLobby.players.find(p => p.id === playerId);
+            // Compare player IDs as strings to handle both string and number IDs
+            const currentPlayer = currentLobby.players.find(p => String(p.id) === playerId);
             if (currentPlayer?.isReady) {
                 readyBtn.classList.add('ready');
             }

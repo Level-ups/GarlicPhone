@@ -3,9 +3,50 @@ import { parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 import { menuNav, titleCard } from "../components/menuNav";
 import * as lobbyService from "../services/lobbyService";
+import { der, sig, type Signal } from "../../../lib/signal";
+import { apiFetch } from "../lib/fetch";
+
+type PlayerInfo = {
+    id: number;
+    name: string;
+    avatarUrl?: string;
+    isHost?: boolean;
+    isReady?: boolean
+};
+
+async function createLobby(playerId: string | number) {
+    const playerIdNum = typeof playerId === 'string' ? parseInt(playerId, 10) : playerId;
+    const res = await apiFetch("post", "/api/lobbies", {
+        hostId: playerIdNum,
+        hostName: "Host Player"
+    });
+
+    const data = await res.json();
+    console.log("CREATE LOBBY:", data);
+
+    return data;
+}
+
+async function joinLobby(gameCode: string, playerId: string | number, players: Signal<PlayerInfo[]>) {
+    const playerIdNum = typeof playerId === 'string' ? parseInt(playerId, 10) : playerId;
+    const res = await apiFetch("post", "/api/lobbies/join", {
+        playerId: playerIdNum,
+        playerName: "Joined Player",
+        code: gameCode
+    });
+
+    const data = await res.json();
+    console.log("JOIN LOBBY:", data);
+    players(data.players);
+
+    return data;
+}
 
 export const menuPlayGamePage: PageRenderer = ({ page }) => {
     // Generate a random player ID
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) localStorage.setItem("google-id-token", token);
     const generatePlayerId = (): string => {
         return Math.random().toString(36).substring(2, 15);
     };
@@ -33,12 +74,8 @@ export const menuPlayGamePage: PageRenderer = ({ page }) => {
             createLobbyBtn.disabled = true;
             createLobbyBtn.textContent = 'Creating...';
             
-            const lobby = await lobbyService.createLobby(
-                playerId,
-                playerName,
-                '', // avatarUrl
-                10 // maxPlayers
-            );
+            // Use local createLobby function instead of lobbyService.createLobby
+            const lobby = await createLobby(playerId);
             
             // Store player info and lobby code in session storage
             storePlayerInfo(playerName, playerId);
@@ -80,12 +117,11 @@ export const menuPlayGamePage: PageRenderer = ({ page }) => {
             joinLobbyBtn.disabled = true;
             joinLobbyBtn.textContent = 'Joining...';
             
-            const lobby = await lobbyService.joinLobbyByCode(
-                code,
-                playerId,
-                playerName,
-                '' // avatarUrl
-            );
+            // Create a signal for players
+            const playersSignal = sig<PlayerInfo[]>([]);
+            
+            // Use local joinLobby function instead of lobbyService.joinLobbyByCode
+            const lobby = await joinLobby(code, playerId, playersSignal);
             
             // Store player info and lobby code in session storage
             storePlayerInfo(playerName, playerId);
