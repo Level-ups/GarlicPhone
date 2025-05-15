@@ -1,6 +1,6 @@
 import { titleCard } from "../components/menuNav";
-import { wrapAsCard, wrapAsRowCards } from "../lib/card";
-import { DEFAULT_FLEX_CONFIG, ROW_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
+import { wrapAsCard } from "../lib/card";
+import { DEFAULT_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { parseInto } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 

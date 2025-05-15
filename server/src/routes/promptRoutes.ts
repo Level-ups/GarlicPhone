@@ -91,5 +91,32 @@ router.post("/", async (req, res) => {
   }
 });
 
+// Get the latest prompt by chain ID
+router.get("/chain/:chainId", async (req, res) => {
+  try {  const chainId = parseInt(req.params.chainId);
+
+    if (isNaN(chainId)) {
+      return res.status(400).json(new ValidationErrorDetails(
+        "Invalid chain ID",
+        [{
+          field: "chainId",
+          message: "Chain ID must be a number",
+          isValid: false,
+        }]
+      ));
+    }
+
+    const [prompts, error] = await promptService.getLatestPromptByChainId(chainId);
+
+    if (error) {
+      return res.status(500).json(error);
+    } else {
+      return res.status(200).json(prompts);
+    }
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("Failed to get latest prompt", [error.message], error.stack));
+  }
+});
+
 export { router as promptRouter };
 

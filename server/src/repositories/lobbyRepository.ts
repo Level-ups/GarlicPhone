@@ -70,20 +70,18 @@ export const addPlayerToLobby = (lobbyId: UUID, player: Omit<Player, 'isHost' | 
   }
   
   // Check if player is already in the lobby
-  if (lobby.players.some(p => p.id === player.id)) {
-    return [undefined, new InsertErrorDetails(`Player with ID ${player.id} is already in the lobby`)];
+  if (!lobby.players.some(p => p.id === player.id)) {
+    const newPlayer: Player = {
+      ...player,
+      isHost: false,
+      isReady: false
+    };
+    
+    lobby.players.push(newPlayer);
+    lobby.lastActivity = new Date();
+    lobbies.set(lobbyId, lobby);
   }
-  
-  const newPlayer: Player = {
-    ...player,
-    isHost: false,
-    isReady: false
-  };
-  
-  lobby.players.push(newPlayer);
-  lobby.lastActivity = new Date();
-  lobbies.set(lobbyId, lobby);
-  
+
   // Broadcast the lobby update to all connected clients
   broadcastLobbyUpdate(lobby);
   

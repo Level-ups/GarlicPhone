@@ -5,6 +5,8 @@ import { titleCard } from "../components/menuNav";
 import { updateSSEHandler } from "../lib/sse";
 import { der, sig, type Signal } from "../../../lib/signal";
 import { wrapAsCard } from "../lib/card";
+import type { Lobby, WithClient } from "../services/lobbyService";
+import { apiFetch } from "../lib/fetch";
 
 type PlayerInfo = {
     id: number;
@@ -15,15 +17,7 @@ type PlayerInfo = {
 };
 
 function randId() {
-    return Math.floor(10000000 * Math.random());
-}
-
-async function apiFetch(method: string, path: string, payload: any) {
-    return fetch(`${window.location.origin}${path}`, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
+    return Math.floor(100000000 * Math.random());
 }
 
 async function createLobby(playerId: number) {
@@ -86,7 +80,9 @@ export const lobbyPage: PageRenderer = ({ page }) => {
     ]);
     const message = sig<string | null>(null);
 
-    const playerId = randId();
+    const playerId = Number(localStorage.getItem("playerId") ?? randId());
+    localStorage.setItem("playerId", `${playerId}`);
+
     const isHost = sig<boolean>(false);
 
     const urlGameCode: string = window.location.pathname.split("/").filter(x => x.trim() != "").at(-1)!;
@@ -117,7 +113,8 @@ export const lobbyPage: PageRenderer = ({ page }) => {
         console.log(gameCode);
 
         // Listen on state refresh
-        sseHandler?.addEventListener("lobby_update", () => {
+        sseHandler?.addEventListener("lobby_update", (e) => {
+            const data: WithClient<Lobby> = JSON.parse(e.data);
             if (gameCode != "") { refreshLobbyState(gameCode, players); }
         });
 

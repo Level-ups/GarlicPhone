@@ -7,6 +7,7 @@ import tickIcon from "/assets/canvas/tick.svg";
 import trashIcon from "/assets/canvas/trash.svg";
 import { drawLine, drawPixel, floodFill, resizeCanvasToDisplaySize } from "../lib/util/canvasUtils";
 import type { PageRenderer } from "../lib/router";
+import { apiFetch } from "../lib/fetch";
 
 type CanvasModes = {
   fill: boolean;
@@ -331,6 +332,39 @@ export const drawPage: PageRenderer = ({ app }) => {
 window.addEventListener("resize", () => {
   resizeCanvasToDisplaySize(getCanvasContext())
 });
+
+
+async function uploadCanvasImage(canvas: HTMLCanvasElement, promptId: number, userId: number) {
+  // Convert canvas to Blob (PNG format)
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+
+  if (!blob) {
+    throw new Error('Failed to convert canvas to PNG blob');
+  }
+
+  const response = await apiFetch(
+    "post",
+    `/api/prompt/${promptId}/image?userId=${userId}`,
+    blob,
+    { 'Content-Type': 'image/png' }
+);
+
+  if (!response.ok) {
+    const errorDetails = await response.json();
+    throw new Error(`Upload failed: ${JSON.stringify(errorDetails)}`);
+  }
+
+  const result = await response.json();
+  return result; // image object returned from your API
+}
+
+// sseHandler?.addEventListener("lobby_update", async (e) => {
+//   // const x = canvasConfig.canvasContext
+//   (document.getElementById("canvas") as HTMLCanvasElement).toBlob(() => {
+//   });
+//   // const data: WithClient<Lobby> = JSON.parse(e.data);
+//   // if (gameCode != "") { refreshLobbyState(gameCode, players); }
+// });
 
 // Initial calls
 

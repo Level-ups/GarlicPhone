@@ -1,8 +1,8 @@
-import type { Lobby } from "../services/lobbyService";
+import type { Lobby, WithClient } from "../services/lobbyService";
 
 export type SSEHandlers = (
   { [key: string]: (e: any) => void } &
-  { "lobby_update": (e: Lobby) => void }
+  { "lobby_update": (e: WithClient<Lobby>) => void }
 );
 
 declare global {
@@ -31,11 +31,12 @@ export const sseHandlers: SSEHandlers = {
 const STORAGE_KEY = 'sse_url';
 
 export function updateSSEHandler(url?: string) {
-  if (url) {
-    localStorage.setItem(STORAGE_KEY, url);
-  } else {
-    url = localStorage.getItem(STORAGE_KEY) || undefined;
-  }
+  // TODO: Fix
+  // if (url) {
+  //   localStorage.setItem(STORAGE_KEY, url);
+  // } else {
+  //   url = localStorage.getItem(STORAGE_KEY) || undefined;
+  // }
 
   if (!url) { throw new Error("No URL provided and none found in localStorage."); }
 

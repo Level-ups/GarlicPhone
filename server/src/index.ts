@@ -27,15 +27,15 @@ const PORT = Number(process.env.PORT) || 5000;
 app.use(cors());
 
 // the upload image route should not be parsed as JSON
-app.use('/api/prompt/:promptId/image', express.raw({ type: 'image/png', limit: '10mb' }));
-app.post('/api/prompt/:promptId/image', async (req, res) => {
+app.use('/api/chain/:chainId/latest-image', express.raw({ type: 'image/png', limit: '10mb' }));
+app.post('/api/chain/:chainId/latest-image', async (req, res) => {
   try {
-    const { promptId } = req.params;
+    const { chainId } = req.params;
     const { userId } = req.query;
 
     const validationResult = validateImageUploadDto({
       userId: Number(userId),
-      promptId: Number(promptId),
+      chainId: Number(chainId),
       image: req.body,
     });
 
@@ -43,11 +43,11 @@ app.post('/api/prompt/:promptId/image', async (req, res) => {
       res.status(400).json(new ValidationErrorDetails("Error uploading image", validationResult));
     } else {
       const imageBuffer = req.body;
-      const imageName = `prompts/${promptId}/image.png`;
+      const imageName = `prompts/${chainId}/image.png`;
     
       const [image, error] = await imageService.createImage({
         userId: Number(userId), 
-        promptId: Number(promptId), 
+        chainId: Number(chainId), 
         image: imageBuffer
       }, imageName);
     

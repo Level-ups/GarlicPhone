@@ -62,5 +62,33 @@ router.get("/prompt/:promptId", async (req, res) => {
   }
 });
 
-export { router as imageRouter };
 
+// Get the latest image by chain ID
+router.get("/chain/:chainId", async (req, res) => {
+  const chainId = parseInt(req.params.chainId);
+
+  if (isNaN(chainId)) {
+    return res.status(400).json(new ValidationErrorDetails(
+      "Invalid chain ID",
+      [{
+        field: "chainId",
+        message: "Chain ID must be a number",
+        isValid: false,
+      }]
+    ))
+  }
+
+  try {
+    const [images, error] = await imageService.getLatestImageByChainId(chainId);
+
+    if (error) {
+      return res.status(500).json(new ErrorDetails("Error fetching images", error.details));
+    } else {
+      return res.status(200).json(images);
+    }
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
+  }
+});
+
+export { router as imageRouter };

@@ -17,7 +17,7 @@ export type ImageQueryResult = {
 } & PromptQueryResult & UserQueryResult;
 
 export type ImageUploadDto = {
-  promptId: number;
+  chainId: number;
   userId: number;
   image: Buffer;
 }
@@ -31,9 +31,9 @@ export type InsertImageDto = {
 export function validateImageUploadDto(imageUploadDto: Partial<ImageUploadDto>): ValidationResult[] {
   const imageUploadValidations: ValidationResult[] = [
     {
-      field: "promptId",
-      message: "promptId is required",
-      isValid: !imageUploadDto.promptId,
+      field: "chainId",
+      message: "chainId is required",
+      isValid: !imageUploadDto.chainId,
     },
     {
       field: "userId",
