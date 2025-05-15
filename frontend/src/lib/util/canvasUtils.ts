@@ -33,19 +33,6 @@ export function paint(x: number, y: number, size: number, ctx: CanvasRenderingCo
   ctx.putImageData(imageData, startX, startY);
 }
 
-  
-  export function resizeCanvasToDisplaySize(ctx: CanvasRenderingContext2D) {
-    
-    const dpr = window.devicePixelRatio || 1;
-    // const width = ctx.canvas.clientWidth;
-    // const height = ctx.canvas.clientHeight;
-  
-    ctx.canvas.width = 64;
-    ctx.canvas.height = 64;
-  
-    if (ctx) ctx.scale(dpr, dpr);
-  }
-  
   export function drawLine(
     x0: number,
     y0: number,

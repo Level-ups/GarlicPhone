@@ -40,7 +40,7 @@ async function findUserById(id: string): Promise<User | null> {
   return result.rows.length > 0 ? userMapper.toDomain(result.rows[0]) : null;
 }
 
-async function findUserByGoogleId(id: string): Promise<User | null> {
+async function findUserByGoogleId(googleSub: string): Promise<User | null> {
   const query = `
     SELECT 
       u.id AS user_id,
@@ -51,12 +51,12 @@ async function findUserByGoogleId(id: string): Promise<User | null> {
       r.name AS role_name 
     FROM users u
     INNER JOIN roles r ON u.role_id = r.id
-    WHERE u.id = $1
+    WHERE u.google_sub = $1
   `;
 
   const result = await pool.query(
     query,
-    [id]
+    [googleSub]
   );
   return result.rows.length > 0 ? userMapper.toDomain(result.rows[0]) : null;
 }
@@ -89,6 +89,9 @@ async function insertUser(userData: UserDto): Promise<User> {
     query,
     [userData.roleName, userData.googleSub, userData.name, userData.avatarUrl]
   );
+
+  console.log("INSERTED USER:", result.rows) // Add this line for debugging purposes
+
   return userMapper.toDomain(result.rows[0]);
 }
 

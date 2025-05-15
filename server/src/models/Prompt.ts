@@ -32,11 +32,6 @@ export type PromptDto = {
 export function validateCreatePrompt(prompt: Partial<PromptDto>): ValidationResult[] {
   const createPromptValidations: ValidationResult[] = [
     {
-      field: "userId",
-      isValid: !!prompt.userId,
-      message: "User ID must be a positive integer",
-    },
-    {
       field: "chainId",
       isValid:!!prompt.chainId,
       message: "Chain ID must be a positive integer",
@@ -53,5 +48,5 @@ export function validateCreatePrompt(prompt: Partial<PromptDto>): ValidationResu
     }
   ];
   
-  return createPromptValidations;
+  return createPromptValidations.filter(validation => !validation.isValid);
 }

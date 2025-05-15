@@ -1,5 +1,5 @@
+import { Either } from "../../../lib/types";
 import { ErrorDetails, InsertErrorDetails } from "../library/error-types";
-import { Either } from "../library/types";
 import { PlayerGame, PlayerGameDto } from "../models/PlayerGames";
 import playerGameRepository from "../repositories/playerGameRepository";
 

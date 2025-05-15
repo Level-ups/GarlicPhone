@@ -17,11 +17,13 @@ export const constants = {
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID!,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET!,
   GOOGLE_CLIENT_REDIRECT_URI: process.env.GOOGLE_CLIENT_REDIRECT_URI!,
-  APP_URL: process.env.APP_URL!,
+  APP_URL: process.env.APP_URL ?? 'http://localhost:5000',
   GOOGLE_CLIENT_SCOPES: process.env.GOOGLE_CLIENT_SCOPES ?? 'openid profile email',
   GOOGLE_CLIENT_AUTH_URL: process.env.GOOGLE_CLIENT_AUTH_URL ?? 'https://accounts.google.com/o/oauth2/v2/auth',
   FRONTEND_URL: process.env.FRONTEND_URL!,
-  ROUND_LENGTH_MILLISECONDS: parseIntOrDefault(process.env.ROUND_LENGTH_MILLISECONDS, 30000)
+  ROUND_LENGTH_MILLISECONDS: parseIntOrDefault(process.env.ROUND_LENGTH_MILLISECONDS, 10000),
+  UPLOAD_LENGTH_MILLISECONDS: parseIntOrDefault(process.env.UPLOAD_LENGTH_MILLISECONDS, 3000),
+  DOWNLOAD_LENGTH_MILLISECONDS: parseIntOrDefault(process.env.DOWNLOAD_LENGTH_MILLISECONDS, 500),
 }
 
 function parseIntOrDefault(value: string | undefined, defaultValue: number): number {

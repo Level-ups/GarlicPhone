@@ -1,18 +1,24 @@
-import * as lobbyService from '../services/lobbyService';
+import { UUID } from 'crypto';
 import express, { Request, Response } from 'express';
-import { registerClient, removeClient } from '../library/lobbyEventBroadcaster';
 import { ErrorDetails, ErrorType, NotFoundErrorDetails, ValidationErrorDetails } from '../library/error-types';
+import { registerClient, removeClient } from '../library/lobbyEventBroadcaster';
 import { createServerSentEventHandler } from '../library/serverSentEvents';
 import { validateLobbyJoinCode, validateLobbyUrlId } from "../models/Lobby";
-import { UUID } from 'crypto';
+import * as lobbyService from '../services/lobbyService';
 
 export const lobbyRouter = express.Router();
 
 // Create a new lobby
 lobbyRouter.post('/', (req: Request, res: Response) => {
   try {
-    const { hostId, hostName, hostAvatarUrl, maxPlayers } = req.body;
+    const { hostName, hostAvatarUrl, maxPlayers } = req.body;
+    const hostId = req.user?.id;
 
+    console.log("USER IS:", req.user)
+
+    if (!hostId) {
+      return res.status(401).json(new ErrorDetails("Unauthorized", ["User is not authenticated"]));
+    };
     // console.log("BODY:", req.body);
 
     if (hostId == null || hostName == null) {
@@ -42,7 +48,12 @@ lobbyRouter.post('/', (req: Request, res: Response) => {
 // Join a lobby by code
 lobbyRouter.post('/join', (req: Request, res: Response) => {
   try {
-    const { code, playerId, playerName, playerAvatarUrl } = req.body;
+    const { code, playerName, playerAvatarUrl } = req.body;
+    const playerId = req.user?.id;
+
+    if (!playerId) {
+      return res.status(401).json(new ErrorDetails("Unauthorized", ["User is not authenticated"]));
+    };
     
     if (code == null || playerId == null || playerName == null) {
       return res.status(400).json(new ValidationErrorDetails(
@@ -78,7 +89,11 @@ lobbyRouter.post('/join', (req: Request, res: Response) => {
 lobbyRouter.post('/:lobbyId/leave', (req: Request, res: Response) => {
   try {
     const { lobbyId } = req.params;
-    const { playerId } = req.body;
+    const playerId = req.user?.id;
+
+    if (!playerId) {
+      return res.status(401).json(new ErrorDetails("Unauthorized", ["User is not authenticated"]));
+    };
 
     const lobbyIdValidationResult = validateLobbyUrlId(lobbyId);
     if (!lobbyIdValidationResult.length) {
@@ -109,7 +124,12 @@ lobbyRouter.post('/:lobbyId/leave', (req: Request, res: Response) => {
 lobbyRouter.post('/:lobbyId/ready', (req: Request, res: Response) => {
   try {
     const { lobbyId } = req.params;
-    const { playerId, isReady } = req.body;
+    const { isReady } = req.body;
+    const playerId = req.user?.id;
+
+    if (!playerId) {
+      return res.status(401).json(new ErrorDetails("Unauthorized", ["User is not authenticated"]));
+    };
 
     const validationResults = ([...validateLobbyUrlId(lobbyId), {
           field: "playerId",
@@ -142,19 +162,12 @@ lobbyRouter.post('/:lobbyId/ready', (req: Request, res: Response) => {
 lobbyRouter.post('/:lobbyId/start', async (req: Request, res: Response) => {
   try {
     const { lobbyId } = req.params;
-    const { playerId } = req.body;
-    
-    const validationResults = ([...validateLobbyUrlId(lobbyId), {
-      field: "playerId",
-      message: "playerId is required",
-      isValid: !!playerId,
-    }
-  ]).filter((result) => !result.isValid);
+    const playerId = req.user?.id;
 
-  if (validationResults.length) {
-    return res.status(400).json(new ValidationErrorDetails('Validation failed', validationResults));
-  }
-    
+    if (!playerId) {
+      return res.status(401).json(new ErrorDetails("Unauthorized", ["User is not authenticated"]));
+    };
+
     const [updatedLobby, updatedLobbyError] = await lobbyService.startGame(lobbyId as UUID, playerId);
     
     if (updatedLobbyError) {
@@ -232,53 +245,15 @@ lobbyRouter.get('/code/:code', (req: Request, res: Response) => {
   } catch (error: any) {
     return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
-});
-
-// Connect to lobby updates via Server-Sent Events
-lobbyRouter.get('/:lobbyId/events', createServerSentEventHandler(sendEvent => {
-  try {
-    // Access the lobbyId from the request
-    if (!sendEvent.request) {
-      sendEvent('error', new NotFoundErrorDetails('Lobby ID not found'));
-      return;
-    }
-    
-    const lobbyId = sendEvent.request.params.lobbyId;
-
-    const validationResults = validateLobbyUrlId(lobbyId);
-
-    if (validationResults.length) {
-      sendEvent('error', new ValidationErrorDetails('Validation failed', validationResults));
-      return;
-    }
-    
-    // Send initial lobby state
-    try {
-      const [lobby, findLobbyError] = lobbyService.getLobbyById(lobbyId);
-      if (findLobbyError) {
-        sendEvent('error', findLobbyError);
-        return;
-      }
-
-      sendEvent('lobby_state', lobby);
-      
-      // Register this client for lobby updates
-      registerClient(lobbyId, sendEvent);
-      
-      // Clean up when the client disconnects
-      sendEvent.request.on('close', () => {
-        removeClient(lobbyId, sendEvent);
-      });
-    } catch (error: any) {
-      sendEvent('error', new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
-    }
-  } catch (error: any) {
-    sendEvent('error', new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
-  }
-})); 
+}); 
 
 lobbyRouter.get("/:lobbyId/current-phase/assignments", async (req, res) => {
   const { lobbyId } = req.params;
+  const playerId = req.user?.id;
+
+  if (!playerId) {
+    return res.status(401).json(new ErrorDetails("Unauthorized", ["User is not authenticated"]));
+  };
 
   try {
     
@@ -298,6 +273,7 @@ lobbyRouter.get("/:lobbyId/current-phase/assignments", async (req, res) => {
 
     if (phaseAssignments) {
       const currentPhaseAssignments = phaseAssignments.filter((phase) => phase.phase.index === lobby.phases.getCurrentPhase().index);
+      if (playerId) currentPhaseAssignments.filter(assignment => assignment.player.id === Number(playerId));
       return res.status(200).json(currentPhaseAssignments);
     } else if (getPhaseAssignmentsError) {
       if (getPhaseAssignmentsError.type === ErrorType.NotFound) {

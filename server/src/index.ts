@@ -3,10 +3,11 @@ import dotenv from 'dotenv';
 import express from 'express';
 import path from 'path';
 import imageService from './services/imageService';
-import { ErrorDetails, ValidationErrorDetails } from './library/error-types';
+import { ErrorDetails, NotFoundErrorDetails, ValidationErrorDetails } from './library/error-types';
 import { authRouter } from './routes/authRoutes';
 import { cleanupExpiredLobbies } from './services/lobbyService';
-import { cleanupInactiveClients } from './library/lobbyEventBroadcaster';
+import * as lobbyService from './services/lobbyService';
+import { cleanupInactiveClients, registerClient, removeClient } from './library/lobbyEventBroadcaster';
 import { createServerSentEventHandler } from './library/serverSentEvents';
 import { fullChainDetailsRouter } from './routes/fullChainDetailsRoutes';
 import { imageRouter } from './routes/imageRoutes';
@@ -17,6 +18,7 @@ import { validateImageUploadDto } from './models/Image';
 
 //---------- SETUP ----------//import { createServerSentEventHandler } from './library/serverSentEvents';
 import { authenticateRequest, requireRole } from './library/authMiddleware';
+import { validateLobbyUrlId } from './models/Lobby';
 
 //---------- SETUP ----------//
 
@@ -33,10 +35,15 @@ app.use(cors());
 
 // the upload image route should not be parsed as JSON
 app.use('/api/chain/:chainId/latest-image', express.raw({ type: 'image/png', limit: '10mb' }));
-app.post('/api/chain/:chainId/latest-image', async (req, res) => {
+app.post('/api/chain/:chainId/latest-image', authenticateRequest, async (req, res) => {
   try {
     const { chainId } = req.params;
-    const { userId } = req.query;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json(new ErrorDetails("Unauthorized"));
+      return;
+    }
 
     const validationResult = validateImageUploadDto({
       userId: Number(userId),
@@ -72,12 +79,54 @@ app.use(express.json());
 
 //---------- API ----------//
 // Routes
-app.use('/api/users', userRouter);
+// Connect to lobby updates via Server-Sent Events
+app.get('/api/lobbies/:lobbyId/events', createServerSentEventHandler(sendEvent => {
+  try {
+    // Access the lobbyId from the request
+    if (!sendEvent.request) {
+      sendEvent('error', new NotFoundErrorDetails('Lobby ID not found'));
+      return;
+    }
+    
+    const lobbyId = sendEvent.request.params.lobbyId;
+
+    const validationResults = validateLobbyUrlId(lobbyId);
+
+    if (validationResults.length) {
+      sendEvent('error', new ValidationErrorDetails('Validation failed', validationResults));
+      return;
+    }
+    
+    // Send initial lobby state
+    try {
+      const [lobby, findLobbyError] = lobbyService.getLobbyById(lobbyId);
+      if (findLobbyError) {
+        sendEvent('error', findLobbyError);
+        return;
+      }
+
+      sendEvent('lobby_state', lobby);
+      
+      // Register this client for lobby updates
+      registerClient(lobbyId, sendEvent);
+      
+      // Clean up when the client disconnects
+      sendEvent.request.on('close', () => {
+        removeClient(lobbyId, sendEvent);
+      });
+    } catch (error: any) {
+      sendEvent('error', new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
+    }
+  } catch (error: any) {
+    sendEvent('error', new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
+  }
+}));
+app.use('/api/users', authenticateRequest, userRouter);
 app.use('/api/auth', authRouter);
-app.use('/api/lobbies', lobbyRouter);
-app.use('/api/chains', fullChainDetailsRouter);
-app.use('/api/prompts', promptRouter);
-app.use('/api/images', imageRouter);
+app.use('/api/lobbies', authenticateRequest, lobbyRouter);
+app.use('/api/chains', authenticateRequest, fullChainDetailsRouter);
+app.use('/api/prompts', authenticateRequest, promptRouter);
+app.use('/api/images', authenticateRequest, imageRouter);
 
 //---------- INIT ----------//
 // Health check endpoint

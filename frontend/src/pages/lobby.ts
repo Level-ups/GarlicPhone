@@ -1,12 +1,12 @@
+import { der, sig, type Signal } from "../../../lib/signal";
+import { titleCard } from "../components/menuNav";
+import { wrapAsCard } from "../lib/card";
+import { apiFetch } from "../lib/fetch";
 import { GALLERY_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { forEl, parseInto, react } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
-import { titleCard } from "../components/menuNav";
 import { updateSSEHandler } from "../lib/sse";
-import { der, sig, type Signal } from "../../../lib/signal";
-import { wrapAsCard } from "../lib/card";
 import type { Lobby, WithClient } from "../services/lobbyService";
-import { apiFetch } from "../lib/fetch";
 
 type PlayerInfo = {
     id: number;
@@ -15,10 +15,6 @@ type PlayerInfo = {
     isHost?: boolean;
     isReady?: boolean
 };
-
-function randId() {
-    return Math.floor(100000000 * Math.random());
-}
 
 async function createLobby(playerId: number) {
     const res = await apiFetch("post", "/api/lobbies", {
@@ -71,15 +67,14 @@ async function refreshLobbyState(gameCode: string, players: Signal<PlayerInfo[]>
 }
 
 export const lobbyPage: PageRenderer = ({ page }) => {
-
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
-    localStorage.setItem("google-id-token", token ?? "");
+    if (token) localStorage.setItem("google-id-token", token);
 
     const players = sig<PlayerInfo[]>([]);
     const message = sig<string | null>(null);
 
-    const playerId = Number(localStorage.getItem("playerId") ?? randId());
+    const playerId = Number(localStorage.getItem("playerId"));
     localStorage.setItem("playerId", `${playerId}`);
 
     const isHost = sig<boolean>(false);

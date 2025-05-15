@@ -1,20 +1,16 @@
-import { forEl, parse, parseInto, type ElemTree } from "../lib/parse";
-import garlicPhoneLogo from "/assets/logo.svg";
+import { sig } from "../../../lib/signal";
+import { apiFetch } from "../lib/fetch";
+import { forEl, parseInto, type ElemTree } from "../lib/parse";
+import type { PageRenderer } from "../lib/router";
+import { timer } from "../lib/timer";
+import { drawLine, paint, floodFill } from "../lib/util/canvasUtils";
+import type { Lobby, WithClient } from "../services/lobbyService";
 import eraserToolIcon from "/assets/canvas/eraser-tool.svg";
 import fillToolIcon from "/assets/canvas/fill-tool.svg";
 import pecilToolIcon from "/assets/canvas/pencil-tool.svg";
 import tickIcon from "/assets/canvas/tick.svg";
 import trashIcon from "/assets/canvas/trash.svg";
-import {
-  drawLine,
-  paint,
-  floodFill,
-  resizeCanvasToDisplaySize,
-} from "../lib/util/canvasUtils";
-import type { PageRenderer } from "../lib/router";
-import { apiFetch } from "../lib/fetch";
-import { der, sig } from "../../../lib/signal";
-import { timer } from "../lib/timer";
+import garlicPhoneLogo from "/assets/logo.svg";
 
 type CanvasModes = {
   fill: boolean;
@@ -227,8 +223,9 @@ function getCanvasContext() {
   if (!canvasConfig.canvasContext) throw new Error("Canvas not supported");
   return canvasConfig.canvasContext;
 }
+
 export const drawPage: PageRenderer = ({ app }) => {
-  const prompt = sig<string>("Clown with a pie on his face");
+  const prompt = sig<string>("Loading...");
 
   const colourButtons: ColourButtonConfig[] = [
     { colour: "rgb(255, 0, 0)" },
@@ -289,18 +286,32 @@ export const drawPage: PageRenderer = ({ app }) => {
       clickFunc: () => {
         const canvasCtx = getCanvasContext();
         canvasCtx.fillStyle = "#ffffff";
-        canvasCtx.fillRect(
-          0,
-          0,
-          canvasCtx.canvas.width,
-          canvasCtx.canvas.height
-        );
-
+        canvasCtx.fillRect(0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
+ 
         if (!canvasConfig.modes.erase)
           canvasCtx.fillStyle = canvasConfig.pencilContext.colour;
       },
     },
   ];
+
+  // sseHandler?.addEventListener("before_lobby_update", async (e) => {
+  //   const lobby: WithClient<Lobby> = JSON.parse(e.data);
+  //   const canvas = document.getElementById("canvas") as HTMLCanvasElement;  
+  //   console.log("BEFORE_LOBBY_UPDATE_DATA", lobby)
+  //   console.log("PHASE PLAYER ASSIGNMENTS:", lobby.phasePlayerAssignments)
+  //   const uploadedImage = await uploadCanvasImage(canvas, lobby.phasePlayerAssignments[0].chain.id, lobby.players[lobby.clientIndex].id);
+  //   console.log("PROMPT IMAGE:", uploadedImage);
+  // });
+
+  // sseHandler?.addEventListener("after_lobby_update", async (e) => {
+  //   console.log("RAW PROMPT THING", e.data)
+  //   const lobby: WithClient<Lobby> = JSON.parse(e.data);
+  //   const promptForPlayer = await getPromptForPLayer(lobby.phasePlayerAssignments[0].chain.id);
+    
+  //   prompt(promptForPlayer.text);
+    
+  //   console.log("PROMPT FOR PLAYER:", promptForPlayer.text);
+  // });
 
   isolateContainer("app");
 
@@ -346,6 +357,7 @@ export const drawPage: PageRenderer = ({ app }) => {
             "%touchend": () => {
               isDrawing = false;
             },
+            "@": { width: "64", height: "64" }
           },
         },
       },
@@ -385,15 +397,13 @@ export const drawPage: PageRenderer = ({ app }) => {
   });
 };
 
-window.addEventListener("resize", () => {
-  resizeCanvasToDisplaySize(getCanvasContext());
-});
+async function getPromptForPLayer(chainId: number) {
+  const latestPromptForChain = await apiFetch("GET", `/api/prompts/chain/${chainId}/latest`, undefined);
+  const data = await latestPromptForChain.json();
+  return data;
+}
 
-async function uploadCanvasImage(
-  canvas: HTMLCanvasElement,
-  promptId: number,
-  userId: number
-) {
+async function uploadCanvasImage(canvas: HTMLCanvasElement, chainId: number, userId: string) {
   // Convert canvas to Blob (PNG format)
   const blob = await new Promise((resolve) =>
     canvas.toBlob(resolve, "image/png")
@@ -405,7 +415,7 @@ async function uploadCanvasImage(
 
   const response = await apiFetch(
     "post",
-    `/api/prompt/${promptId}/image?userId=${userId}`,
+    `/api/chain/${chainId}/latest-image?userId=${userId}`,
     blob,
     { "Content-Type": "image/png" }
   );
@@ -440,7 +450,6 @@ const observer = new MutationObserver((mutations, obs) => {
     canvasConfig.canvasContext = element.getContext("2d", {
       willReadFrequently: true,
     });
-    resizeCanvasToDisplaySize(getCanvasContext());
 
     //setting active colour button
     colourButtons.forEach((button) => {
