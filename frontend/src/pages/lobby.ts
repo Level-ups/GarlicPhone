@@ -1,8 +1,9 @@
 import { der, sig, type Signal } from "../../../lib/signal";
 import { titleCard } from "../components/menuNav";
+import { createButton, createInput, createRadioboxList, createToggleSwitch, createCheckboxList, createSlider, createItemList } from "../components/ui";
 import { wrapAsCard } from "../lib/card";
 import { apiFetch } from "../lib/fetch";
-import { GALLERY_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
+import { DEFAULT_FLEX_CONFIG, GALLERY_FLEX_CONFIG, NAV_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { forEl, parseInto, react } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 import { updateSSEHandler } from "../lib/sse";
@@ -68,6 +69,7 @@ export const lobbyPage: PageRenderer = ({ page }) => {
 
     const players = sig<PlayerInfo[]>([]);
     const message = sig<string | null>(null);
+    const lobbyCode = sig<string>("")
 
     const playerId = Number(localStorage.getItem("playerId"));
     localStorage.setItem("playerId", `${playerId}`);
@@ -85,6 +87,7 @@ export const lobbyPage: PageRenderer = ({ page }) => {
             const res = await createLobby(playerId);
 
             gameCode = res.code; gameId = res.id;
+            lobbyCode(gameCode);
             updateSSEHandler(`/api/lobbies/${res.id}/events`);
             setAsReady(res.id, playerId, players);
         }
@@ -114,19 +117,25 @@ export const lobbyPage: PageRenderer = ({ page }) => {
     // Render page
     return parseInto(page, {
         ...titleCard("Lobby"),
-        "|div": wrapAsFlex({
-            ...react([message, players], () => (
-                message() == null ? {
-                    "|ul#playerList": forEl(players(), (_, p) => ({
-                        "|li": { _: `[${p.id}] ${p.name}` }
-                    }))
-                } : wrapAsCard({ _: `Error: ${message()}` })
-            )),
+        ...wrapAsFlex({
+            ...wrapAsCard({
+                ...createButton("Login", () => { visit("login"); }),
+                ...createInput("Lobby Code", lobbyCode),
+                ...react([message], () => wrapAsCard({ _: `Error: ${message()}` })),
+                $: {
+                    textAlign: "center",
+                    width: "50%"
+                }
+            }, ),
+            ...wrapAsCard({"|p#lobbyCode": {
+                "_": lobbyCode
+            }}, "Lobby Code"),
+            ...react([players], () => (createItemList(players()))),
+        }, DEFAULT_FLEX_CONFIG),
         "|button": {
             _: "Play",
             "%click": () => { if (gameId != "") startGame(gameId, playerId); },
             $: { display: der(() => isHost() ? "inline-block" : "none") }
         }
-        }, GALLERY_FLEX_CONFIG)
     });
 }
