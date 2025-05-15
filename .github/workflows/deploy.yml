@@ -113,4 +113,5 @@ jobs:
 
           # Start the server
           PORT=${PORT} nohup npm start --prefix server > server.log 2>&1 &
+          exit
           EOF
