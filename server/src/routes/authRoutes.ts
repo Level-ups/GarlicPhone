@@ -6,11 +6,9 @@ import userService from '../services/userService';
 
 const router = Router();
 
-const redirectUri = "https://garlic-phone.com/api/auth/callback";
-
 router.get('/start', (req, res) => {
   const clientId = constants.GOOGLE_CLIENT_ID;
-  const redirectUri = constants.GOOGLE_CLIENT_REDIRECT_URI;
+  const redirectUri = constants.APP_URL + '/api/auth/callback';
   const scope = constants.GOOGLE_CLIENT_SCOPES;
   const authUrl = new URL(constants.GOOGLE_CLIENT_AUTH_URL);
 
@@ -18,9 +16,8 @@ router.get('/start', (req, res) => {
   authUrl.searchParams.set('client_id', clientId);
   authUrl.searchParams.set('redirect_uri', redirectUri);
   authUrl.searchParams.set('scope', scope);
-  authUrl.searchParams.set('prompt', 'consent select_account');
 
-  res.redirect(authUrl.toString());
+  return res.redirect(authUrl.toString());
 });
 
 router.get('/callback', async (req, res) => {
@@ -32,7 +29,7 @@ router.get('/callback', async (req, res) => {
 
   const clientId = constants.GOOGLE_CLIENT_ID;
   const clientSecret = constants.GOOGLE_CLIENT_SECRET;
-  const redirectUri = constants.GOOGLE_CLIENT_REDIRECT_URI;
+  const redirectUri = "https://" + constants.APP_URL + '/api/auth/callback';
 
   try {
     // Exchange code for tokens

@@ -18,6 +18,7 @@ env:
   PG_DATABASE: ${{ vars.PG_DATABASE }}
   PG_PORT: ${{ vars.PG_PORT }}
   CERTBOT_EMAIL: ${{ vars.CERTBOT_EMAIL }}
+  APP_URL: ${{ vars.APP_URL }}
 
 jobs:
   deploy:

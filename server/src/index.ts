@@ -16,15 +16,7 @@ import { userRouter } from './routes/userRoutes';
 import { validateImageUploadDto } from './models/Image';
 
 //---------- SETUP ----------//import { createServerSentEventHandler } from './library/serverSentEvents';
-import { fullChainDetailsRouter } from './routes/fullChainDetailsRoutes';
-import { imageRouter } from './routes/imageRoutes';
-import { lobbyRouter } from './routes/lobbyRoutes';
-import { promptRouter } from './routes/promptRoutes';
-import { userRouter } from './routes/userRoutes';
-import { validateImageUploadDto } from './models/Image';
 import { authenticateRequest, requireRole } from './library/authMiddleware';
-import https from 'https';
-import fs from 'fs';
 
 //---------- SETUP ----------//
 
