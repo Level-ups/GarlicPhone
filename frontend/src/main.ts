@@ -1,4 +1,4 @@
-import './style.css'
+import './lobbyStyle.css'
 import { PageRouter, type ContainerMap, type PageRenderer, type RedirectFn } from './lib/router'
 import { parseInto } from './lib/parse';
 import { defineCustomComponents } from './components/custom-components';

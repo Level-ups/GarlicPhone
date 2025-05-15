@@ -291,30 +291,51 @@ export const lobbyPage: PageRenderer = ({ page }) => {
                 },
                 "|section.player-controls": {
                     "|h3": { _: "Game Controls" },
-                    "|button#ready-btn": {
-                        _: "Set Ready",
-                        "@": { type: "button" },
-                        "%click": handleReadyClick,
+                    "|nav.buttons-container": {
+                        "@": { role: "toolbar", "aria-label": "Game control options" },
                         $: {
-                            backgroundColor: "var(--not-ready-color)",
-                            display: isHost ? "none" : "block"
-                        }
-                    },
-                    "|button#leave-lobby-btn": {
-                        _: "Leave Lobby",
-                        "@": { type: "button" },
-                        "%click": handleLeaveLobby
-                    },
-                    "|button#start-game-btn": {
-                        _: "Start Game",
-                        "@": { 
-                            type: "button",
-                            disabled: "true"
+                            display: "flex",
+                            flexDirection: "row",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            gap: "1rem",
+                            flexWrap: "wrap",
+                            margin: "1rem 0",
+                            padding: "0"
                         },
-                        "%click": handleStartGame,
-                        $: {
-                            backgroundColor: "var(--host-color)",
-                            display: isHost ? "block" : "none"
+                        "|button#ready-btn": {
+                            _: "Set Ready",
+                            "@": { type: "button" },
+                            "%click": handleReadyClick,
+                            $: {
+                                backgroundColor: "var(--not-ready-color)",
+                                display: isHost ? "none" : "block",
+                                flex: "1",
+                                minWidth: "100px"
+                            }
+                        },
+                        "|button#leave-lobby-btn": {
+                            _: "Leave Lobby",
+                            "@": { type: "button" },
+                            "%click": handleLeaveLobby,
+                            $: {
+                                flex: "1",
+                                minWidth: "100px"
+                            }
+                        },
+                        "|button#start-game-btn": {
+                            _: "Start Game",
+                            "@": { 
+                                type: "button",
+                                disabled: "true"
+                            },
+                            "%click": handleStartGame,
+                            $: {
+                                backgroundColor: "var(--host-color)",
+                                display: isHost ? "block" : "none",
+                                flex: "1",
+                                minWidth: "100px"
+                            }
                         }
                     }
                 }

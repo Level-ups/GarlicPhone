@@ -113,6 +113,30 @@ button#start-game-btn {
   background-color: var(--host-color);
 }
 
+/* Buttons container for horizontal layout */
+.buttons-container, 
+menu.buttons-container,
+nav.buttons-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+  list-style: none;
+  padding: 0;
+}
+
+.buttons-container button, 
+menu.buttons-container button,
+nav.buttons-container button {
+  flex: 1;
+  margin: 0;
+  min-width: 100px;
+  white-space: nowrap;
+}
+
 /* Player list styling */
 .player-item {
   display: flex;
@@ -180,4 +204,19 @@ button#start-game-btn {
   .lobby-container {
     grid-template-columns: 1fr !important;
   }
-}
+  
+  /* Stack buttons vertically on very small screens */
+  @media (max-width: 400px) {
+    .buttons-container,
+    menu.buttons-container,
+    nav.buttons-container {
+      flex-direction: column;
+    }
+    
+    .buttons-container button,
+    menu.buttons-container button,
+    nav.buttons-container button {
+      width: 100%;
+    }
+  }
+} 

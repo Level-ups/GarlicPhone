@@ -151,7 +151,15 @@ export const homePage: PageRenderer = ({ page }) => {
                     marginBottom: "2rem"
                 }
             },
-            ...wrapAsFlex({
+            "|section.game-options": {
+                $: {
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "stretch",
+                    gap: "2rem",
+                    flexWrap: "wrap"
+                },
                 "|article.create-game.card": {
                     "|h3": { _: "Create a New Game" },
                     "|p": { _: "Start a new lobby and invite your friends!" },
@@ -162,7 +170,9 @@ export const homePage: PageRenderer = ({ page }) => {
                     },
                     $: {
                         textAlign: "center",
-                        padding: "2rem"
+                        padding: "2rem",
+                        flex: "1",
+                        minWidth: "250px"
                     }
                 },
                 "|article.join-game.card": {
@@ -195,10 +205,12 @@ export const homePage: PageRenderer = ({ page }) => {
                     },
                     $: {
                         textAlign: "center",
-                        padding: "2rem"
+                        padding: "2rem",
+                        flex: "1",
+                        minWidth: "250px"
                     }
                 }
-            }, ROW_FLEX_CONFIG)
+            }
         }
     });
 }
