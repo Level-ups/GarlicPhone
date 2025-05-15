@@ -11,6 +11,7 @@ import { promptPage } from './pages/prompt';
 import { guessPage } from './pages/guess';
 import { reviewPage } from './pages/review';
 import { homePage } from './pages/home';
+import { menuPlayGamePage } from './pages/menuPlayGame';
 
 //---------- Setup ----------//
 const containers: ContainerMap = {
@@ -26,6 +27,7 @@ const pages: { [key: string]: PageRenderer } = {
   "login": c => loginPage(c),
   "menuGallery": c => menuGalleryPage(c),
   "menuPlay": c => menuPlayPage(c),
+  "menuPlayGame": c => menuPlayGamePage(c),
   "lobby": c => lobbyPage(c),
   "prompt": c => promptPage(c),
   "draw": c => drawPage(c),
@@ -37,6 +39,7 @@ const redirects: RedirectFn[] = [
   path => path === '/'        ? 'home' : null,
   path => path === '/login'   ? 'login' : null,
   path => path === '/play'    ? 'menuPlay' : null,
+  path => path === '/playgame' ? 'menuPlayGame' : null,
   path => path === '/gallery' ? 'menuGallery' : null,
 
   path => path === '/game'    ? 'menuPlay' : null,
