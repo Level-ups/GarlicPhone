@@ -1,9 +1,5 @@
 import './style.css'
 import { PageRouter, type ContainerMap, type PageRenderer, type RedirectFn } from './lib/router'
-<<<<<<< HEAD
-import { parseInto } from './lib/parse';
-=======
->>>>>>> 92c160dbd84b06a2c6379104202e94abef4f884d
 import { defineCustomComponents } from './components/custom-components';
 import { loginPage } from './pages/login';
 import { menuGalleryPage } from './pages/menuGallery';

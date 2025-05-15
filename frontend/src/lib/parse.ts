@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-import { bind, der, eff, maybeBind, maybeSub, sig, type MaybeReactive } from "../../../lib/signal";
-import { tryCall } from "../../../lib/types";
-=======
 import { bind, der, eff, maybeBind, maybeSub, multiSub, sig, type MaybeReactive, type Reactive } from "../../../lib/signal";
 import { generate, randHex, tryCall } from "../../../lib/types";
->>>>>>> 92c160dbd84b06a2c6379104202e94abef4f884d
 
 //-------------------- Types --------------------//
 export type ElemTree_Meta = {
@@ -14,13 +9,6 @@ export type ElemTree_Meta = {
   '%'?: (el: HTMLElement) => void;
 };
 
-<<<<<<< HEAD
-export type ElemTree_Elems = (
-    { [key in `|${keyof HTMLElementTagNameMap}`]?: ElemTree | (() => ElemTree); } &
-    { [key in `${string}|${string}`]?: ElemTree | (() => ElemTree); }
-);
-
-=======
 // export type ElemTree_Elems = (
 //     { [key in `|${keyof HTMLElementTagNameMap}`]?: ElemTree | (() => ElemTree); } &
 //     { [key in `${string}|${string}`]?: ElemTree | (() => ElemTree); }
@@ -32,7 +20,6 @@ export type ElemTree_Elems = (
 
 export type ElemTreeGenerator<Args extends any[] = []> = ElemTree | ((...args: Args) => ElemTree);
 
->>>>>>> 92c160dbd84b06a2c6379104202e94abef4f884d
 export type ElemTree_Events = { [key in `%${keyof HTMLElementEventMap}`]?: (e: Event) => void; };
 
 export type ElemTree = ElemTree_Meta & ElemTree_Events & ElemTree_Elems;
@@ -247,8 +234,6 @@ export function forEl<T>(it: number | T[], tree: ElemTree | ((i: number, x: T) =
     return res;
 }
 
-<<<<<<< HEAD
-=======
 // Wrap the tree in a reactive <div> element
 // If any of the listed signals changes value, then the subtree will be regenerated
 // WARNING: These should never be nested
@@ -265,7 +250,6 @@ export function react(sigs: Reactive<any>[], tree: ElemTreeGenerator): ElemTree 
     };
 }
 
->>>>>>> 92c160dbd84b06a2c6379104202e94abef4f884d
 
 
 //-------------------- Spec : ElemTree --------------------//
