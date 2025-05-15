@@ -55,7 +55,7 @@ jobs:
           echo "export PG_DATABASE=$PG_DATABASE" >> .env
           echo "export PG_PORT=$PG_PORT" >> .env
           echo "export APP_URL=$APP_URL" >> .env
-          scp -i key.pem -o StrictHostKeyChecking=no -r ./ .env $USER@$HOST:/home/$USER/
+          scp -v -i key.pem -o StrictHostKeyChecking=no -r ./ .env $USER@$HOST:/home/$USER/
 
       - name: Setup and reload NGINX
         env:

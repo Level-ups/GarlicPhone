@@ -1,5 +1,4 @@
 export function startGoogleLogin(e: MouseEvent) {
-    console.log(e);
     
     e.preventDefault(); // Stop form or button default behavior
     window.location.href = '/api/auth/start'; // relative URL to the backend

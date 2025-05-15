@@ -152,37 +152,6 @@ export const updateLobbyStatus = async (lobbyId: UUID, status: LobbyStatus): Pro
     lobbyTimers.delete(lobbyId);
   }
 
-  if (status === 'started') {
-    const intervalId = setInterval(() => {
-      const updatedLobby = lobbies.get(lobbyId);
-
-      // Schedule the pre-callback 5 seconds before the main one
-      setTimeout(() => {
-        if (updatedLobby) broadcastLobbyUpdate(updatedLobby, 'before_lobby_update');
-      }, 0);
-  
-      // Schedule the main callback at the actual interval
-      setTimeout(() => {
-        if (!updatedLobby?.phases.peekNextPhase()) return;
-
-        updatedLobby.phases.moveToNextPhase();
-        broadcastLobbyUpdate(updatedLobby);
-
-        if (updatedLobby.phases.getCurrentPhase().phase === 'Review') {
-          clearInterval(intervalId);
-          lobbyTimers.delete(lobbyId);
-        }
-      }, constants.UPLOAD_LENGTH_MILLISECONDS);
-
-      setTimeout(() => {
-        if (updatedLobby) broadcastLobbyUpdate(updatedLobby, 'after_lobby_update');
-      }, 2 * constants.UPLOAD_LENGTH_MILLISECONDS);
-  
-    }, constants.ROUND_LENGTH_MILLISECONDS);
-    
-    lobbyTimers.set(lobbyId, intervalId);
-  }
-  
   if (lobby.phases.peekNextPhase()?.phase === "Prompt") {
     const [lobbyState, error] = await performGameStartActivities(lobby);
     if (error) {
@@ -190,6 +159,40 @@ export const updateLobbyStatus = async (lobbyId: UUID, status: LobbyStatus): Pro
     } else {
       lobby.phases.moveToNextPhase();
     }
+  }
+
+  if (lobby.phases.getCurrentPhase()?.phase === "Prompt") {
+    const intervalId = setInterval(() => {
+      const updatedLobby = lobbies.get(lobbyId);
+
+      // Schedule the pre-callback 5 seconds before the main one
+      setTimeout(() => {
+        if (updatedLobby) broadcastLobbyUpdate(updatedLobby, 'before_lobby_update');
+        console.log('before_lobby_update', new Date());
+      }, constants.ROUND_LENGTH_MILLISECONDS - constants.UPLOAD_LENGTH_MILLISECONDS);
+  
+      // Schedule the main callback at the actual interval
+      setTimeout(() => {
+        if (!updatedLobby?.phases.peekNextPhase()) return;
+
+        updatedLobby.phases.moveToNextPhase();
+        broadcastLobbyUpdate(updatedLobby);
+        console.log('during_lobby_update', new Date());
+
+        if (updatedLobby.phases.getCurrentPhase().phase === 'Review') {
+          clearInterval(intervalId);
+          lobbyTimers.delete(lobbyId);
+        }
+      }, constants.ROUND_LENGTH_MILLISECONDS);
+
+      setTimeout(() => {
+        if (updatedLobby) broadcastLobbyUpdate(updatedLobby, 'after_lobby_update');
+        console.log('after_lobby_update', new Date());
+      }, constants.ROUND_LENGTH_MILLISECONDS + constants.UPLOAD_LENGTH_MILLISECONDS);
+  
+    }, constants.ROUND_LENGTH_MILLISECONDS);
+    
+    lobbyTimers.set(lobbyId, intervalId);
   }
 
   lobbies.set(lobbyId, lobby);
@@ -205,71 +208,53 @@ async function performGameStartActivities(lobby: Lobby): Promise<Either<Lobby, E
 
   if (!game) {
     return [undefined, gameCreationError];
-  } else {
-    // don't return yet 
   }
 
-  lobby.players.forEach((player) => {
-    lobby.phases.addDrawAndGuessPhase();
-  });
+  for (let i = 0; i < lobby.players.length - 1; i++) {
+    lobby.phases.addNextGameLoopPhase(); // This should add Draw, then Guess, etc.
+  }
+  lobby.phases.addReviewAndCompletePhase();
 
-  let chains: Chain[] = [];
-  for (const player of lobby.players) {
-    const chain = await chainRepository.insertChain({
-      gameId: game.id
-    });
-    if (!chain) {
-      return [undefined, new InsertErrorDetails("Could not create chain")];
-    } else {
-      chains.push(chain);
-    }
+  const [chains, chainCreationError] = await createChainsForPlayers(game.id, lobby.players);
+  if (chainCreationError) {
+    return [undefined, chainCreationError];
   }
 
-  assignPlayersAndPhases(lobby, chains);
+  lobby.phasePlayerAssignments = assignPlayersAndPhases(lobby.players, lobby.phases, chains);
 
   return [lobby, undefined];
 }
 
-function assignPlayersAndPhases(lobby: Lobby, chains: Chain[]) {
-  // We clone the phases so that we can traverse them (which will modify the object) without affecting the lobby's phases
-  const phases = deepCloneWithPrototype(lobby.phases);
-  
-  // Move to the Prompt phase
-  while (phases.getCurrentPhase().phase !== "Prompt") {
-    phases.moveToNextPhase();
-  }
-
-  let chainPhases: GamePhaseList[] = [];
-  // Each chain gets a list of phases, and each player gets a phase in that list
-  lobby.phasePlayerAssignments = chains.flatMap((chain, chainIndex) => {
-    // We clone again to avoid modifying the lobby's phases and to avoid modifying the phases for other chains
-    const phasesForChain = deepCloneWithPrototype(phases);
-    
-    chainPhases.push(phasesForChain);
-    
-    const chainPlayers = lobby.players;
-    const assignments: PhasePlayerAssignment[] = [];
-
-    // Assign each player a phase in the chain
-    for (let phaseIndex = 0; phaseIndex < lobby.players.length; phaseIndex++) {
-      // offset by the chain index (so that there is a circular pattern)
-      const playerIndex = (phaseIndex + chainIndex) % chainPlayers.length;
-      
-      // Assign the player to the current phase in the chain
-      assignments.push(new PhasePlayerAssignment(
-        phasesForChain.getCurrentPhase(),
-        lobby.players[playerIndex],
-        chain
-      ));
-
-      // Move to the next phase in the chain before assigning the next player
-      phasesForChain.moveToNextPhase();
+async function createChainsForPlayers(gameId: number, players: Player[]): Promise<Either<Chain[], InsertErrorDetails>> {
+  const chains: Chain[] = [];
+  for (const _player of players) { // Create one chain per player
+    const chain = await chainRepository.insertChain({
+      gameId: gameId
+    });
+    if (!chain) {
+      return [undefined, new InsertErrorDetails("Could not create chain")];
     }
+    chains.push(chain);
+  }
+  return [chains, undefined];
+}
+
+function assignPlayersAndPhases(players: Player[], phases: GamePhaseList, chains: Chain[]) {
+
+    const assignments: PhasePlayerAssignment[] = [];
+    chains.forEach((chain, cIndex) => {
+      phases.phases.forEach((phase, pIndex) => {
+        const player = players[(cIndex + pIndex) % players.length];
+        assignments.push({
+          phase,
+          player,
+          chain
+        })
+      })
+    })
 
     return assignments;
-  });
 
-  lobby.phases.addReviewAndCompletePhase();
 }
 
 

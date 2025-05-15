@@ -1,13 +1,11 @@
 import { sig } from "../../../lib/signal";
 import { apiFetch } from "../lib/fetch";
-import { LIST_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { parseInto } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 import type { Lobby, WithClient } from "../services/lobbyService";
 import { createGuessPage } from "./guess";
   
 async function uploadPrompt(chainId: number, index: number, text: string, userId: number) {
-    console.log("UPLOADING PROMPT:", {chainId, index, text, userId});
     
     const res = await apiFetch("post", "/api/prompts", {
         chainId,
@@ -25,10 +23,9 @@ export const promptPage: PageRenderer = ({ page }) => {
     
     sseHandler?.addEventListener("before_lobby_update", async (e) => {
         const lobby: WithClient<Lobby> = JSON.parse(e.data);
-        console.log("BEFORE_LOBBY_UPDATE_DATA", lobby)
-        console.log("PHASE PLAYER ASSIGNMENTS:", lobby.phasePlayerAssignments)
+        console.log("Before Lobby Update (prompts/guess)", lobby);
+        
         const uploadedPrompt = await uploadPrompt(lobby.phasePlayerAssignments[0].chain.id, lobby.phases.index, promptInput(), Number(lobby.players[lobby.clientIndex].id));
-        console.log("PROMPT UPLOADED:", uploadedPrompt);
     });
 
     isolateContainer("page");
@@ -37,6 +34,6 @@ export const promptPage: PageRenderer = ({ page }) => {
     return parseInto(page, createGuessPage(
         "Think quick - write a prompt!",
         promptInput,
-        () => { visit("draw") }
+        () => { /* visit("draw") */ }
     ));
 };

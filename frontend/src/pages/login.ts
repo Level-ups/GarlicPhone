@@ -4,7 +4,10 @@ import type { PageRenderer } from "../lib/router";
 import garlicPhoneLogo from "/assets/logo.svg";
 
 import googleLogo from "/assets/google.svg";
-export const loginPage: PageRenderer = ({ app }) =>
+
+export const loginPage: PageRenderer = ({ app }) => {
+  isolateContainer("app");
+
   parseInto(app, {
     "|section.login": {
       "|form.login-form": {
@@ -31,3 +34,4 @@ export const loginPage: PageRenderer = ({ app }) =>
       },
     },
   });
+}

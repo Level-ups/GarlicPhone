@@ -35,13 +35,13 @@ export async function createImage(imageUploadDto: ImageUploadDto, filename: stri
 
   const image: InsertImageDto = {
     s3Url: s3Result.Location,
-    promptId: imageUploadDto.chainId,
+    chainId: imageUploadDto.chainId,
     userId: imageUploadDto.userId
   };
   
   // Insert image into database
   try {
-    const createdImage = await imageRepository.insertImage(image);
+    const createdImage = await imageRepository.insertImageToLatestPromptInChain(imageUploadDto.chainId, imageUploadDto.userId, s3Result.Location);
     if (!createdImage) {
       return [undefined, new InsertErrorDetails("Could not create image")];
     } else {
