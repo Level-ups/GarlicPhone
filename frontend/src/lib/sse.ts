@@ -11,7 +11,6 @@ declare global {
 
 export const sseHandlers: SSEHandlers = {
   "lobby_update": (data) => {
-    console.log("RECEIVED EVENT:", data);
 
     if (!localStorage.getItem("gameId")) {
       localStorage.setItem("gameId", data.id);

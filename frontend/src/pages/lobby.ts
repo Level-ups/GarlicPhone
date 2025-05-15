@@ -26,7 +26,6 @@ async function createLobby(playerId: number) {
     });
 
     const data = await res.json()
-    console.log("CREATE LOBBY:", data);
 
     return data;
 }
@@ -39,7 +38,6 @@ async function joinLobby(gameCode: string, playerId: number, players: Signal<Pla
     });
 
     const data = await res.json();
-    console.log("JOIN LOBBY:", data);
     players(data.players);
 
     return data;
@@ -49,7 +47,6 @@ async function joinLobby(gameCode: string, playerId: number, players: Signal<Pla
 async function setAsReady(lobbyId: string, playerId: number, players: Signal<PlayerInfo[]>) {
     const res = await apiFetch("post", `/api/lobbies/${lobbyId}/ready`, { playerId, isReady: true });
     const data = await res.json();
-    console.log("SET AS READY:", res);
 
     players(data.players);
 }
@@ -58,7 +55,6 @@ async function startGame(gameId: string, playerId: number) {
     const res = await apiFetch("post", `/api/lobbies/${gameId}/start`, { playerId });
 
     const data = await res.json();
-    console.log("START GAME:", data);
 }
 
 
