@@ -94,6 +94,10 @@ export function der<T>(compute: () => T): DerivedSignal<T> {
   return readOnly;
 }
 
+export function multiSub(sigs: Reactive<any>[], fn: (v: any) => void) {
+  sigs.forEach(s => s.sub(fn));
+}
+
 export function maybeSub<T>(sig: MaybeReactive<T>, fn: (v: T) => void) {
   if (isReactive<T>(sig)) { sig.sub(fn); }
   else                    { fn(sig); }

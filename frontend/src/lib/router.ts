@@ -4,6 +4,10 @@ export type ContainerMap = { [key: string]: HTMLElement } & { app: HTMLElement, 
 
 declare global {
   function visit(page: string): void;
+<<<<<<< HEAD
+=======
+  function isolateContainer(container: string): void;
+>>>>>>> 92c160dbd84b06a2c6379104202e94abef4f884d
 }
 
 interface RouterOptions {
@@ -25,11 +29,21 @@ export class PageRouter {
     // Bind methods to this instance
     this.handlePopState = this.handlePopState.bind(this);
     this.visit = this.visit.bind(this);
+<<<<<<< HEAD
+=======
+    this.isolateContainer = this.isolateContainer.bind(this);
+>>>>>>> 92c160dbd84b06a2c6379104202e94abef4f884d
 
     // Listen to browser navigation
     window.addEventListener('popstate', this.handlePopState);
 
+<<<<<<< HEAD
     (window as any).visit = this.visit; // Expose globally
+=======
+    // Global exposures
+    (window as any).visit = this.visit;
+    (window as any).isolateContainer = this.isolateContainer;
+>>>>>>> 92c160dbd84b06a2c6379104202e94abef4f884d
 
     // Initial route handling
     this.handlePopState();
@@ -63,6 +77,18 @@ export class PageRouter {
     this.render(page);
   }
 
+<<<<<<< HEAD
+=======
+  public isolateContainer(container: keyof ContainerMap | "all") {
+    for (let c in this.containers) {
+      this.containers[c].style.display = container == "all" ? "block" : "none";
+    }
+    if (container != "all") {
+      this.containers[container].style.display = "block";
+    }
+  }
+
+>>>>>>> 92c160dbd84b06a2c6379104202e94abef4f884d
   // Clear page content & render new page
   private render(page: string): void {
     const renderer = this.pages[page];

@@ -24,7 +24,7 @@ export type FullChainDetailQueryResult = GameQueryResult & {
   prompt_chain_id: number;
   prompt_index: number;
   prompt_text: string;
-  prompt_created_at: string;  // ISO datetime string
+  prompt_created_at: string;
   
   // Image Details (nullable)
   image_id: number | null;
@@ -37,6 +37,7 @@ export type FullChainDetailQueryResult = GameQueryResult & {
   prompt_user_name: string;
   prompt_user_avatar_url: string | null;
   prompt_user_role_id: number;
+  prompt_user_role_name: string;
   
   // Image Author Details (nullable)
   image_user_id: number | null;
@@ -44,8 +45,5 @@ export type FullChainDetailQueryResult = GameQueryResult & {
   image_user_name: string | null;
   image_user_avatar_url: string | null;
   image_user_role_id: number | null;
-
-  prompt_user_role_name: string;
-  
   image_user_role_name: string | null;
 }

@@ -15,7 +15,7 @@ const cardStyleOverrides: StyleDict = {
 function genGalleryCard(i: number, itm: GalleryItem) {
     return wrapAsCard({
         $: cardStyleOverrides,
-        "|figure": {
+        "|figure.galleryItem": {
             "|img": {
                 "@": { src: itm.imgUrl },
                 $: {
@@ -46,6 +46,8 @@ export const menuGalleryPage: PageRenderer = ({ page }) => {
         { title: "Item D", imgUrl: "https://picsum.photos/250" },
         { title: "Item D", imgUrl: "https://picsum.photos/250" }
     ]);
+
+    isolateContainer("page");
 
     // Render page
     return parseInto(page, {

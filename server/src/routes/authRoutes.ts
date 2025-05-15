@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import fetch from 'node-fetch';
-import { jwtVerify, importJWK, JWK } from 'jose';
+import { importJWK, JWK, jwtVerify } from 'jose';
+import { constants } from '../library/constants';
+import { ErrorDetails, ValidationErrorDetails } from '../library/error-types';
 import userService from '../services/userService';
 
 const router = Router();
@@ -8,9 +9,10 @@ const router = Router();
 const redirectUri = "https://garlic-phone.com/api/auth/callback";
 
 router.get('/start', (req, res) => {
-  const clientId = process.env.GOOGLE_CLIENT_ID || "";
-  const scope = 'openid profile email';
-  const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+  const clientId = constants.GOOGLE_CLIENT_ID;
+  const redirectUri = constants.GOOGLE_CLIENT_REDIRECT_URI;
+  const scope = constants.GOOGLE_CLIENT_SCOPES;
+  const authUrl = new URL(constants.GOOGLE_CLIENT_AUTH_URL);
 
   authUrl.searchParams.set('response_type', 'code');
   authUrl.searchParams.set('client_id', clientId);
@@ -25,11 +27,12 @@ router.get('/callback', async (req, res) => {
   const code = req.query.code as string | undefined;
 
   if (!code) {
-    return res.status(400).send('Missing code');
+    return res.status(400).json(new ValidationErrorDetails('Missing code parameter'));
   }
 
-  const clientId = process.env.GOOGLE_CLIENT_ID || '';
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
+  const clientId = constants.GOOGLE_CLIENT_ID;
+  const clientSecret = constants.GOOGLE_CLIENT_SECRET;
+  const redirectUri = constants.GOOGLE_CLIENT_REDIRECT_URI;
 
   try {
     // Exchange code for tokens
@@ -47,8 +50,7 @@ router.get('/callback', async (req, res) => {
 
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
-      console.error('Token exchange failed:', errorText);
-      return res.status(500).send('Failed to exchange code for tokens');
+      return res.status(500).json(new ErrorDetails('Token exchange failed', [errorText]));
     }
 
     const tokens = (await tokenResponse.json()) as {
@@ -72,8 +74,7 @@ router.get('/callback', async (req, res) => {
     const matchingKey = keys.find((k) => k.kid === kid);
     
     if (!matchingKey) {
-      console.error('No matching key found for kid:', kid);
-      return res.status(500).send('Unable to verify token: no matching key');
+      return res.status(500).json(new ErrorDetails(`No matching key found for kid: ${kid}`));
     }
 
     const key = await importJWK(matchingKey, 'RS256');

@@ -26,7 +26,8 @@ export type UserDto = {
 }
 
 export function validateCreateUser(input: Partial<UserDto>): ValidationResult[] {
-  const invalidFields: ValidationResult[] = [
+
+  const createUserValidations: ValidationResult[] = [
     {
       field: "name",
       message: "'name' is required",
@@ -42,6 +43,7 @@ export function validateCreateUser(input: Partial<UserDto>): ValidationResult[] 
       message: "'roleName' is required",
       isValid:!!input.roleName?.trim(),
     }
-  ].filter((field) => !field.isValid);
-  return invalidFields;
+  ];
+  
+  return createUserValidations.filter((field) => !field.isValid);
 }

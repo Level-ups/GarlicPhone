@@ -1,5 +1,5 @@
+import { Either } from "../../../lib/types";
 import { ErrorDetails, InsertErrorDetails, NotFoundErrorDetails } from "../library/error-types";
-import { Either } from "../library/types";
 import { Image, ImageUploadDto, InsertImageDto } from "../models/Image";
 import imageRepository from "../repositories/imageRepository";
 
@@ -12,7 +12,7 @@ export async function getImageById(id: number): Promise<Either<Image, ErrorDetai
       return [image, undefined];
     }
   } catch (error: any) {
-    return [undefined, new ErrorDetails("Error retrieving image", [error.message])];
+    return [undefined, new ErrorDetails("Error retrieving image", [error.message], error.stack)];
   }
 }
 
@@ -21,25 +21,25 @@ export async function getImagesByPromptId(promptId: number): Promise<Either<Imag
     const images = await imageRepository.getImagesByPromptId(promptId);
     return [images, undefined];
   } catch (error: any) {
-    return [undefined, new ErrorDetails("Error retrieving images", [error.message])];
+    return [undefined, new ErrorDetails("Error retrieving images", [error.message], error.stack)];
   }
 }
 
 export async function createImage(imageUploadDto: ImageUploadDto, filename: string): Promise<Either<Image, ErrorDetails>> {
+  // Upload image to S3
   const [s3Result, error] = await imageRepository.uploadImageToS3(imageUploadDto.image, filename);
   
   if (error) {
     return [undefined, error];
-  } else {
-    // continue with the rest of the function
   }
 
   const image: InsertImageDto = {
     s3Url: s3Result.Location,
-    promptId: imageUploadDto.promptId,
+    promptId: imageUploadDto.chainId,
     userId: imageUploadDto.userId
   };
   
+  // Insert image into database
   try {
     const createdImage = await imageRepository.insertImage(image);
     if (!createdImage) {
@@ -48,12 +48,32 @@ export async function createImage(imageUploadDto: ImageUploadDto, filename: stri
       return [createdImage, undefined];
     }
   } catch (error: any) {
-    return [undefined, new ErrorDetails("Error creating image", [error.message])];
+    return [undefined, new ErrorDetails("Error creating image", [error.message], error.stack)];
+  }
+}
+
+export async function getLatestImageByChainId(chainId: number): Promise<Either<Image, ErrorDetails>> {
+  try {
+    const image = await imageRepository.getLatestImageFromChain(chainId);
+    return [image, undefined];
+  } catch (error: any) {
+    return [undefined, new ErrorDetails("Error retrieving images", [error.message], error.stack)];
+  }
+}
+
+export async function insertImageToLatestPromptInChain(chainId: number, userId: number, s3Url: string): Promise<Either<Image, ErrorDetails>> {
+  try {
+    const image = await imageRepository.insertImageToLatestPromptInChain(chainId, userId, s3Url);
+    return [image, undefined];
+  } catch (error: any) {
+    return [undefined, new ErrorDetails("Error retrieving images", [error.message], error.stack)];
   }
 }
 
 export default {
   getImageById,
   getImagesByPromptId,
-  createImage
+  createImage,
+  getLatestImageByChainId,
+  insertImageToLatestPromptInChain,
 };

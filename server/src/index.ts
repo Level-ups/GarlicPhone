@@ -14,6 +14,14 @@ import { lobbyRouter } from './routes/lobbyRoutes';
 import { promptRouter } from './routes/promptRoutes';
 import { userRouter } from './routes/userRoutes';
 import { validateImageUploadDto } from './models/Image';
+
+//---------- SETUP ----------//import { createServerSentEventHandler } from './library/serverSentEvents';
+import { fullChainDetailsRouter } from './routes/fullChainDetailsRoutes';
+import { imageRouter } from './routes/imageRoutes';
+import { lobbyRouter } from './routes/lobbyRoutes';
+import { promptRouter } from './routes/promptRoutes';
+import { userRouter } from './routes/userRoutes';
+import { validateImageUploadDto } from './models/Image';
 import { authenticateRequest, requireRole } from './library/authMiddleware';
 import https from 'https';
 import fs from 'fs';
@@ -32,39 +40,43 @@ const EC2_HOST =  process.env.EC2_HOST
 app.use(cors());
 
 // the upload image route should not be parsed as JSON
-app.use('/api/prompt/:promptId/image', express.raw({ type: 'image/png', limit: '10mb' }));
-app.post('/api/prompt/:promptId/image', async (req, res) => {
-  const { promptId } = req.params;
-  const { userId } = req.query;
+app.use('/api/chain/:chainId/latest-image', express.raw({ type: 'image/png', limit: '10mb' }));
+app.post('/api/chain/:chainId/latest-image', async (req, res) => {
+  try {
+    const { chainId } = req.params;
+    const { userId } = req.query;
 
-  const validationResult = validateImageUploadDto({
-    userId: Number(userId),
-    promptId: Number(promptId),
-    image: req.body,
-  });
+    const validationResult = validateImageUploadDto({
+      userId: Number(userId),
+      chainId: Number(chainId),
+      image: req.body,
+    });
 
-  if (validationResult.length) {
-    res.status(400).json(new ValidationErrorDetails("Error uploading image", validationResult));
-  } else {
-    const imageBuffer = req.body;
-    const imageName = `prompts/${promptId}/image.png`;
-  
-    const [image, error] = await imageService.createImage({
-      userId: Number(userId), 
-      promptId: Number(promptId), 
-      image: imageBuffer
-    }, imageName);
-  
-    if (error) {
-      res.status(500).json(new ErrorDetails("Error uploading image", error.details));
+    if (validationResult.length) {
+      res.status(400).json(new ValidationErrorDetails("Error uploading image", validationResult));
     } else {
-      res.status(200).json(image);
+      const imageBuffer = req.body;
+      const imageName = `prompts/${chainId}/image.png`;
+    
+      const [image, error] = await imageService.createImage({
+        userId: Number(userId), 
+        chainId: Number(chainId), 
+        image: imageBuffer
+      }, imageName);
+    
+      if (error) {
+        res.status(500).json(new ErrorDetails("Error uploading image", error.details));
+      } else {
+        res.status(200).json(image);
+      }
     }
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
-
 });
 
 app.use(express.json());
+
 
 //---------- API ----------//
 // Routes
@@ -90,8 +102,8 @@ app.get('/events/health', createServerSentEventHandler<string>(sendEvent => {
 
 
 //---------- FRONTEND ----------//
-const fePath = path.join(__dirname, '..', '..', 'public');
-// const fePath = path.join(__dirname, '..', 'dist', 'public');
+// const fePath = path.join(__dirname, '..', '..', 'public');
+const fePath = path.join(__dirname, '..', 'dist', 'public');
 app.use(express.static(fePath));
 app.get('/*', (_, res) => {
   res.sendFile(path.join(fePath, 'index.html'));

@@ -8,6 +8,9 @@ export interface Player {
 }
 
 export type LobbyStatus = 'waiting' | 'started' | 'finished';
+export type GamePhaseName = "Waiting" | "Prompt" | "Draw" | "Guess" | "Review" | "Complete";
+
+export type WithClient<T> = T & { clientIndex: number };
 
 export interface Lobby {
   id: string;
@@ -16,6 +19,7 @@ export interface Lobby {
   maxPlayers: number;
   status: LobbyStatus;
   createdAt: string;
+  phases: { index: number, phase: GamePhaseName };
   lastActivity: string;
 }
 

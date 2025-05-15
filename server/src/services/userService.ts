@@ -11,8 +11,8 @@ async function getAllUsers(): Promise<Either<User[], ErrorDetails>> {
     } else {
       return [users, undefined];
     }
-  } catch (error) {
-    return [undefined, new ErrorDetails('Failed to retrieve users')];
+  } catch (error: any) {
+    return [undefined, new ErrorDetails('Failed to retrieve users', [error.message], error.stack)];
   }
 }
 
@@ -50,8 +50,8 @@ async function createUser(userData: UserDto): Promise<Either<User, ErrorDetails>
     } else {
       return [createdUser];
     }
-  } catch (error) {
-    return [undefined, new InsertErrorDetails('Failed to create user')];
+  } catch (error: any) {
+    return [undefined, new InsertErrorDetails('Failed to create user', [error.message], error.stack)];
   }
 }
 
@@ -63,8 +63,8 @@ async function updateUser(id: string, userData: UserDto): Promise<Either<User, E
     } else {
       return [updatedUser];
     }
-  } catch (error) {
-    return [undefined, new ErrorDetails('Failed to update user')];
+  } catch (error: any) {
+    return [undefined, new ErrorDetails('Failed to update user', [error.message], error.stack)];
   }
 }
 
@@ -76,8 +76,8 @@ async function deleteUser(id: string): Promise<Either<boolean, ErrorDetails>> {
     } else {
       return [deletedUser];
     }
-  } catch (error) {
-    return [undefined, new ErrorDetails('Failed to delete user')];
+  } catch (error: any) {
+    return [undefined, new ErrorDetails('Failed to delete user', [error.message], error.stack)];
   }
 }
 

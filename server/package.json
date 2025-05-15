@@ -6,7 +6,7 @@
   "scripts": {
     "build": "NODE_OPTIONS='--max-old-space-size=4096' tsc",
     "start": "node dist/index.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev": "ts-node-dev --watch --poll --respawn --transpile-only src/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint . --ext .ts",

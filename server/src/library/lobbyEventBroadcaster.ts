@@ -52,13 +52,32 @@ export function broadcastLobbyUpdate(lobby: Lobby): void {
   
   const clients = lobbyClients.get(lobbyId) as LobbyClient[];
   
+  let i = 0;
   for (const client of clients) {
     try {
-      client.sendEvent('lobby_update', lobby);
+      const assignments = lobby.phasePlayerAssignments.filter(x => (
+        lobby.phases.getCurrentPhase().index == x.phase.index &&
+        lobby.players[i].id == x.player.id
+      ));
+
+      console.log("\n\n")
+      console.log("ASSIGNMENTS BEFORE:", assignments);
+      console.log("ASSIGNMENTS AFTER:", assignments);
+      console.log("-------------------------------------\n\n")
+
+      const payload = {
+        ...lobby,
+        phasePlayerAssignments: assignments,
+        clientIndex: i
+      };
+
+      client.sendEvent('lobby_update', payload);
+
       client.lastActivity = new Date();
     } catch (error) {
       console.error(`Error broadcasting to client:`, error);
     }
+    i++;
   }
 }
 

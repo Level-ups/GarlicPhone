@@ -1,9 +1,10 @@
 import * as lobbyService from '../services/lobbyService';
 import express, { Request, Response } from 'express';
-import { ErrorDetails, ErrorType, NotFoundErrorDetails } from '../library/error-types';
-import { UUID } from 'crypto';
-import { createServerSentEventHandler } from '../library/serverSentEvents';
 import { registerClient, removeClient } from '../library/lobbyEventBroadcaster';
+import { ErrorDetails, ErrorType, NotFoundErrorDetails, ValidationErrorDetails } from '../library/error-types';
+import { createServerSentEventHandler } from '../library/serverSentEvents';
+import { validateLobbyJoinCode, validateLobbyUrlId } from "../models/Lobby";
+import { UUID } from 'crypto';
 
 export const lobbyRouter = express.Router();
 
@@ -11,17 +12,30 @@ export const lobbyRouter = express.Router();
 lobbyRouter.post('/', (req: Request, res: Response) => {
   try {
     const { hostId, hostName, hostAvatarUrl, maxPlayers } = req.body;
-    if (!hostId || !hostName) {
+
+    // console.log("BODY:", req.body);
+
+    if (hostId == null || hostName == null) {
       // TODO: use ValidationResults to let the user know what fields are missing.
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json(new ValidationErrorDetails(
+        "Missing required fields",
+        [{
+          field: "hostId",
+          message: "hostId is required",
+          isValid: !!hostId,
+        }, {
+          field: "hostName",
+          message: "hostName is required",
+          isValid: !!hostName,
+        }]
+      ));
     }
     
-    const lobby = lobbyService.createLobby(hostId, hostName, hostAvatarUrl || '', maxPlayers);
+    const [lobby, error] = lobbyService.createLobby(hostId, hostName, hostAvatarUrl || '', maxPlayers);
     
     return res.status(201).json(lobby);
-  } catch (error) {
-    console.error('Error creating lobby:', error);
-    return res.status(400).json({ error: (error as Error).message });
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
 });
 
@@ -30,16 +44,33 @@ lobbyRouter.post('/join', (req: Request, res: Response) => {
   try {
     const { code, playerId, playerName, playerAvatarUrl } = req.body;
     
-    if (!code || !playerId || !playerName) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    if (code == null || playerId == null || playerName == null) {
+      return res.status(400).json(new ValidationErrorDetails(
+        "Missing required fields",
+        [{
+          field: "code",
+          message: "code is required",
+          isValid:!!code,
+        }, {
+          field: "playerId",
+          message: "playerId is required",
+          isValid:!!playerId,
+        }, {
+          field: "playerName",
+          message: "playerName is required",
+          isValid:!!playerName,
+        }]
+      ));
     }
     
-    const lobby = lobbyService.joinLobbyByCode(code, playerId, playerName, playerAvatarUrl || '');
+    const [lobby, joinLobbyError] = lobbyService.joinLobbyByCode(code, playerId, playerName, playerAvatarUrl || '');
     
+    if (joinLobbyError) {
+      return res.status(404).json(joinLobbyError);
+    }
     return res.status(200).json(lobby);
-  } catch (error) {
-    console.error('Error joining lobby:', error);
-    return res.status(400).json({ error: (error as Error).message });
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
 });
 
@@ -48,21 +79,29 @@ lobbyRouter.post('/:lobbyId/leave', (req: Request, res: Response) => {
   try {
     const { lobbyId } = req.params;
     const { playerId } = req.body;
+
+    const lobbyIdValidationResult = validateLobbyUrlId(lobbyId);
+    if (!lobbyIdValidationResult.length) {
+      return res.status(400).json(new ValidationErrorDetails('Invalid lobby ID', lobbyIdValidationResult));
+    } 
     
     if (!playerId) {
-      return res.status(400).json({ error: 'Missing player ID' });
+      return res.status(400).json(new ValidationErrorDetails('Missing required fields', [{
+        field: "playerId",
+        message: "playerId is required",
+        isValid: false,
+      }]));
     }
     
-    const updatedLobby = lobbyService.leaveLobby(lobbyId, playerId);
+    const [updatedLobby, updateLobbyError] = lobbyService.leaveLobby(lobbyId as UUID, playerId);
     
-    if (!updatedLobby) {
-      return res.status(404).json({ error: 'Lobby not found or player not in lobby' });
+    if (!updateLobbyError) {
+      return res.status(404).json(updateLobbyError);
     }
     
     return res.status(200).json(updatedLobby);
-  } catch (error) {
-    console.error('Error leaving lobby:', error);
-    return res.status(400).json({ error: (error as Error).message });
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
 });
 
@@ -71,17 +110,31 @@ lobbyRouter.post('/:lobbyId/ready', (req: Request, res: Response) => {
   try {
     const { lobbyId } = req.params;
     const { playerId, isReady } = req.body;
-    
-    if (!playerId || isReady === undefined) {
-      return res.status(400).json({ error: 'Missing required fields' });
+
+    const validationResults = ([...validateLobbyUrlId(lobbyId), {
+          field: "playerId",
+          message: "playerId is required",
+          isValid: !!playerId,
+        }, {
+          field: "isReady",
+          message: "isReady is required",
+          isValid: !!isReady,
+        }
+    ]).filter((result) => !result.isValid);
+
+    if (validationResults.length) {
+      return res.status(400).json(new ValidationErrorDetails('Validation failed', validationResults));
     }
     
-    const updatedLobby = lobbyService.setPlayerReady(lobbyId, playerId, isReady);
+    const [updatedLobby, updateLobbyError] = lobbyService.setPlayerReady(lobbyId as UUID, playerId, isReady);
     
+    if (updateLobbyError) {
+      return res.status(404).json(updateLobbyError);
+    }
+
     return res.status(200).json(updatedLobby);
-  } catch (error) {
-    console.error('Error setting player ready status:', error);
-    return res.status(400).json({ error: (error as Error).message });
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
 });
 
@@ -91,16 +144,26 @@ lobbyRouter.post('/:lobbyId/start', async (req: Request, res: Response) => {
     const { lobbyId } = req.params;
     const { playerId } = req.body;
     
-    if (!playerId) {
-      return res.status(400).json({ error: 'Missing player ID' });
+    const validationResults = ([...validateLobbyUrlId(lobbyId), {
+      field: "playerId",
+      message: "playerId is required",
+      isValid: !!playerId,
     }
+  ]).filter((result) => !result.isValid);
+
+  if (validationResults.length) {
+    return res.status(400).json(new ValidationErrorDetails('Validation failed', validationResults));
+  }
     
-    const updatedLobby = await lobbyService.startGame(lobbyId, playerId);
+    const [updatedLobby, updatedLobbyError] = await lobbyService.startGame(lobbyId as UUID, playerId);
     
+    if (updatedLobbyError) {
+      return res.status(404).json(updatedLobbyError);
+    }
+
     return res.status(200).json(updatedLobby);
-  } catch (error) {
-    console.error('Error starting game:', error);
-    return res.status(400).json({ error: (error as Error).message });
+  } catch (error: any) {
+    return res.status(400).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
 });
 
@@ -110,13 +173,18 @@ lobbyRouter.post('/:lobbyId/start', async (req: Request, res: Response) => {
 lobbyRouter.post('/:lobbyId/end', async (req: Request, res: Response) => {
   try {
     const { lobbyId } = req.params;
+
+    const validationResults = validateLobbyUrlId(lobbyId);
+
+    if (validationResults.length) {
+      return res.status(400).json(new ValidationErrorDetails('Validation failed', validationResults));
+    }
     
-    const updatedLobby = await lobbyService.endGame(lobbyId);
+    const updatedLobby = await lobbyService.endGame(lobbyId as UUID);
     
     return res.status(200).json(updatedLobby);
-  } catch (error) {
-    console.error('Error ending game:', error);
-    return res.status(400).json({ error: (error as Error).message });
+  } catch (error: any) {
+    return res.status(400).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
 });
 
@@ -124,13 +192,22 @@ lobbyRouter.post('/:lobbyId/end', async (req: Request, res: Response) => {
 lobbyRouter.get('/:lobbyId', (req: Request, res: Response) => {
   try {
     const { lobbyId } = req.params;
+
+    const validationResults = validateLobbyUrlId(lobbyId);
+
+    if (validationResults.length) {
+      return res.status(400).json(new ValidationErrorDetails('Validation failed', validationResults));
+    }
     
-    const lobby = lobbyService.getLobbyById(lobbyId);
+    const [lobby, findLobbyError] = lobbyService.getLobbyById(lobbyId);
     
+    if (findLobbyError) {
+      return res.status(404).json(findLobbyError);
+    }
+
     return res.status(200).json(lobby);
-  } catch (error) {
-    console.error('Error fetching lobby:', error);
-    return res.status(404).json({ error: (error as Error).message });
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
 });
 
@@ -138,13 +215,22 @@ lobbyRouter.get('/:lobbyId', (req: Request, res: Response) => {
 lobbyRouter.get('/code/:code', (req: Request, res: Response) => {
   try {
     const { code } = req.params;
+
+    const validationResults = validateLobbyJoinCode(code);
     
-    const lobby = lobbyService.getLobbyByCode(code);
+    if (validationResults.length) {
+      return res.status(400).json(new ValidationErrorDetails('Validation failed', validationResults));
+    }
+
+    const [lobby, findLobbyError] = lobbyService.getLobbyByCode(code);
     
+    if (findLobbyError) {
+      return res.status(404).json(findLobbyError);
+    }
+
     return res.status(200).json(lobby);
-  } catch (error) {
-    console.error('Error fetching lobby by code:', error);
-    return res.status(404).json({ error: (error as Error).message });
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
 });
 
@@ -153,22 +239,27 @@ lobbyRouter.get('/:lobbyId/events', createServerSentEventHandler(sendEvent => {
   try {
     // Access the lobbyId from the request
     if (!sendEvent.request) {
-      console.error('Request object is not available in SSE handler');
-      sendEvent('error', { message: 'Internal server error' });
+      sendEvent('error', new NotFoundErrorDetails('Lobby ID not found'));
       return;
     }
     
     const lobbyId = sendEvent.request.params.lobbyId;
-    
-    if (!lobbyId) {
-      console.error('Lobby ID not found in request params');
-      sendEvent('error', { message: 'Lobby ID is required' });
+
+    const validationResults = validateLobbyUrlId(lobbyId);
+
+    if (validationResults.length) {
+      sendEvent('error', new ValidationErrorDetails('Validation failed', validationResults));
       return;
     }
     
     // Send initial lobby state
     try {
-      const lobby = lobbyService.getLobbyById(lobbyId);
+      const [lobby, findLobbyError] = lobbyService.getLobbyById(lobbyId);
+      if (findLobbyError) {
+        sendEvent('error', findLobbyError);
+        return;
+      }
+
       sendEvent('lobby_state', lobby);
       
       // Register this client for lobby updates
@@ -178,13 +269,11 @@ lobbyRouter.get('/:lobbyId/events', createServerSentEventHandler(sendEvent => {
       sendEvent.request.on('close', () => {
         removeClient(lobbyId, sendEvent);
       });
-    } catch (error) {
-      console.error('Error setting up lobby events:', error);
-      sendEvent('error', { message: (error as Error).message });
+    } catch (error: any) {
+      sendEvent('error', new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
     }
-  } catch (error) {
-    console.error('Error in lobby events:', error);
-    sendEvent('error', { message: 'An unexpected error occurred' });
+  } catch (error: any) {
+    sendEvent('error', new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
 })); 
 
@@ -192,12 +281,23 @@ lobbyRouter.get("/:lobbyId/current-phase/assignments", async (req, res) => {
   const { lobbyId } = req.params;
 
   try {
-    const lobby = lobbyService.getLobbyById(lobbyId as UUID);
+    
+    const validationResults = validateLobbyUrlId(lobbyId);
+    
+    if (validationResults.length) {
+      return res.status(400).json(new ValidationErrorDetails('Validation failed', validationResults));
+    }
+
+    const [lobby, findLobbyError] = lobbyService.getLobbyById(lobbyId as UUID);
+
+    if (findLobbyError) {
+      return res.status(404).json(findLobbyError);
+    }
     // it is safe to alias lobbyCode as UUID at this point as it has been checked in the validateLobbyCode function.
     const [phaseAssignments, getPhaseAssignmentsError] = await lobbyService.getLobbyPhases(lobbyId as UUID);
 
     if (phaseAssignments) {
-      const currentPhaseAssignments = phaseAssignments.filter((phase) => phase.phase.index === lobby.currentPhase.index);
+      const currentPhaseAssignments = phaseAssignments.filter((phase) => phase.phase.index === lobby.phases.getCurrentPhase().index);
       return res.status(200).json(currentPhaseAssignments);
     } else if (getPhaseAssignmentsError) {
       if (getPhaseAssignmentsError.type === ErrorType.NotFound) {
@@ -206,8 +306,8 @@ lobbyRouter.get("/:lobbyId/current-phase/assignments", async (req, res) => {
         return res.status(500).json(getPhaseAssignmentsError);
       }
     }
-  } catch (error) {
-    return res.status(500).json({ message: "Internal Server Error" });
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }  
 })
 
@@ -215,15 +315,21 @@ lobbyRouter.get("/:lobbyId/current-phase", async (req, res) => {
   const { lobbyId } = req.params;
 
   try {
-    const lobby = await lobbyService.getLobbyById(lobbyId as UUID);
+    const validationResults = validateLobbyUrlId(lobbyId);
+    
+    if (validationResults.length) {
+      return res.status(400).json(new ValidationErrorDetails('Validation failed', validationResults));
+    }
+
+    const [lobby, findLobbyError] = await lobbyService.getLobbyById(lobbyId as UUID);
   
     if (lobby) {
-      return res.status(200).json(lobby.currentPhase);
+      return res.status(200).json(lobby.phases.getCurrentPhase());
     } else {
-      return res.status(404).json(new NotFoundErrorDetails("Lobby not found"));
+      return res.status(404).json(findLobbyError);
     }
-  } catch (error) {
-    return res.status(500).json({ message: "Internal Server Error" });
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
 })
 
@@ -231,11 +337,11 @@ lobbyRouter.put("/:lobbyCode/phase", async (req, res) => {
   const { lobbyCode } = req.params;
 
   try {
-    const foundLobby = await lobbyService.getLobbyById(lobbyCode as UUID);
+    const [foundLobby, findLobbyError] = lobbyService.getLobbyById(lobbyCode as UUID);
 
     if (!foundLobby) {
-      return res.status(404).json(new NotFoundErrorDetails("Lobby not found"));
-    } else if (foundLobby && foundLobby.currentPhase.phase === "Complete") {
+      return res.status(404).json(findLobbyError);
+    } else if (foundLobby.phases.getCurrentPhase().phase === "Complete") {
       return res.status(403).json(new ErrorDetails("This game is already completed."));
     }
   
@@ -254,8 +360,8 @@ lobbyRouter.put("/:lobbyCode/phase", async (req, res) => {
       }
     }
     
-  } catch (error) {
-    return res.status(500).json({ message: "Internal Server Error" });
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
   
 });

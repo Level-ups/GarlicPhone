@@ -16,20 +16,22 @@ router.get("/:id", async (req, res) => {
         isValid: false,
       }]
     ));
-  } else {
-    // continue with the rest of the function
   }
 
-  const [image, error] = await imageService.getImageById(id);
-
-  if (image) {
-    return res.status(200).json(image);
-  } else {
-    if (error.type === ErrorType.NotFound) {
-      return res.status(404).json(new NotFoundErrorDetails("Image not found", error.details));
+  try {
+    const [image, error] = await imageService.getImageById(id);
+  
+    if (image) {
+      return res.status(200).json(image);
     } else {
-      return res.status(500).json(new ErrorDetails("Error fetching image", error.details));
+      if (error.type === ErrorType.NotFound) {
+        return res.status(404).json(new NotFoundErrorDetails("Image not found", error.details));
+      } else {
+        return res.status(500).json(new ErrorDetails("Error fetching image", error.details));
+      }
     }
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
 });
 
@@ -45,18 +47,48 @@ router.get("/prompt/:promptId", async (req, res) => {
         isValid: false,
       }]
     ));
-  } else {
-    // continue with the rest of the function
   }
 
-  const [images, error] = await imageService.getImagesByPromptId(promptId);
+  try {
+    const [images, error] = await imageService.getImagesByPromptId(promptId);
+  
+    if (error) {
+      return res.status(500).json(new ErrorDetails("Error fetching images", error.details));
+    } else {
+      return res.status(200).json(images);
+    }
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
+  }
+});
 
-  if (error) {
-    return res.status(500).json(new ErrorDetails("Error fetching images", error.details));
-  } else {
-    return res.status(200).json(images);
+
+// Get the latest image by chain ID
+router.get("/chain/:chainId", async (req, res) => {
+  const chainId = parseInt(req.params.chainId);
+
+  if (isNaN(chainId)) {
+    return res.status(400).json(new ValidationErrorDetails(
+      "Invalid chain ID",
+      [{
+        field: "chainId",
+        message: "Chain ID must be a number",
+        isValid: false,
+      }]
+    ))
+  }
+
+  try {
+    const [images, error] = await imageService.getLatestImageByChainId(chainId);
+
+    if (error) {
+      return res.status(500).json(new ErrorDetails("Error fetching images", error.details));
+    } else {
+      return res.status(200).json(images);
+    }
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
 });
 
 export { router as imageRouter };
-

@@ -3,6 +3,8 @@ import { parseInto } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 
 export const promptPage: PageRenderer = ({ page }) => {
+    isolateContainer("page");
+
     // Render page
     return parseInto(page, {
         "|div": wrapAsFlex({

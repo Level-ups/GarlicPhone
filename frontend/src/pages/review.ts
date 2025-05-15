@@ -49,8 +49,10 @@ export const reviewPage: PageRenderer = ({ page }) => {
         ] },
     ]
 
+    isolateContainer("page");
+
     // Render page
-    return parseInto(page, {
+    parseInto(page, {
         ...titleCard("Review"),
         ...wrapAsRowCards({
             "|ul#chainList .list": {
