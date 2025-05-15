@@ -96,7 +96,7 @@ router.get('/callback', async (req, res) => {
       }
     }
 
-    res.status(200).json({token: idToken});
+    res.redirect(200, `/lobby?token=${idToken}`);
   } catch (error) {
     console.error('Error during OAuth callback handling:', error);
     return res.status(500).send('Internal Server Error');
