@@ -54,7 +54,6 @@ function updateCanvasColour(colourButton: HTMLButtonElement) {
   if (!canvasConfig.canvasContext) {
     return;
   }
-  console.log(colourButton.style.backgroundColor);
   if (canvasConfig.modes.erase) {
     canvasConfig.pencilContext.colour = colourButton.style.backgroundColor;
   } else {
@@ -284,8 +283,9 @@ export const drawPage: PageRenderer = ({ app }) => {
       "|div.draw-page-controls": {
         ...forEl(colourButtons, (_, v) => generateCanvasColourButton(v)),
       },
-      "|div": {
-        "|canvas.canvas#canvas": {
+      "|div.canvas-container": {
+        "|div.canvas-wrapper": {
+          "|canvas.canvas#canvas": {
           "%mousedown": (event) => {
             mousedownEvent(event as MouseEvent, getCanvasContext());
           },
@@ -298,6 +298,7 @@ export const drawPage: PageRenderer = ({ app }) => {
           "%touchmove": (event) => {touchmoveEvent(event as TouchEvent, getCanvasContext())},
           "%touchend": () => {isDrawing = false}
         },
+        }
       },
       "|div.draw-page-controls#toolControls": {
         ...forEl(toolButtons, (_, v) => generateCanvasToolButton(v)),

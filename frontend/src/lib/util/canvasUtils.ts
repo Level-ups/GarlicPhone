@@ -2,8 +2,8 @@ export function drawPixel(x: number, y: number, ctx: CanvasRenderingContext2D, p
     ctx.fillRect(
       x,
       y,
-      pixelSize,
-      pixelSize
+      1,
+      1
     );
   }
   
@@ -13,8 +13,8 @@ export function drawPixel(x: number, y: number, ctx: CanvasRenderingContext2D, p
     const width = ctx.canvas.clientWidth;
     const height = ctx.canvas.clientHeight;
   
-    ctx.canvas.width = width * dpr;
-    ctx.canvas.height = height * dpr;
+    ctx.canvas.width = 64;
+    ctx.canvas.height = 64;
   
     if (ctx) ctx.scale(dpr, dpr);
   }
