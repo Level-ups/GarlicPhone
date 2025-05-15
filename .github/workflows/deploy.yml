@@ -60,8 +60,14 @@ jobs:
           HOST: ${{ vars.EC2_HOST }}
           USER: ${{ vars.EC2_USER }}
         run: |
-          ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
+          ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << EOF
           sudo cp /home/$USER/server/nginx/garlic-phone.conf /etc/nginx/conf.d/garlic-phone.conf
+
+          # Enable and start NGINX if not running
+          sudo systemctl enable nginx
+          sudo systemctl start nginx
+
+          # Test and reload config
           sudo nginx -t && sudo systemctl reload nginx
           EOF
 
