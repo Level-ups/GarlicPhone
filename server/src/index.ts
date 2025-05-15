@@ -1,20 +1,21 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
+import fs from 'fs';
 import path from 'path';
-import imageService from './services/imageService';
 import { ErrorDetails, NotFoundErrorDetails, ValidationErrorDetails } from './library/error-types';
-import { authRouter } from './routes/authRoutes';
-import { cleanupExpiredLobbies } from './services/lobbyService';
-import * as lobbyService from './services/lobbyService';
 import { cleanupInactiveClients, registerClient, removeClient } from './library/lobbyEventBroadcaster';
 import { createServerSentEventHandler } from './library/serverSentEvents';
+import { validateImageUploadDto } from './models/Image';
+import { authRouter } from './routes/authRoutes';
 import { fullChainDetailsRouter } from './routes/fullChainDetailsRoutes';
 import { imageRouter } from './routes/imageRoutes';
 import { lobbyRouter } from './routes/lobbyRoutes';
 import { promptRouter } from './routes/promptRoutes';
 import { userRouter } from './routes/userRoutes';
-import { validateImageUploadDto } from './models/Image';
+import imageService from './services/imageService';
+import * as lobbyService from './services/lobbyService';
+import { cleanupExpiredLobbies } from './services/lobbyService';
 
 //---------- SETUP ----------//import { createServerSentEventHandler } from './library/serverSentEvents';
 import { authenticateRequest, requireRole } from './library/authMiddleware';
@@ -54,13 +55,16 @@ app.post('/api/chain/:chainId/latest-image', authenticateRequest, async (req, re
     if (validationResult.length) {
       res.status(400).json(new ValidationErrorDetails("Error uploading image", validationResult));
     } else {
-      const imageBuffer = req.body;
+      const imageAsBuffer = Buffer.from(await (req.body as Blob).arrayBuffer());
+
+      fs.writeFileSync('./PHOTO.png', imageAsBuffer)
+
       const imageName = `prompts/${chainId}/image.png`;
     
       const [image, error] = await imageService.createImage({
         userId: Number(userId), 
         chainId: Number(chainId), 
-        image: imageBuffer
+        image: imageAsBuffer
       }, imageName);
     
       if (error) {

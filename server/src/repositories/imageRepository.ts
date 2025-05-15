@@ -1,10 +1,10 @@
 import { ManagedUpload } from 'aws-sdk/clients/s3';
+import { Either } from '../../../lib/types';
 import pool from '../library/db';
 import { ErrorDetails } from '../library/error-types';
 import { imageMapper } from '../library/mappers';
 import s3 from '../library/s3';
 import { Image, InsertImageDto } from '../models/Image';
-import { Either } from '../../../lib/types';
 
 async function getImageById(id: number): Promise<Image | null> {
   const query = `
@@ -107,7 +107,7 @@ async function insertImage(image: InsertImageDto): Promise<Image | null> {
 
   const result = await pool.query(
     query,
-    [image.s3Url, image.promptId, image.userId]
+    [image.s3Url, image.chainId, image.userId]
   );
   return result.rows.length ? imageMapper.toDomain(result.rows[0]) : null;
 }
