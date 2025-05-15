@@ -1,36 +1,13 @@
 import { der, sig } from "../../../lib/signal";
 import { titleCard } from "../components/menuNav";
-import { createItemList } from "../components/ui";
+import { createChainDisplay, createItemList, type ChainInfo } from "../components/ui";
 import { wrapAsCard, wrapAsRowCards } from "../lib/card";
-import { wrapAsFlex } from "../lib/flex";
-import { forEl, parseInto, type ElemTree } from "../lib/parse";
+import { parseInto, react } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
-
-type ChainPrompt = { type: "prompt", prompt: string };
-type ChainImage = { type: "image", url: string };
-type ChainLink = ChainPrompt | ChainImage;
-export type ChainInfo = {
-    name: string,
-    links: ChainLink[]
-};
 
 export const reviewPage: PageRenderer = ({ page }) => {
     const selectedChain = sig<number>(0);
     const scStr = der<string>(() => selectedChain().toString());
-
-    function chainItem(index: number, { name }: ChainInfo): ElemTree {
-        return {
-            "|button.item": {
-                _: `Item: ${name}`,
-                "%click": () => { selectedChain(index); },
-                $: { cursor: "pointer" }
-            }
-        };
-    }
-
-    function chainLink({}: ChainInfo): ElemTree {
-        return {};
-    }
 
     const chains: ChainInfo[] = [
         { name: "Chain 1", links: [
@@ -56,18 +33,11 @@ export const reviewPage: PageRenderer = ({ page }) => {
     parseInto(page, {
         ...titleCard("Review"),
         ...wrapAsRowCards({
-            // "|ul#chainList .list": {
-            //     ...forEl(chains, (i, info) => chainItem(i, info))
-            // },
-            ...createItemList(chains),
-            "|p": { _: scStr },
-            "|section#currChain": wrapAsFlex({
-                ...forEl(chains, (_, info) => chainLink(info))
-            })
+            ...createItemList(chains, (i, _) => { selectedChain(i); }),
+            ...react([selectedChain], () => createChainDisplay(chains[selectedChain()].links))
         }, [1, 2], "1em"),
         "|br": {},
         ...wrapAsCard({
-            _: "asdf"
         }),
     });
 }
