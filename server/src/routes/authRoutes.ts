@@ -16,6 +16,7 @@ router.get('/start', (req, res) => {
   authUrl.searchParams.set('client_id', clientId);
   authUrl.searchParams.set('redirect_uri', redirectUri);
   authUrl.searchParams.set('scope', scope);
+  authUrl.searchParams.set('prompt', 'consent'); 
 
   return res.redirect(authUrl.toString());
 });
@@ -30,6 +31,9 @@ router.get('/callback', async (req, res) => {
   const clientId = constants.GOOGLE_CLIENT_ID;
   const clientSecret = constants.GOOGLE_CLIENT_SECRET;
   const redirectUri = "https://" + constants.APP_URL + '/api/auth/callback';
+
+  console.log(redirectUri);
+  
 
   try {
     // Exchange code for tokens
