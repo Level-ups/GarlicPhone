@@ -1,6 +1,5 @@
 import './style.css'
 import { PageRouter, type ContainerMap, type PageRenderer, type RedirectFn } from './lib/router'
-import { defineCustomComponents } from './components/custom-components';
 import { loginPage } from './pages/login';
 import { menuGalleryPage } from './pages/menuGallery';
 import { drawPage } from './pages/draw';
@@ -17,8 +16,6 @@ const containers: ContainerMap = {
   "app": document.getElementById("app")!,
   "page": document.getElementById("page")!
 };
-
-defineCustomComponents();
 
 //---------- Page routing ----------//
 const pages: { [key: string]: PageRenderer } = {

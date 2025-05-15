@@ -9,10 +9,6 @@ export type ElemTree_Meta = {
   '%'?: (el: HTMLElement) => void;
 };
 
-// export type ElemTree_Elems = (
-//     { [key in `|${keyof HTMLElementTagNameMap}`]?: ElemTree | (() => ElemTree); } &
-//     { [key in `${string}|${string}`]?: ElemTree | (() => ElemTree); }
-// );
 export type ElemTree_Elems = (
     { [key in `|${keyof HTMLElementTagNameMap}`]?: ElemTreeGenerator; } &
     { [key in `${string}|${string}`]?: ElemTreeGenerator; }
@@ -236,7 +232,8 @@ export function forEl<T>(it: number | T[], tree: ElemTree | ((i: number, x: T) =
 
 // Wrap the tree in a reactive <div> element
 // If any of the listed signals changes value, then the subtree will be regenerated
-// WARNING: These should never be nested
+// WARNING: When nesting make sure that all parents & grandparents have a `() => ElemTree`
+// function as the `tree` generator, and not a fixed ElemTree
 export function react(sigs: Reactive<any>[], tree: ElemTreeGenerator): ElemTree {
     const reactiveId = `react-${randHex(10)}`;
     return {
