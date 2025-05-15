@@ -1,5 +1,6 @@
 import { der, sig } from "../../../lib/signal";
 import { titleCard } from "../components/menuNav";
+import { createItemList } from "../components/ui";
 import { wrapAsCard, wrapAsRowCards } from "../lib/card";
 import { wrapAsFlex } from "../lib/flex";
 import { forEl, parseInto, type ElemTree } from "../lib/parse";
@@ -55,9 +56,10 @@ export const reviewPage: PageRenderer = ({ page }) => {
     parseInto(page, {
         ...titleCard("Review"),
         ...wrapAsRowCards({
-            "|ul#chainList .list": {
-                ...forEl(chains, (i, info) => chainItem(i, info))
-            },
+            // "|ul#chainList .list": {
+            //     ...forEl(chains, (i, info) => chainItem(i, info))
+            // },
+            ...createItemList(chains),
             "|p": { _: scStr },
             "|section#currChain": wrapAsFlex({
                 ...forEl(chains, (_, info) => chainLink(info))
