@@ -5,7 +5,7 @@ import userService from '../services/userService';
 
 const router = Router();
 
-const redirectUri = "http://" + process.env.EC2_HOST + ":" + process.env.PORT + '/api/auth/callback';
+const redirectUri = "https://garlic-phone.com/api/auth/callback";
 
 router.get('/start', (req, res) => {
   const clientId = process.env.GOOGLE_CLIENT_ID || "";
