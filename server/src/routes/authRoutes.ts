@@ -30,7 +30,7 @@ router.get('/callback', async (req, res) => {
 
   const clientId = constants.GOOGLE_CLIENT_ID;
   const clientSecret = constants.GOOGLE_CLIENT_SECRET;
-  const redirectUri = "https://" + constants.APP_URL + '/api/auth/callback';
+  const redirectUri = constants.APP_URL + '/api/auth/callback';
 
   console.log(redirectUri);
   
