@@ -24,7 +24,7 @@ function genGalleryCard(i: number, itm: GalleryItem) {
                     imageRendering: "pixelated",
                 }
             },
-            "|figcaption": {
+            "|figcaption.galleryCaption": {
                 _: itm.title,
                 $: { padding: "1rem", fontSize: "1em" }
             }

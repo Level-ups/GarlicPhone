@@ -93,7 +93,8 @@ html {
   height: 100%;
   /* overflow: hidden; */
 
-  background: var(--bg);
+  /* background: var(--bg); */
+  animation: back-colour-fade 50s ease infinite;
 }
 
 /* Medium screens (tablet) */
@@ -229,11 +230,12 @@ a:hover { color: var(--link-hover) }
   width: 100%;
   min-height: 5em;
   padding: 2em;
-  background: var(--card);
+  background: var(--white);
   /* border: 1px solid green; */
-  border-radius: 1em;
+  border-radius: 1rem;
+  border: 2px solid black;  
   overflow: hidden;
-  filter: drop-shadow(0 0 0.5rem black);
+  box-shadow: .4rem .5rem black;
   transition: transform 0.2s ease;
 }
 
@@ -270,8 +272,8 @@ a:hover { color: var(--link-hover) }
   height: "100%";
   border-color: var(--dark_turquios);
   border-radius: 0.75rem;
-  background-color: var(--card); 
-  color: var(--white_white);
+  background-color: var(--white); 
+  color: var(--black);
   text-align: left;
   font-family: 'Rosario', sans-serif;
 }
@@ -281,7 +283,7 @@ a:hover { color: var(--link-hover) }
 }
 
 .gallerBlock {
-  background-color: var(--dark_turquios);
+  background-color: var(--white);
   color: #fff;
   border-radius: 12px;
   padding: 0.2rem 0.5rem;
@@ -294,6 +296,14 @@ a:hover { color: var(--link-hover) }
   opacity: 0.13;
   border-radius: 12px; 
   font-size: 1.5rem;
+}
+
+.menuButton{
+  border-radius: 2rem;
+  border: black 2px solid;
+  background-color: white;
+  color: var(--black);
+  padding: 0.5rem 1rem;
 }
   
 .timer {

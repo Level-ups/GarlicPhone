@@ -8,14 +8,9 @@ type Link = {
 
 function createLink({ name, url }: Link): ElemTree {
     return {
-        "|a": {
+        "|a.menuButton": {
             _: name,
             "@": { href: url},
-            $: {
-                border: "1px solid pink",
-                padding: "0.4em 1em",
-                borderRadius: "100em"
-            }
         }
     };
 }

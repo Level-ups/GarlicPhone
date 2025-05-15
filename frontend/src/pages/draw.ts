@@ -288,24 +288,24 @@ export const drawPage: PageRenderer = ({ app }) => {
     },
   ];
 
-  sseHandler?.addEventListener("before_lobby_update", async (e) => {
-    const lobby: WithClient<Lobby> = JSON.parse(e.data);
-    const canvas = document.getElementById("canvas") as HTMLCanvasElement;  
-    console.log("BEFORE_LOBBY_UPDATE_DATA", lobby)
-    console.log("PHASE PLAYER ASSIGNMENTS:", lobby.phasePlayerAssignments)
-    const uploadedImage = await uploadCanvasImage(canvas, lobby.phasePlayerAssignments[0].chain.id, lobby.players[lobby.clientIndex].id);
-    console.log("PROMPT IMAGE:", uploadedImage);
-  });
+  // sseHandler?.addEventListener("before_lobby_update", async (e) => {
+  //   const lobby: WithClient<Lobby> = JSON.parse(e.data);
+  //   const canvas = document.getElementById("canvas") as HTMLCanvasElement;  
+  //   console.log("BEFORE_LOBBY_UPDATE_DATA", lobby)
+  //   console.log("PHASE PLAYER ASSIGNMENTS:", lobby.phasePlayerAssignments)
+  //   const uploadedImage = await uploadCanvasImage(canvas, lobby.phasePlayerAssignments[0].chain.id, lobby.players[lobby.clientIndex].id);
+  //   console.log("PROMPT IMAGE:", uploadedImage);
+  // });
 
-  sseHandler?.addEventListener("after_lobby_update", async (e) => {
-    console.log("RAW PROMPT THING", e.data)
-    const lobby: WithClient<Lobby> = JSON.parse(e.data);
-    const promptForPlayer = await getPromptForPLayer(lobby.phasePlayerAssignments[0].chain.id);
+  // sseHandler?.addEventListener("after_lobby_update", async (e) => {
+  //   console.log("RAW PROMPT THING", e.data)
+  //   const lobby: WithClient<Lobby> = JSON.parse(e.data);
+  //   const promptForPlayer = await getPromptForPLayer(lobby.phasePlayerAssignments[0].chain.id);
     
-    prompt(promptForPlayer.text);
+  //   prompt(promptForPlayer.text);
     
-    console.log("PROMPT FOR PLAYER:", promptForPlayer.text);
-  });
+  //   console.log("PROMPT FOR PLAYER:", promptForPlayer.text);
+  // });
 
   isolateContainer("app");
 
