@@ -5,7 +5,12 @@ import fillToolIcon from "/assets/canvas/fill-tool.svg";
 import pecilToolIcon from "/assets/canvas/pencil-tool.svg";
 import tickIcon from "/assets/canvas/tick.svg";
 import trashIcon from "/assets/canvas/trash.svg";
-import { drawLine, drawPixel, floodFill, resizeCanvasToDisplaySize } from "../lib/util/canvasUtils";
+import {
+  drawLine,
+  drawPixel,
+  floodFill,
+  resizeCanvasToDisplaySize,
+} from "../lib/util/canvasUtils";
 import type { PageRenderer } from "../lib/router";
 import { apiFetch } from "../lib/fetch";
 
@@ -26,8 +31,13 @@ type CanvasConfig = {
   modes: CanvasModes;
 };
 
-type ToolButtonConfig = { imagePath: string; altText: string, initiallyActive?: boolean, clickFunc: Function };
-type ColourButtonConfig = {colour: string, initiallyActive?: boolean}
+type ToolButtonConfig = {
+  imagePath: string;
+  altText: string;
+  initiallyActive?: boolean;
+  clickFunc: Function;
+};
+type ColourButtonConfig = { colour: string; initiallyActive?: boolean };
 
 const canvasConfig: CanvasConfig = {
   pencilContext: {
@@ -50,7 +60,6 @@ let activeColourButton: HTMLButtonElement | null | undefined = null;
 let activeToolButton: HTMLButtonElement | null | undefined = null;
 
 function updateCanvasColour(colourButton: HTMLButtonElement) {
-  
   if (!canvasConfig.canvasContext) {
     return;
   }
@@ -76,9 +85,13 @@ function toggleToolButtonActive(button: HTMLButtonElement) {
   }
 }
 
-function generateCanvasColourButton(colourButton: ColourButtonConfig): ElemTree {
+function generateCanvasColourButton(
+  colourButton: ColourButtonConfig
+): ElemTree {
   return {
-    [`|button.colour-button${colourButton.initiallyActive ? '.colour-button-active' : ''}`]: {
+    [`|button.colour-button${
+      colourButton.initiallyActive ? ".colour-button-active" : ""
+    }`]: {
       "%click": (event: Event) => {
         toggleColourButtonActive(event.target as HTMLButtonElement);
         updateCanvasColour(event.target as HTMLButtonElement);
@@ -98,7 +111,9 @@ function generateCanvasColourButton(colourButton: ColourButtonConfig): ElemTree 
 
 function generateCanvasToolButton(button: ToolButtonConfig) {
   return {
-    [`|button.canvas-button${button.initiallyActive ? '.canvas-button-active': ''}`]: {
+    [`|button.canvas-button${
+      button.initiallyActive ? ".canvas-button-active" : ""
+    }`]: {
       "|img.inner-button-img": {
         "@": {
           src: button.imagePath,
@@ -106,8 +121,8 @@ function generateCanvasToolButton(button: ToolButtonConfig) {
         },
       },
       "%click": (event: Event) => {
-        button.clickFunc(event)
-      }
+        button.clickFunc(event);
+      },
     },
   };
 }
@@ -118,10 +133,12 @@ function mousedownEvent(event: MouseEvent, ctx: CanvasRenderingContext2D) {
 
   if (canvasConfig.modes.fill) {
     const rect = getCanvasContext().canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    const canvasX = Math.floor((event.clientX - rect.left) * dpr);
-    const canvasY = Math.floor((event.clientY - rect.top) * dpr);
-    
+    const scaleX = getCanvasContext().canvas.width / rect.width;
+    const scaleY = getCanvasContext().canvas.height / rect.height;
+
+    const canvasX = Math.floor((event.clientX - rect.left) * scaleX);
+    const canvasY = Math.floor((event.clientY - rect.top) * scaleY);
+
     floodFill(ctx, canvasX, canvasY, canvasConfig.pencilContext.colour);
   } else if (canvasConfig.modes.erase) {
     isDrawing = true;
@@ -136,7 +153,7 @@ function mousedownEvent(event: MouseEvent, ctx: CanvasRenderingContext2D) {
   }
 }
 
-function mousemoveEvent(event: MouseEvent, ctx: CanvasRenderingContext2D){
+function mousemoveEvent(event: MouseEvent, ctx: CanvasRenderingContext2D) {
   if (!isDrawing) return;
   const x = Math.floor(event.offsetX / canvasConfig.pencilContext.pixelSize);
   const y = Math.floor(event.offsetY / canvasConfig.pencilContext.pixelSize);
@@ -145,13 +162,17 @@ function mousemoveEvent(event: MouseEvent, ctx: CanvasRenderingContext2D){
   lastY = y;
 }
 
-function touchstartEvent(event: TouchEvent, ctx: CanvasRenderingContext2D){
+function touchstartEvent(event: TouchEvent, ctx: CanvasRenderingContext2D) {
   event.preventDefault();
 
   const touch = event.touches[0];
   const rect = ctx.canvas.getBoundingClientRect();
-  const x = Math.floor((touch.clientX - rect.left) / canvasConfig.pencilContext.pixelSize);
-  const y = Math.floor((touch.clientY - rect.top) / canvasConfig.pencilContext.pixelSize);
+  const x = Math.floor(
+    (touch.clientX - rect.left) / canvasConfig.pencilContext.pixelSize
+  );
+  const y = Math.floor(
+    (touch.clientY - rect.top) / canvasConfig.pencilContext.pixelSize
+  );
 
   if (canvasConfig.modes.fill) {
     const dpr = window.devicePixelRatio || 1;
@@ -171,21 +192,24 @@ function touchstartEvent(event: TouchEvent, ctx: CanvasRenderingContext2D){
   }
 }
 
-function touchmoveEvent(event: TouchEvent, ctx: CanvasRenderingContext2D){
+function touchmoveEvent(event: TouchEvent, ctx: CanvasRenderingContext2D) {
   event.preventDefault();
 
   if (!isDrawing) return;
 
   const touch = event.touches[0];
   const rect = ctx.canvas.getBoundingClientRect();
-  const x = Math.floor((touch.clientX - rect.left) / canvasConfig.pencilContext.pixelSize);
-  const y = Math.floor((touch.clientY - rect.top) / canvasConfig.pencilContext.pixelSize);
+  const x = Math.floor(
+    (touch.clientX - rect.left) / canvasConfig.pencilContext.pixelSize
+  );
+  const y = Math.floor(
+    (touch.clientY - rect.top) / canvasConfig.pencilContext.pixelSize
+  );
 
   drawLine(lastX, lastY, x, y, ctx, canvasConfig.pencilContext.pixelSize);
   lastX = x;
   lastY = y;
-};
-
+}
 
 function getCanvasContext() {
   if (!canvasConfig.canvasContext) throw new Error("Canvas not supported");
@@ -193,14 +217,14 @@ function getCanvasContext() {
 }
 export const drawPage: PageRenderer = ({ app }) => {
   const colourButtons: ColourButtonConfig[] = [
-    {colour: "rgb(255, 0, 0)"},
-    {colour: "rgb(0, 0, 255)"},
-    {colour: "rgb(0, 128, 0)"},
-    {colour: "rgb(255, 255, 0)"},
-    {colour: "rgb(255, 166, 0)"},
-    {colour: "rgb(128, 0, 128)"},
-    {colour: "rgb(255, 192, 203)"},
-    {colour: "rgb(0, 0, 0)", initiallyActive: true},
+    { colour: "rgb(255, 0, 0)" },
+    { colour: "rgb(0, 0, 255)" },
+    { colour: "rgb(0, 128, 0)" },
+    { colour: "rgb(255, 255, 0)" },
+    { colour: "rgb(255, 166, 0)" },
+    { colour: "rgb(128, 0, 128)" },
+    { colour: "rgb(255, 192, 203)" },
+    { colour: "rgb(0, 0, 0)", initiallyActive: true },
   ];
 
   const toolButtons: ToolButtonConfig[] = [
@@ -208,58 +232,59 @@ export const drawPage: PageRenderer = ({ app }) => {
       imagePath: fillToolIcon,
       altText: "fill tool",
       clickFunc: (event: Event) => {
-        toggleToolButtonActive(event.target as HTMLButtonElement)
+        toggleToolButtonActive(event.target as HTMLButtonElement);
         canvasConfig.modes = {
           ...canvasConfig.modes,
           fill: true,
           erase: false,
         };
-      }
+      },
     },
     {
       imagePath: eraserToolIcon,
       altText: "eraser tool",
-      clickFunc : (event: Event) => {
-        toggleToolButtonActive(event.target as HTMLButtonElement)
+      clickFunc: (event: Event) => {
+        toggleToolButtonActive(event.target as HTMLButtonElement);
         canvasConfig.modes = {
           ...canvasConfig.modes,
           erase: true,
           fill: false,
           draw: false,
         };
-          getCanvasContext().fillStyle = "white";
-      }
+        getCanvasContext().fillStyle = "white";
+      },
     },
     {
       imagePath: pecilToolIcon,
       altText: "draw tool",
       initiallyActive: true,
       clickFunc: (event: Event) => {
-        toggleToolButtonActive(event.target as HTMLButtonElement)
+        toggleToolButtonActive(event.target as HTMLButtonElement);
         canvasConfig.modes = {
           ...canvasConfig.modes,
           erase: false,
           fill: false,
           draw: true,
         };
-          getCanvasContext().fillStyle = canvasConfig.pencilContext.colour;
-      }
+        getCanvasContext().fillStyle = canvasConfig.pencilContext.colour;
+      },
     },
     {
       imagePath: trashIcon,
       altText: "clear tool",
       clickFunc: () => {
-        const canvasCtx = getCanvasContext()
-          canvasCtx.fillStyle = "#ffffff";
-          canvasCtx.fillRect(
-            0,
-            0,
-            canvasCtx.canvas.width,
-            canvasCtx.canvas.height
-          );
+        const canvasCtx = getCanvasContext();
+        canvasCtx.fillStyle = "#ffffff";
+        canvasCtx.fillRect(
+          0,
+          0,
+          canvasCtx.canvas.width,
+          canvasCtx.canvas.height
+        );
 
-          if(!canvasConfig.modes.erase) canvasCtx.fillStyle = canvasConfig.pencilContext.colour
-      }
+        if (!canvasConfig.modes.erase)
+          canvasCtx.fillStyle = canvasConfig.pencilContext.colour;
+      },
     },
   ];
 
@@ -269,16 +294,16 @@ export const drawPage: PageRenderer = ({ app }) => {
     "|section.draw-page": {
       "|div.draw-page-header-ctn": {
         "|div.draw-page-title-timer-ctn": {
-          "|h2.large-heading.draw-page-title": { _: "Garlic Phone", },
-          "|p.draw-page-timer": { _: "00:00", },
+          "|h2.large-heading.draw-page-title": { _: "Garlic Phone" },
+          "|p.draw-page-timer": { _: "00:00" },
         },
         "|img.draw-page-logo": {
-          "@": { src: garlicPhoneLogo, alt: "Garlic Phone Logo", },
+          "@": { src: garlicPhoneLogo, alt: "Garlic Phone Logo" },
         },
       },
       "|div.draw-page-prompt-ctn": {
         "|p": { _: "Draw:" },
-        "|h3.medium-heading": { _: "Clown with pie on his face", },
+        "|h3.medium-heading": { _: "Clown with pie on his face" },
       },
       "|div.draw-page-controls": {
         ...forEl(colourButtons, (_, v) => generateCanvasColourButton(v)),
@@ -286,19 +311,29 @@ export const drawPage: PageRenderer = ({ app }) => {
       "|div.canvas-container": {
         "|div.canvas-wrapper": {
           "|canvas.canvas#canvas": {
-          "%mousedown": (event) => {
-            mousedownEvent(event as MouseEvent, getCanvasContext());
+            "%mousedown": (event) => {
+              mousedownEvent(event as MouseEvent, getCanvasContext());
+            },
+            "%mousemove": (event) => {
+              mousemoveEvent(event as MouseEvent, getCanvasContext());
+            },
+            "%mouseup": () => {
+              isDrawing = false;
+            },
+            "%mouseleave": () => {
+              isDrawing = false;
+            },
+            "%touchstart": (event) => {
+              touchstartEvent(event as TouchEvent, getCanvasContext());
+            },
+            "%touchmove": (event) => {
+              touchmoveEvent(event as TouchEvent, getCanvasContext());
+            },
+            "%touchend": () => {
+              isDrawing = false;
+            },
           },
-          "%mousemove": (event) => {
-            mousemoveEvent(event as MouseEvent, getCanvasContext())
-          },
-          "%mouseup": () => {isDrawing = false},
-          "%mouseleave": () => {isDrawing = false},
-          "%touchstart": (event) => {touchstartEvent(event as TouchEvent, getCanvasContext())},
-          "%touchmove": (event) => {touchmoveEvent(event as TouchEvent, getCanvasContext())},
-          "%touchend": () => {isDrawing = false}
         },
-        }
       },
       "|div.draw-page-controls#toolControls": {
         ...forEl(toolButtons, (_, v) => generateCanvasToolButton(v)),
@@ -313,12 +348,15 @@ export const drawPage: PageRenderer = ({ app }) => {
             },
           },
           "%input": (event: Event) => {
-            const inputEvent = event.target as HTMLInputElement
-            const newSize = parseInt(inputEvent.value, 10)
-            canvasConfig.pencilContext = {...canvasConfig.pencilContext, pixelSize: newSize}
+            const inputEvent = event.target as HTMLInputElement;
+            const newSize = parseInt(inputEvent.value, 10);
+            canvasConfig.pencilContext = {
+              ...canvasConfig.pencilContext,
+              pixelSize: newSize,
+            };
 
             const pixelSizeLabel = document.getElementById("pixelSliderLabel");
-              if(pixelSizeLabel) pixelSizeLabel.textContent = `${newSize}px`
+            if (pixelSizeLabel) pixelSizeLabel.textContent = `${newSize}px`;
           },
           "|label.pixel-slider-value#pixelSliderLabel": {
             _: `${canvasConfig.pencilContext.pixelSize}px`,
@@ -333,24 +371,29 @@ export const drawPage: PageRenderer = ({ app }) => {
 };
 
 window.addEventListener("resize", () => {
-  resizeCanvasToDisplaySize(getCanvasContext())
+  resizeCanvasToDisplaySize(getCanvasContext());
 });
 
-
-async function uploadCanvasImage(canvas: HTMLCanvasElement, promptId: number, userId: number) {
+async function uploadCanvasImage(
+  canvas: HTMLCanvasElement,
+  promptId: number,
+  userId: number
+) {
   // Convert canvas to Blob (PNG format)
-  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  const blob = await new Promise((resolve) =>
+    canvas.toBlob(resolve, "image/png")
+  );
 
   if (!blob) {
-    throw new Error('Failed to convert canvas to PNG blob');
+    throw new Error("Failed to convert canvas to PNG blob");
   }
 
   const response = await apiFetch(
     "post",
     `/api/prompt/${promptId}/image?userId=${userId}`,
     blob,
-    { 'Content-Type': 'image/png' }
-);
+    { "Content-Type": "image/png" }
+  );
 
   if (!response.ok) {
     const errorDetails = await response.json();
@@ -372,13 +415,17 @@ async function uploadCanvasImage(canvas: HTMLCanvasElement, promptId: number, us
 // Initial calls
 
 const observer = new MutationObserver((mutations, obs) => {
-  const colourButtons = document.querySelectorAll<HTMLButtonElement>(".colour-button")
-  const toolButtons = document.querySelectorAll<HTMLButtonElement>(".canvas-button")
+  const colourButtons =
+    document.querySelectorAll<HTMLButtonElement>(".colour-button");
+  const toolButtons =
+    document.querySelectorAll<HTMLButtonElement>(".canvas-button");
   const element = document.getElementById("canvas") as HTMLCanvasElement;
   if (element && colourButtons.length > 0 && toolButtons.length > 0) {
     //setting canvas context
-    canvasConfig.canvasContext = element.getContext('2d', { willReadFrequently: true })
-    resizeCanvasToDisplaySize(getCanvasContext())
+    canvasConfig.canvasContext = element.getContext("2d", {
+      willReadFrequently: true,
+    });
+    resizeCanvasToDisplaySize(getCanvasContext());
 
     //setting active colour button
     colourButtons.forEach((button) => {
@@ -399,5 +446,5 @@ const observer = new MutationObserver((mutations, obs) => {
 });
 observer.observe(document.body, {
   childList: true,
-  subtree: true
+  subtree: true,
 });
