@@ -137,7 +137,7 @@ button {
   border-radius: var(--button-radius);
   padding: 0.8rem 1.5rem;
   font-size: 1rem;
-  font-weight: bold;
+  /*font-weight: bold;*/
   cursor: pointer;
   transition: var(--transition);
 }

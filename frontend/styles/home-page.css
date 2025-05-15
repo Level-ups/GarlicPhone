@@ -157,12 +157,12 @@ input:focus {
 
 button {
   background-color: var(--primary-color);
-  color: white;
+  color: rgba(253, 214, 255, 0.695);
   border: none;
   border-radius: var(--button-radius);
   padding: 0.8rem 1.5rem;
   font-size: 1rem;
-  font-weight: bold;
+  /*font-weight: bold;*/
   cursor: pointer;
   transition: var(--transition);
 }
