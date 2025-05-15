@@ -24,8 +24,21 @@ async function getUserById(id: string): Promise<Either<User, ErrorDetails>> {
     } else {
       return [user];
     }
-  } catch (error: any) {
-    return [undefined, new ErrorDetails('Failed to retrieve user', [error.message], error.stack)];
+  } catch (error) {
+    return [undefined, new ErrorDetails('Failed to retrieve user')];
+  }
+}
+
+async function getUserByGoogleId(id: string): Promise<Either<User, ErrorDetails>> {
+  try {
+    const user = await userRepository.findUserByGoogleId(id);
+    if (!user) {
+      return [undefined, new ErrorDetails('User not found')];
+    } else {
+      return [user];
+    }
+  } catch (error) {
+    return [undefined, new ErrorDetails('Failed to retrieve user')];
   }
 }
 
@@ -74,6 +87,7 @@ const userService = {
   createUser,
   updateUser,
   deleteUser,
+  getUserByGoogleId
 };
 
 export default userService;

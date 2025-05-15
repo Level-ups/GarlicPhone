@@ -8,7 +8,7 @@ const router = Router();
 
 router.get('/start', (req, res) => {
   const clientId = constants.GOOGLE_CLIENT_ID;
-  const redirectUri = constants.GOOGLE_CLIENT_REDIRECT_URI;
+  const redirectUri = constants.APP_URL + '/api/auth/callback';
   const scope = constants.GOOGLE_CLIENT_SCOPES;
   const authUrl = new URL(constants.GOOGLE_CLIENT_AUTH_URL);
 
@@ -16,6 +16,7 @@ router.get('/start', (req, res) => {
   authUrl.searchParams.set('client_id', clientId);
   authUrl.searchParams.set('redirect_uri', redirectUri);
   authUrl.searchParams.set('scope', scope);
+  authUrl.searchParams.set('prompt', 'consent'); 
 
   return res.redirect(authUrl.toString());
 });
@@ -29,13 +30,16 @@ router.get('/callback', async (req, res) => {
 
   const clientId = constants.GOOGLE_CLIENT_ID;
   const clientSecret = constants.GOOGLE_CLIENT_SECRET;
-  const redirectUri = constants.GOOGLE_CLIENT_REDIRECT_URI;
+  const redirectUri = constants.APP_URL + '/api/auth/callback';
+
+  console.log(redirectUri);
+  
 
   try {
     // Exchange code for tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
       body: new URLSearchParams({
         code,
         client_id: clientId,
@@ -80,19 +84,26 @@ router.get('/callback', async (req, res) => {
       issuer: ['https://accounts.google.com', 'accounts.google.com'],
       audience: clientId,
     });
+ 
+    if(payload.sub){
+      const user = userService.getUserByGoogleId(payload.sub);
+      if (!user) {
+        const newUser = await userService.createUser({
+          googleSub: payload.sub,
+          name: payload.name as string,
+          avatarUrl: payload.picture as string,
+          roleName: 'player',
+        });
+        if (!newUser) {
+          return res.status(500).send('Failed to create user');
+        }
+      }
+    }
 
-    // TO-DO: Create user
-    userService.createUser({
-      googleSub: payload.sub!,
-      name: '',
-      avatarUrl: '',
-      roleName: ''
-    });
-
-    return res.redirect(`${constants.FRONTEND_URL}/congrats`);
-  }
-  catch (error: any) {
-    return res.status(500).json(new ErrorDetails('Internal server error', [error.message], error.stack));
+    res.redirect(`/lobby?token=${idToken}`);
+  } catch (error) {
+    console.error('Error during OAuth callback handling:', error);
+    return res.status(500).send('Internal Server Error');
   }
 });
 

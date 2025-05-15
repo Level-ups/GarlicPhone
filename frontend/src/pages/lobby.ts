@@ -72,6 +72,9 @@ async function refreshLobbyState(gameCode: string, players: Signal<PlayerInfo[]>
 
 export const lobbyPage: PageRenderer = ({ page }) => {
     const players = sig<PlayerInfo[]>([]);
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    localStorage.setItem("google-id-token", token ?? "");
     const message = sig<string | null>(null);
 
     const playerId = Number(localStorage.getItem("playerId") ?? randId());
