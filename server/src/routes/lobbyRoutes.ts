@@ -1,8 +1,6 @@
 import { UUID } from 'crypto';
 import express, { Request, Response } from 'express';
-import { ErrorDetails, ErrorType, NotFoundErrorDetails, ValidationErrorDetails } from '../library/error-types';
-import { registerClient, removeClient } from '../library/lobbyEventBroadcaster';
-import { createServerSentEventHandler } from '../library/serverSentEvents';
+import { ErrorDetails, ErrorType, ValidationErrorDetails } from '../library/error-types';
 import { validateLobbyJoinCode, validateLobbyUrlId } from "../models/Lobby";
 import * as lobbyService from '../services/lobbyService';
 
@@ -14,7 +12,6 @@ lobbyRouter.post('/', (req: Request, res: Response) => {
     const { hostName, hostAvatarUrl, maxPlayers } = req.body;
     const hostId = req.user?.id;
 
-    console.log("USER IS:", req.user)
 
     if (!hostId) {
       return res.status(401).json(new ErrorDetails("Unauthorized", ["User is not authenticated"]));

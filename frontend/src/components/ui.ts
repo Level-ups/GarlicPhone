@@ -1,4 +1,4 @@
-import { der, type Reactive } from "../../../lib/signal";
+import { bind, der, sig, type Reactive } from "../../../lib/signal";
 import { forEl, parse, type ElemTree } from "../lib/parse";
 
 export function defineCustomElem (
@@ -167,6 +167,61 @@ export function createItemList<T extends { name: string }>(
   return {
     '|ul.item-list': {
       ...forEl(items, (i, info) => renderItem(i, info))
+    }
+  };
+}
+
+
+export type ChainPrompt = { type: "prompt", prompt: string };
+export type ChainImage = { type: "image", url: string };
+export type ChainLink = ChainPrompt | ChainImage;
+export type ChainInfo = {
+    name: string,
+    links: ChainLink[]
+};
+
+
+export function createChainDisplay(links: ChainLink[]): ElemTree {
+  const showModal = sig<boolean>(false);
+  const modalImage = sig<string>('');
+
+  function renderLink(link: ChainLink): ElemTree {
+    if (link.type === 'prompt') {
+      return {
+        '|div.chat-row.left': {
+          '|p.prompt-bubble': { _: link.prompt }
+        }
+      };
+    } else {
+      return {
+        '|div.chat-row.right': {
+          '|img.chat-image': {
+            '@': { src: link.url, alt: "Chat image" },
+            '%click': () => {
+              modalImage(link.url);
+              showModal(true);
+            }
+          }
+        }
+      };
+    }
+  }
+
+  return {
+    '|section.chat-container': {
+      ...forEl(links, (_, link) => renderLink(link)),
+
+      // Modal overlay
+      '|div#image-modal.modal-overlay': {
+        $: { display: der(() => showModal() ? 'flex' : 'none') },
+
+        '%click': (e: Event) => {
+          if ((e.target as HTMLElement).id === 'image-modal') {
+            showModal(false);
+          }
+        },
+        '|img.modal-image': { "@": { src: modalImage } }
+      }
     }
   };
 }

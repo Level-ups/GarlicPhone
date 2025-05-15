@@ -61,8 +61,7 @@ export function broadcastLobbyUpdate(lobby: Lobby, eventName: string = "lobby_up
       ));
 
       console.log("\n\n")
-      console.log("ASSIGNMENTS BEFORE:", assignments);
-      console.log("ASSIGNMENTS AFTER:", assignments);
+      console.log("LOBBY:", JSON.stringify(lobby, null, 2));
       console.log("-------------------------------------\n\n")
 
       const payload = {

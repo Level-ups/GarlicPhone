@@ -6,60 +6,69 @@ export type GamePhase = {
   phase: GamePhaseName;
 }
 
-class GamePhaseNode {
-  value: GamePhase;
-  next?: GamePhaseNode;
-  
-  constructor(phaseName: GamePhaseName, index?: number) {
-    this.value = {
-      index: index ?? 0,
-      phase: phaseName,
-    };
-    this.next = undefined;
-  }
-
-  addNext(phaseName: GamePhaseName): GamePhaseNode {
-    const node = new GamePhaseNode(phaseName, this.value.index + 1);
-    this.next = node;
-    return this.next;
-  }
-}
-
 export class GamePhaseList {
-  private head: GamePhaseNode;
-  public current: GamePhaseNode;
-  private tail?: GamePhaseNode;
+  phases: GamePhase[];
+  private currentIndex: number;
 
   constructor() {
-    this.head = new GamePhaseNode("Waiting");
-    this.tail = this.head.addNext("Prompt");
-    this.current = this.head;
+    this.phases = [];
+    this.currentIndex = 0;
+    this.addPhase("Waiting");
+    this.addPhase("Prompt");
   }
 
+  private addPhase(phaseName: GamePhaseName): void {
+    const newPhase: GamePhase = {
+      index: this.phases.length,
+      phase: phaseName,
+    };
+    this.phases.push(newPhase);
+  }
+  
   addDrawAndGuessPhase() {
-    this.tail = this.tail?.addNext("Draw")
-      .addNext("Guess");
+    this.addPhase("Draw");
+    this.addPhase("Guess");
+  }
+
+  addNextGameLoopPhase() {
+    const lastPhase = this.phases[this.phases.length - 1];
+    if (lastPhase?.phase === 'Prompt' || lastPhase?.phase === "Guess") {
+      this.addPhase("Draw");
+    } else if (lastPhase?.phase === "Waiting") {
+      this.addPhase("Prompt");
+    } else {
+      this.addPhase("Guess");
+    }
+  }
+
+  get(index: number): GamePhase | undefined {
+    return this.phases[index];
   }
 
   addReviewAndCompletePhase() {
-    this.tail = this.tail?.addNext("Review")
-     .addNext("Complete");
+    this.addPhase("Review");
+    this.addPhase("Complete");
   }
 
   getCurrentPhase(): GamePhase {
-    return this.current.value;
+    return this.phases[this.currentIndex];
   }
 
   peekNextPhase(): GamePhase | undefined {
-    return this.current.next?.value;
+    if (this.currentIndex + 1 < this.phases.length) {
+      return this.phases[this.currentIndex + 1];
+    }
+    return undefined;
   }
 
   moveToNextPhase(): GamePhase {
-    this.current = this.current.next ?? this.current;
-    return this.current.value;
+    if (this.currentIndex + 1 < this.phases.length) {
+      this.currentIndex++;
+    }
+    return this.phases[this.currentIndex];
   }
 
   toJSON() {
-    return this.current.value;
+    return {...this.phases[this.currentIndex], debugDetails: { phases: this.phases, currentIndex: this.currentIndex }};
   }
 }

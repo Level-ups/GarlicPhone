@@ -23,7 +23,6 @@ async function createLobby(playerId: number) {
     });
 
     const data = await res.json()
-    console.log("CREATE LOBBY:", data);
 
     return data;
 }
@@ -36,7 +35,6 @@ async function joinLobby(gameCode: string, playerId: number, players: Signal<Pla
     });
 
     const data = await res.json();
-    console.log("JOIN LOBBY:", data);
     players(data.players);
 
     return data;
@@ -46,7 +44,6 @@ async function joinLobby(gameCode: string, playerId: number, players: Signal<Pla
 async function setAsReady(lobbyId: string, playerId: number, players: Signal<PlayerInfo[]>) {
     const res = await apiFetch("post", `/api/lobbies/${lobbyId}/ready`, { playerId, isReady: true });
     const data = await res.json();
-    console.log("SET AS READY:", res);
 
     players(data.players);
 }
@@ -55,14 +52,12 @@ async function startGame(gameId: string, playerId: number) {
     const res = await apiFetch("post", `/api/lobbies/${gameId}/start`, { playerId });
 
     const data = await res.json();
-    console.log("START GAME:", data);
 }
 
 async function refreshLobbyState(gameCode: string, players: Signal<PlayerInfo[]>) {
     const res = await apiFetch("get", `/api/lobbies/code/${gameCode}`, undefined);
 
     const data = await res.json();
-    console.log("REFRESH LOBBY STATE:", data);
     players(data.players);
 }
 
@@ -104,7 +99,6 @@ export const lobbyPage: PageRenderer = ({ page }) => {
             updateSSEHandler(`/api/lobbies/${res.id}/events`);
             setAsReady(res.id, playerId, players);
         }
-        console.log(gameCode);
 
         // Listen on state refresh
         sseHandler?.addEventListener("lobby_update", (e) => {

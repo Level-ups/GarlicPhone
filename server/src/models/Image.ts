@@ -24,7 +24,7 @@ export type ImageUploadDto = {
 
 export type InsertImageDto = {
   s3Url: string;
-  promptId: number;
+  chainId: number;
   userId: number;
 }
 
