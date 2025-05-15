@@ -264,6 +264,8 @@ export const drawPage: PageRenderer = ({ app }) => {
     },
   ];
 
+  isolateContainer("app");
+
   return parseInto(app, {
     "|section.draw-page": {
       "|div.draw-page-header-ctn": {

@@ -48,10 +48,7 @@ async function joinLobby(gameCode: string, playerId: number, players: Signal<Pla
 
 // Set the current player as ready
 async function setAsReady(lobbyId: string, playerId: number, players: Signal<PlayerInfo[]>) {
-    const res = await apiFetch("post", `/api/lobbies/${lobbyId}/ready`, {
-        playerId,
-        isReady: true
-    });
+    const res = await apiFetch("post", `/api/lobbies/${lobbyId}/ready`, { playerId, isReady: true });
     const data = await res.json();
     console.log("SET AS READY:", res);
 
@@ -120,6 +117,8 @@ export const lobbyPage: PageRenderer = ({ page }) => {
 
     })();
 
+
+    isolateContainer("page");
 
     // Render page
     return parseInto(page, {

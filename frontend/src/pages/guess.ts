@@ -28,6 +28,8 @@ export const guessPage: PageRenderer = ({ page }) => {
     }, 4000);
 
     // Render page
+    isolateContainer("page");
+
     return parseInto(page, {
         "|div": wrapAsFlex({
             "|img": { "@": { src: imgSrc } },

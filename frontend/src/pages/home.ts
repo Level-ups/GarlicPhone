@@ -5,6 +5,8 @@ import { parseInto } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 
 export const homePage: PageRenderer = ({ page }) => {
+    isolateContainer("page");
+
     // Render page
     parseInto(page, {
         ...titleCard("Home"),

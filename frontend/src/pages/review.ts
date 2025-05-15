@@ -49,6 +49,8 @@ export const reviewPage: PageRenderer = ({ page }) => {
         ] },
     ]
 
+    isolateContainer("page");
+
     // Render page
     parseInto(page, {
         ...titleCard("Review"),

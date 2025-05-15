@@ -21,6 +21,8 @@ function menuButton(label: Lowercase<string>): ElemTree {
 }
 
 export const menuPlayPage: PageRenderer = ({ page }) => {
+  isolateContainer("page");
+
   // Render page
   return parseInto(page, {
     ...menuNav(),

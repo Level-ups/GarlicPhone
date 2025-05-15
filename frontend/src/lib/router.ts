@@ -4,6 +4,7 @@ export type ContainerMap = { [key: string]: HTMLElement } & { app: HTMLElement, 
 
 declare global {
   function visit(page: string): void;
+  function isolateContainer(container: string): void;
 }
 
 interface RouterOptions {
@@ -25,11 +26,14 @@ export class PageRouter {
     // Bind methods to this instance
     this.handlePopState = this.handlePopState.bind(this);
     this.visit = this.visit.bind(this);
+    this.isolateContainer = this.isolateContainer.bind(this);
 
     // Listen to browser navigation
     window.addEventListener('popstate', this.handlePopState);
 
-    (window as any).visit = this.visit; // Expose globally
+    // Global exposures
+    (window as any).visit = this.visit;
+    (window as any).isolateContainer = this.isolateContainer;
 
     // Initial route handling
     this.handlePopState();
@@ -61,6 +65,15 @@ export class PageRouter {
     }
     history.pushState({}, '', `/${page}`);
     this.render(page);
+  }
+
+  public isolateContainer(container: keyof ContainerMap | "all") {
+    for (let c in this.containers) {
+      this.containers[c].style.display = container == "all" ? "block" : "none";
+    }
+    if (container != "all") {
+      this.containers[container].style.display = "block";
+    }
   }
 
   // Clear page content & render new page

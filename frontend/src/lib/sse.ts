@@ -38,7 +38,7 @@ export function updateSSEHandler(url?: string) {
   //   url = localStorage.getItem(STORAGE_KEY) || undefined;
   // }
 
-  if (!url) { throw new Error("No URL provided and none found in localStorage."); }
+  // if (!url) { throw new Error("No URL provided and none found in localStorage."); }
 
   (window as any).sseHandler = null; // Cleanup old event handler
 
