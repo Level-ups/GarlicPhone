@@ -95,6 +95,11 @@ html {
 
   /* background: var(--bg); */
   animation: back-colour-fade 50s ease infinite;
+  background-color: #CCE0AC;
+opacity: 1;
+background-image:  radial-gradient(#0000002a 2px, transparent 2px), radial-gradient(#0000002A 2px, #CCE0AC00 2px);
+background-size: 80px 80px;
+background-position: 0 0,40px 40px;
 }
 
 /* Medium screens (tablet) */
@@ -233,11 +238,12 @@ a:hover { color: var(--link-hover) }
   background: var(--white);
   /* border: 1px solid green; */
   border-radius: 1rem;
-  border: 2px solid black;  
+  border: 3px solid black;  
   overflow: hidden;
   box-shadow: .4rem .5rem black;
   transition: transform 0.2s ease;
 }
+
 
 .card:hover {
   transform: translateY(-4px);
@@ -304,6 +310,7 @@ a:hover { color: var(--link-hover) }
   background-color: white;
   color: var(--black);
   padding: 0.5rem 1rem;
+  box-shadow: .1rem .2rem ;
 }
   
 .timer {

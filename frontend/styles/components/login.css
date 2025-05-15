@@ -23,8 +23,13 @@
 }
 .login-heading {
   font-size: 3rem;
-  font-family: "Rock Salt", cursive;
-  color: black;
+        font-family: "Playwrite DK Loopet", cursive;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+    font-style: italic;
+  color: black;    
+  text-shadow: .1rem .1rem black;
 }
 
 .login-subheading {
