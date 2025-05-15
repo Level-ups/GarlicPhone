@@ -3,7 +3,7 @@ import { apiFetch } from "../lib/fetch";
 import { forEl, parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 import { timer } from "../lib/timer";
-import { drawLine, drawPixel, floodFill, resizeCanvasToDisplaySize } from "../lib/util/canvasUtils";
+import { drawLine, paint, floodFill } from "../lib/util/canvasUtils";
 import type { Lobby, WithClient } from "../services/lobbyService";
 import eraserToolIcon from "/assets/canvas/eraser-tool.svg";
 import fillToolIcon from "/assets/canvas/fill-tool.svg";
@@ -39,7 +39,7 @@ type ColourButtonConfig = { colour: string; initiallyActive?: boolean };
 
 const canvasConfig: CanvasConfig = {
   pencilContext: {
-    pixelSize: 10,
+    pixelSize: 1,
     colour: "black",
   },
   canvasContext: undefined,
@@ -125,9 +125,19 @@ function generateCanvasToolButton(button: ToolButtonConfig) {
   };
 }
 
+function getXYS(event: MouseEvent): [number, number, number] {
+  const { clientWidth: cw, clientHeight: ch } = canvasConfig.canvasContext?.canvas!;
+  const { width: pw, height: ph } = canvasConfig.canvasContext?.canvas!;
+
+  const x = Math.floor(pw * event.offsetX / cw);
+  const y = Math.floor(ph * event.offsetY / ch);
+  const size = Math.floor(canvasConfig.pencilContext.pixelSize);
+
+  return [x, y, size];
+}
+
 function mousedownEvent(event: MouseEvent, ctx: CanvasRenderingContext2D) {
-  const x = Math.floor(event.offsetX / canvasConfig.pencilContext.pixelSize);
-  const y = Math.floor(event.offsetY / canvasConfig.pencilContext.pixelSize);
+  const [x, y, size] = getXYS(event);
 
   if (canvasConfig.modes.fill) {
     const rect = getCanvasContext().canvas.getBoundingClientRect();
@@ -137,25 +147,25 @@ function mousedownEvent(event: MouseEvent, ctx: CanvasRenderingContext2D) {
     const canvasX = Math.floor((event.clientX - rect.left) * scaleX);
     const canvasY = Math.floor((event.clientY - rect.top) * scaleY);
 
-    floodFill(ctx, canvasX, canvasY, canvasConfig.pencilContext.colour);
+    floodFill(ctx, x, y, canvasConfig.pencilContext.colour);
   } else if (canvasConfig.modes.erase) {
     isDrawing = true;
     lastX = x;
     lastY = y;
-    drawPixel(x, y, ctx, canvasConfig.pencilContext.pixelSize);
+    paint(x, y, size, ctx);
   } else if (canvasConfig.modes.draw) {
     isDrawing = true;
     lastX = x;
     lastY = y;
-    drawPixel(x, y, ctx, canvasConfig.pencilContext.pixelSize);
+    paint(x, y, size, ctx);
   }
 }
 
 function mousemoveEvent(event: MouseEvent, ctx: CanvasRenderingContext2D) {
   if (!isDrawing) return;
-  const x = Math.floor(event.offsetX / canvasConfig.pencilContext.pixelSize);
-  const y = Math.floor(event.offsetY / canvasConfig.pencilContext.pixelSize);
-  drawLine(lastX, lastY, x, y, ctx, canvasConfig.pencilContext.pixelSize);
+  const [x, y, size] = getXYS(event);
+
+  drawLine(lastX, lastY, x, y, ctx, size);
   lastX = x;
   lastY = y;
 }
@@ -181,12 +191,12 @@ function touchstartEvent(event: TouchEvent, ctx: CanvasRenderingContext2D) {
     isDrawing = true;
     lastX = x;
     lastY = y;
-    drawPixel(x, y, ctx, canvasConfig.pencilContext.pixelSize);
+    paint(x, y, canvasConfig.pencilContext.pixelSize, ctx);
   } else if (canvasConfig.modes.draw) {
     isDrawing = true;
     lastX = x;
     lastY = y;
-    drawPixel(x, y, ctx, canvasConfig.pencilContext.pixelSize);
+    paint(x, y, canvasConfig.pencilContext.pixelSize, ctx);
   }
 }
 
@@ -213,6 +223,7 @@ function getCanvasContext() {
   if (!canvasConfig.canvasContext) throw new Error("Canvas not supported");
   return canvasConfig.canvasContext;
 }
+
 export const drawPage: PageRenderer = ({ app }) => {
   const prompt = sig<string>("Loading...");
 
@@ -275,13 +286,8 @@ export const drawPage: PageRenderer = ({ app }) => {
       clickFunc: () => {
         const canvasCtx = getCanvasContext();
         canvasCtx.fillStyle = "#ffffff";
-        canvasCtx.fillRect(
-          0,
-          0,
-          canvasCtx.canvas.width,
-          canvasCtx.canvas.height
-        );
-
+        canvasCtx.fillRect(0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
+ 
         if (!canvasConfig.modes.erase)
           canvasCtx.fillStyle = canvasConfig.pencilContext.colour;
       },
@@ -351,6 +357,7 @@ export const drawPage: PageRenderer = ({ app }) => {
             "%touchend": () => {
               isDrawing = false;
             },
+            "@": { width: "64", height: "64" }
           },
         },
       },
@@ -361,14 +368,15 @@ export const drawPage: PageRenderer = ({ app }) => {
             "@": {
               name: "pixel slider",
               type: "range",
-              min: "3",
-              max: "100",
-              value: "10",
+              min: "1",
+              max: "5",
+              value: "1",
             },
           },
           "%input": (event: Event) => {
             const inputEvent = event.target as HTMLInputElement;
             const newSize = parseInt(inputEvent.value, 10);
+
             canvasConfig.pencilContext = {
               ...canvasConfig.pencilContext,
               pixelSize: newSize,
@@ -388,10 +396,6 @@ export const drawPage: PageRenderer = ({ app }) => {
     },
   });
 };
-
-window.addEventListener("resize", () => {
-  resizeCanvasToDisplaySize(getCanvasContext());
-});
 
 async function getPromptForPLayer(chainId: number) {
   const latestPromptForChain = await apiFetch("GET", `/api/prompts/chain/${chainId}/latest`, undefined);
@@ -446,7 +450,6 @@ const observer = new MutationObserver((mutations, obs) => {
     canvasConfig.canvasContext = element.getContext("2d", {
       willReadFrequently: true,
     });
-    resizeCanvasToDisplaySize(getCanvasContext());
 
     //setting active colour button
     colourButtons.forEach((button) => {

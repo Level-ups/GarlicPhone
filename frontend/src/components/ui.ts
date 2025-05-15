@@ -1,5 +1,5 @@
 import { der, type Reactive } from "../../../lib/signal";
-import { parse, type ElemTree } from "../lib/parse";
+import { forEl, parse, type ElemTree } from "../lib/parse";
 
 export function defineCustomElem (
   elemName: `${string}-${string}`,
@@ -136,7 +136,6 @@ export function createToggleSwitch(
   };
 }
 
-
 export function createImage(
   src: Reactive<string>,
   alt: string = ''
@@ -146,6 +145,28 @@ export function createImage(
       '|img.responsive-img': {
         '@': { src, alt },
       }
+    }
+  };
+}
+
+export function createItemList<T extends { name: string }>(
+  items: T[],
+  onSelect: (index: number, details: T) => void = () => {}
+): ElemTree {
+  function renderItem(index: number, item: T): ElemTree {
+    return {
+      '|li.item-button': {
+        '|button.gradient-btn': {
+          _: item.name,
+          '%click': () => onSelect(index, item),
+        }
+      }
+    };
+  }
+
+  return {
+    '|ul.item-list': {
+      ...forEl(items, (i, info) => renderItem(i, info))
     }
   };
 }
