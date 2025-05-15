@@ -24,22 +24,10 @@ html {
     font-size: 14px;
   }
 }
-
-body {
-  font-family: 'Cal Sans', sans-serif;
-  background-color: var(--background-color);
-  color: var(--text-color);
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
-}
-
 /* Card styling */
 .card {
-  background-color: var(--card-background);
+  /* background-color: var(--card-background); */
   padding: 2rem;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
   margin-bottom: 1.5rem;
 }
 
