@@ -35,13 +35,13 @@ export const reviewPage: PageRenderer = ({ page }) => {
         ] },
     ])
 
-    sseHandler?.addEventListener("after_lobby_update", async (e) => {
-        const lobby: WithClient<Lobby> = JSON.parse(e.data);
+    // sseHandler?.addEventListener("after_lobby_update", async (e) => {
+    //     const lobby: WithClient<Lobby> = JSON.parse(e.data);
         
-        const reviewData = await getReviewData(lobby.dbGameId);
+    //     const reviewData = await getReviewData(lobby.dbGameId);
 
-        chains(reviewData);
-    });
+    //     chains(reviewData);
+    // });
 
     isolateContainer("page");
 

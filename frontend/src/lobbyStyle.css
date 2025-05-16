@@ -33,10 +33,14 @@ html {
 
 /* Form elements */
 fieldset {
-  border: 1px solid var(--accent-color);
   padding: 1.5rem;
-  border-radius: var(--border-radius);
+  border-radius: 3rem;
   margin-bottom: 1rem;
+  border: none;
+}
+
+#player-form{
+  border-radius: 2rem;
 }
 
 legend {
@@ -61,14 +65,23 @@ input {
   font-size: 1rem;
 }
 
-input:focus {
-  border-color: var(--secondary-color);
-  outline: none;
+.lobbyCtn{
+  display: flex;
+  flex-direction: column;
 }
 
+.lobbyCtn > .card{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  row-gap: 2rem;
+  color: black;
+}
+
+
 /* Button styling */
-button {
-  background-color: var(--primary-color);
+.playButton {
+  background-color: var(--secondary-color);
   color: white;
   border: none;
   border-radius: var(--button-radius);
@@ -78,26 +91,31 @@ button {
   cursor: pointer;
   transition: var(--transition);
   margin: 0.5rem 0;
+  padding: 1rem 2rem;
+  box-shadow: .2rem .3rem black;
+  border: 2px solid black;
+  align-self: center;
+  margin: auto;
 }
 
-button:hover {
+.playButton:hover {
   background-color: var(--secondary-color);
 }
 
-button:disabled {
+.playButton:disabled {
   background-color: #ccc;
   cursor: not-allowed;
 }
 
-button#ready-btn {
+.playButton#ready-btn {
   background-color: var(--not-ready-color);
 }
 
-button#ready-btn.ready {
+.playButton#ready-btn.ready {
   background-color: var(--ready-color);
 }
 
-button#start-game-btn {
+.playButton#start-game-btn {
   background-color: var(--host-color);
 }
 

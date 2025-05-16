@@ -1,12 +1,8 @@
-<<<<<<< HEAD
-import { sig } from "../lib/signal";
-import { apiFetch } from "../lib/fetch";
-=======
-import { sig } from "../../../lib/signal";
+
 import { apiFetch, apiFetchRawBody } from "../lib/fetch";
->>>>>>> e72ac226036445dae08ddfd4a49ded674712dda0
 import { forEl, parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
+import { sig } from "../lib/signal";
 import { timer } from "../lib/timer";
 import { drawLine, paint, floodFill } from "../lib/util/canvasUtils";
 import type { Lobby, WithClient } from "../services/lobbyService";

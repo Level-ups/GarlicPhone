@@ -30,7 +30,7 @@ export function createGuessPage(
             ...(imgSrc == null ? {} : createImage(imgSrc, "")),
             ...createInput("Enter a prompt", promptInput),
             // ...createButton("Submit", () => { /* visit("draw"); */ }),
-            "|p": { _: der(() => `PROMPT: ${promptInput()}`) }
+            "|p.promptNudge": { _: der(() => `PROMPT: ${promptInput()}`) }
         }, LIST_FLEX_CONFIG)
     };
 }
@@ -39,12 +39,12 @@ export const guessPage: PageRenderer = ({ page }) => {
     const promptInput = sig<string>("");
     const imgSrc = sig<string>("https://picsum.photos/200");
 
-    sseHandler?.addEventListener("after_lobby_update", async (e) => {
-        const lobby: WithClient<Lobby> = JSON.parse(e.data);
+    // sseHandler?.addEventListener("after_lobby_update", async (e) => {
+    //     const lobby: WithClient<Lobby> = JSON.parse(e.data);
         
-        const image = await getImage(lobby.phasePlayerAssignments[0].chain.id);
-        imgSrc(image.s3Url);
-    });
+    //     const image = await getImage(lobby.phasePlayerAssignments[0].chain.id);
+    //     imgSrc(image.s3Url);
+    // });
 
     // Render page
     isolateContainer("page");

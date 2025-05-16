@@ -12,11 +12,17 @@
   margin-bottom: 30px;
 }
 
+#player-form{
+  border: none;
+}
+
 .player-setup {
   background-color: #f8f9fa;
-  border-radius: 8px;
+  border-radius: 2rem;
   padding: 20px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  color: black;
+  box-shadow: .3rem .4rem black;
 }
 
 .form-group {
@@ -32,9 +38,9 @@
 .form-group input {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 16px;
+  background-color: #f6d365;
 }
 
 .action-buttons {
@@ -59,16 +65,18 @@
 button {
   padding: 10px 20px;
   border: none;
-  border-radius: 4px;
+  border-radius: 1rem;
   font-size: 16px;
   cursor: pointer;
-  background-color: #3498db;
+  background-color: #8b5cf6;
   color: white;
   transition: background-color 0.2s;
+  box-shadow: .1rem .2rem black;
+  border: 2px solid black;
 }
 
 button:hover {
-  background-color: #2980b9;
+  background-color: #8b5cf6;
 }
 
 button:disabled {
@@ -227,3 +235,26 @@ button:disabled {
   border-bottom: 1px solid #eee;
   padding: 3px 0;
 } 
+
+
+#player-name{
+  background-color: #f6d365;
+  border: 2px solid black;
+  box-shadow: 0 .2rem black;
+  color: black;
+}
+
+#lobby-code{
+  background-color: #f6d365;
+  border: 2px solid black;
+  box-shadow: 0 .2rem black;
+  color: black;
+}
+
+.create-game{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  row-gap: 1rem;
+}
