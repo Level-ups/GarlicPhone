@@ -101,10 +101,9 @@ jobs:
           cd ../frontend
           npm install
           cd ..
-          npm install
           npm run build
           # Ensure the old process is stopped before starting the new one
           fuser -k ${PORT}/tcp || true
           # Start the server, which is now handling HTTPS
-          nohup $(which npm) start > server.log 2>&1 &
+          nohup $(which npm) run start > server.log 2>&1 &
           EOF

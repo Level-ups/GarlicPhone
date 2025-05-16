@@ -21,6 +21,15 @@ import { cleanupExpiredLobbies } from './services/lobbyService';
 import { authenticateRequest, requireRole } from './library/authMiddleware';
 import { validateLobbyUrlId } from './models/Lobby';
 
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+// “__dirname” and “__filename” aren’t built-in under ESM,
+// so we derive them from import.meta.url:
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+
 //---------- SETUP ----------//
 //
 // Load environment variables
@@ -146,8 +155,8 @@ app.get('/events/health', createServerSentEventHandler<string>(sendEvent => {
 
 
 //---------- FRONTEND ----------//
-const fePath = path.join(__dirname, '..', '..', 'public');
-// const fePath = path.join(__dirname, '..', 'dist', 'public');
+// const fePath = path.join(__dirname, '..', '..', 'public');
+const fePath = path.join(__dirname, '..', 'dist', 'public');
 app.use(express.static(fePath));
 app.get('/*', (_, res) => {
   res.sendFile(path.join(fePath, 'index.html'));
