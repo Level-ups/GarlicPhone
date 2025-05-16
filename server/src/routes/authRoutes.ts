@@ -7,7 +7,7 @@ import userService from '../services/userService';
 const router = Router();
 
 router.get('/start', (req, res) => {
-  const clientId = constants.GOOGLE_CLIENT_ID;
+  const clientId = process.env.GOOGLE_CLIENT_ID || "";
   const redirectUri = constants.APP_URL + '/api/auth/callback';
   const scope = constants.GOOGLE_CLIENT_SCOPES;
   const authUrl = new URL(constants.GOOGLE_CLIENT_AUTH_URL);
@@ -28,8 +28,8 @@ router.get('/callback', async (req, res) => {
     return res.status(400).json(new ValidationErrorDetails('Missing code parameter'));
   }
 
-  const clientId = constants.GOOGLE_CLIENT_ID;
-  const clientSecret = constants.GOOGLE_CLIENT_SECRET;
+  const clientId = process.env.GOOGLE_CLIENT_ID || "";
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET || "";
   const redirectUri = constants.APP_URL + '/api/auth/callback';  
 
   try {
