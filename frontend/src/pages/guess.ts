@@ -6,6 +6,7 @@ import { LIST_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 import type { Lobby, WithClient } from "../services/lobbyService";
+import { timer } from "../lib/timer";
 
 export type Image = {
   id: number;
@@ -25,19 +26,20 @@ export function createGuessPage(
     imgSrc?: Reactive<string>
 ): ElemTree {
     return {
-        "|div": wrapAsFlex({
+        "|section": wrapAsFlex({
             ...titleCard(title),
             ...(imgSrc == null ? {} : createImage(imgSrc, "")),
             ...createInput("Enter a prompt", promptInput),
+            ...timer(30),
             // ...createButton("Submit", () => { /* visit("draw"); */ }),
-            "|p.promptNudge": { _: der(() => `PROMPT: ${promptInput()}`) }
+            // "|p.promptNudge": { _: der(() => `PROMPT: ${promptInput()}`) }
         }, LIST_FLEX_CONFIG)
     };
 }
 
 export const guessPage: PageRenderer = ({ page }) => {
     const promptInput = sig<string>("");
-    const imgSrc = sig<string>("https://picsum.photos/200");
+    const imgSrc = sig<string>("");
 
     // sseHandler?.addEventListener("after_lobby_update", async (e) => {
     //     const lobby: WithClient<Lobby> = JSON.parse(e.data);

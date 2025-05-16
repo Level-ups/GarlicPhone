@@ -1,7 +1,7 @@
 import { wrapAsCard } from "../lib/card";
 import { GALLERY_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { parseInto, forEl, type StyleDict } from "../lib/parse";
-import { der, eff, sig } from "../lib/signal";
+import { sig } from "../lib/signal";
 import type { PageRenderer } from "../lib/router";
 import { menuNav } from "../components/menuNav";
 
@@ -12,7 +12,7 @@ const cardStyleOverrides: StyleDict = {
     padding: "0"
 };
 
-function genGalleryCard(i: number, itm: GalleryItem) {
+function createGalleryCard(i: number, itm: GalleryItem) {
     return wrapAsCard({
         $: cardStyleOverrides,
         "|figure.galleryItem": {
@@ -52,6 +52,6 @@ export const menuGalleryPage: PageRenderer = ({ page }) => {
     // Render page
     return parseInto(page, {
         ...menuNav(),
-        "|div": wrapAsFlex(forEl(items(), genGalleryCard), GALLERY_FLEX_CONFIG)
+        "|section": wrapAsFlex(forEl(items(), createGalleryCard), GALLERY_FLEX_CONFIG)
     });
 }

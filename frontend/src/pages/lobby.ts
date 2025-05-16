@@ -153,13 +153,20 @@ export const lobbyPage: PageRenderer = ({ page }) => {
   // Render page
   return parseInto(page, {
     ...titleCard("Lobby"),
-    "|div.lobbyCtn": {
+    "|section.lobbyCtn": {
       ...wrapAsCard({
-        ...createButton("Login", () => {
-          visit("login");
-        }),
         ...createInput("Lobby Code", lobbyCode),
-        ...react([message], () => wrapAsCard({ _: `Error: ${message()}` })),
+        // ...createButton("Play", () => {
+        //   visit("login");
+        // }),
+        "|button.gradient-btn.playButton": {
+          _: "Play",
+          "%click": () => {
+            if (gameId != "") startGame(gameId, playerId);
+          },
+          $: { display: der(() => (isHost() ? "inline-block" : "none")) },
+        },
+        ...react([message], () => message() ? wrapAsCard({ _: `Error: ${message()}` }) : {}),
         $: {
           textAlign: "center",
           width: "50%",
@@ -169,19 +176,12 @@ export const lobbyPage: PageRenderer = ({ page }) => {
       ...wrapAsCard(
         {
           "|p#lobbyCode": {
-            _: lobbyCode,
+            _: der(() => "CODE: " + lobbyCode()),
           },
         },
         "Lobby Code"
       ),
       ...react([players], () => createItemList(players())),
-    },
-    "|button.playButton": {
-      _: "Play",
-      "%click": () => {
-        if (gameId != "") startGame(gameId, playerId);
-      },
-      $: { display: der(() => (isHost() ? "inline-block" : "none")) },
-    },
+    }
   });
 };
