@@ -3,7 +3,6 @@ import { Either } from '../../../lib/types';
 import { constants } from '../library/constants';
 import { ErrorDetails, InsertErrorDetails, NotFoundErrorDetails } from '../library/error-types';
 import { broadcastLobbyUpdate } from '../library/lobbyEventBroadcaster';
-import { deepCloneWithPrototype } from '../library/utils';
 import { Chain } from '../models/Chain';
 import { GamePhaseList } from '../models/GamePhase';
 import { generateLobbyCode, Lobby, LobbyStatus } from '../models/Lobby';
@@ -163,37 +162,46 @@ export const updateLobbyStatus = async (lobbyId: UUID, status: LobbyStatus): Pro
   }
 
   if (lobby.phases.getCurrentPhase()?.phase === "Prompt") {
-    const intervalId = setInterval(() => {
-      const updatedLobby = lobbies.get(lobbyId);
+    const scheduleNextCycle = () => {
+      const timeoutId = setTimeout(() => {
+        const updatedLobby = lobbies.get(lobbyId);
+        if (!updatedLobby) return;
 
-      // Schedule the pre-callback 5 seconds before the main one
-      setTimeout(() => {
-        if (updatedLobby) broadcastLobbyUpdate(updatedLobby, 'before_lobby_update');
-        console.log('before_lobby_update', new Date());
-      }, constants.ROUND_LENGTH_MILLISECONDS - constants.UPLOAD_LENGTH_MILLISECONDS);
-  
-      // Schedule the main callback at the actual interval
-      setTimeout(() => {
-        if (!updatedLobby?.phases.peekNextPhase()) return;
+        // Schedule pre-callback
+        setTimeout(() => {
+          broadcastLobbyUpdate(updatedLobby, 'before_lobby_update');
+          console.log('before_lobby_update', new Date());
+        }, constants.ROUND_LENGTH_MILLISECONDS - constants.UPLOAD_LENGTH_MILLISECONDS);
 
-        updatedLobby.phases.moveToNextPhase();
-        broadcastLobbyUpdate(updatedLobby);
-        console.log('during_lobby_update', new Date());
+        // Main phase update
+        setTimeout(() => {
+          if (!updatedLobby.phases.peekNextPhase()) return;
 
-        if (updatedLobby.phases.getCurrentPhase().phase === 'Review') {
-          clearInterval(intervalId);
-          lobbyTimers.delete(lobbyId);
-        }
-      }, constants.ROUND_LENGTH_MILLISECONDS);
+          updatedLobby.phases.moveToNextPhase();
+          broadcastLobbyUpdate(updatedLobby);
+          console.log('during_lobby_update', new Date());
 
-      setTimeout(() => {
-        if (updatedLobby) broadcastLobbyUpdate(updatedLobby, 'after_lobby_update');
-        console.log('after_lobby_update', new Date());
-      }, constants.ROUND_LENGTH_MILLISECONDS + constants.UPLOAD_LENGTH_MILLISECONDS);
-  
-    }, constants.ROUND_LENGTH_MILLISECONDS);
-    
-    lobbyTimers.set(lobbyId, intervalId);
+          // Schedule after-callback
+          setTimeout(() => {
+            broadcastLobbyUpdate(updatedLobby, 'after_lobby_update');
+            console.log('after_lobby_update', new Date());
+          }, constants.DOWNLOAD_LENGTH_MILLISECONDS);
+
+          // Continue only if not in Review phase
+          if (updatedLobby.phases.getCurrentPhase().phase !== 'Review') {
+            scheduleNextCycle();
+          } else {
+            lobbyTimers.delete(lobbyId);
+          }
+        }, constants.ROUND_LENGTH_MILLISECONDS);
+ 
+        }, constants.ROUND_LENGTH_MILLISECONDS);
+
+      lobbyTimers.set(lobbyId, timeoutId);
+    };
+
+    // Start the first cycle
+    scheduleNextCycle();
   }
 
   lobbies.set(lobbyId, lobby);
