@@ -1,5 +1,7 @@
 import { bind, der, eff, maybeBind, maybeSub, multiSub, sig, type MaybeReactive, type Reactive } from "./signal";
 
+export type Generator<T, Args extends any[] = []> = T | ((...args: Args) => T);
+
 //-------------------- Types --------------------//
 export type ElemTree_Meta = {
   '_'?: TextContent;
