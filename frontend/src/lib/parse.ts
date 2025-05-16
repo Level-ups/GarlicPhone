@@ -255,7 +255,7 @@ export function tryCall<T>(x: T, args: any[] = []) {
 
 // Run generator with args if its a function, otherwise just return it's value
 export function generate<T, Args extends any[]>(x: Generator<T, Args>, args: Args): T {
-  return (typeof x === "function") ? (x as (_: Args) => T)(args) : x;
+  return (typeof x === "function") ? (x as (_: Args) => T)(args) : x as any;
 }
 
 // Generate a random hexadecimal string of length `n`

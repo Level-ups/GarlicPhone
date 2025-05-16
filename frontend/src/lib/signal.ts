@@ -1,4 +1,4 @@
-import { type WritableKeys } from "./types";
+import { type WritableKeys } from "./types.ts";
 
 //---------- Global effect tracking ----------//
 const effectStack: ((_: any) => void)[] = [];
