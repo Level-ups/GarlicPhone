@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { DEFAULT_FLEX_CONFIG, ROW_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { forEl, parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
@@ -8,6 +9,16 @@ import { der, sig, type Signal } from "../lib/signal";
 import { wrapAsCard } from "../lib/card";
 import { apiFetch } from "../lib/fetch";
 import { GALLERY_FLEX_CONFIG} from "../lib/flex";
+=======
+import { der, sig, type Signal } from "../../../lib/signal";
+import { titleCard } from "../components/menuNav";
+import { createButton, createInput, createRadioboxList, createToggleSwitch, createCheckboxList, createSlider, createItemList } from "../components/ui";
+import { wrapAsCard } from "../lib/card";
+import { apiFetch } from "../lib/fetch";
+import { DEFAULT_FLEX_CONFIG, GALLERY_FLEX_CONFIG, NAV_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
+import { forEl, parseInto, react } from "../lib/parse";
+import type { PageRenderer } from "../lib/router";
+>>>>>>> e72ac226036445dae08ddfd4a49ded674712dda0
 import { updateSSEHandler } from "../lib/sse";
 import type { Lobby, WithClient } from "../services/lobbyService";
 
@@ -81,6 +92,7 @@ export const lobbyPage: PageRenderer = ({ page }) => {
         return;
     }
 
+<<<<<<< HEAD
     // Handle player ready button
     const handleReadyClick = async (): Promise<void> => {
         if (!currentLobby) return;
@@ -102,6 +114,37 @@ export const lobbyPage: PageRenderer = ({ page }) => {
             const readyBtn = document.getElementById('ready-btn') as HTMLButtonElement;
             if (readyBtn) {
                 readyBtn.disabled = false;
+=======
+    const players = sig<PlayerInfo[]>([]);
+    const message = sig<string | null>(null);
+    const lobbyCode = sig<string>("")
+
+    const playerId = Number(localStorage.getItem("playerId"));
+    localStorage.setItem("playerId", `${playerId}`);
+
+    const isHost = sig<boolean>(false);
+
+    const urlGameCode: string = window.location.pathname.split("/").filter(x => x.trim() != "").at(-1)!;
+    isHost(urlGameCode === "lobby");
+
+    let gameCode = "", gameId = "";
+
+    (async () => {
+
+        if (urlGameCode === "lobby") { // Create new lobby
+            const res = await createLobby(playerId);
+
+            gameCode = res.code; gameId = res.id;
+            lobbyCode(gameCode);
+            updateSSEHandler(`/api/lobbies/${res.id}/events`);
+            setAsReady(res.id, playerId, players);
+        }
+        else { // Join existing lobby
+            const res = await joinLobby(urlGameCode, playerId, players);
+            if (res?.message != null) { // There was an error
+                message(res.message);
+                return;
+>>>>>>> e72ac226036445dae08ddfd4a49ded674712dda0
             }
         }
     };
@@ -349,6 +392,7 @@ export const lobbyPage: PageRenderer = ({ page }) => {
     return parseInto(page, {
         ...menuNav(),
         ...titleCard("Lobby"),
+<<<<<<< HEAD
         "|section.lobby-container": {
             $: {
                 display: "grid",
@@ -448,6 +492,27 @@ export const lobbyPage: PageRenderer = ({ page }) => {
                     }
                 }
             }
+=======
+        ...wrapAsFlex({
+            ...wrapAsCard({
+                ...createButton("Login", () => { visit("login"); }),
+                ...createInput("Lobby Code", lobbyCode),
+                ...react([message], () => wrapAsCard({ _: `Error: ${message()}` })),
+                $: {
+                    textAlign: "center",
+                    width: "50%"
+                }
+            }, ),
+            ...wrapAsCard({"|p#lobbyCode": {
+                "_": lobbyCode
+            }}, "Lobby Code"),
+            ...react([players], () => (createItemList(players()))),
+        }, DEFAULT_FLEX_CONFIG),
+        "|button": {
+            _: "Play",
+            "%click": () => { if (gameId != "") startGame(gameId, playerId); },
+            $: { display: der(() => isHost() ? "inline-block" : "none") }
+>>>>>>> e72ac226036445dae08ddfd4a49ded674712dda0
         }
     });
 }

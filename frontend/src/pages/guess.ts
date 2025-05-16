@@ -5,6 +5,7 @@ import { apiFetch } from "../lib/fetch";
 import { LIST_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
+import type { Lobby, WithClient } from "../services/lobbyService";
 
 export type Image = {
   id: number;
@@ -38,13 +39,12 @@ export const guessPage: PageRenderer = ({ page }) => {
     const promptInput = sig<string>("");
     const imgSrc = sig<string>("https://picsum.photos/200");
 
-    const chainId = 1; // TODO
-
-    // Wait a bit for the other guy to upload his shit
-    setTimeout(async () => {
-        const img = await getImage(chainId);
-        imgSrc(img.s3Url)
-    }, 4000);
+    sseHandler?.addEventListener("after_lobby_update", async (e) => {
+        const lobby: WithClient<Lobby> = JSON.parse(e.data);
+        
+        const image = await getImage(lobby.phasePlayerAssignments[0].chain.id);
+        imgSrc(image.s3Url);
+    });
 
     // Render page
     isolateContainer("page");

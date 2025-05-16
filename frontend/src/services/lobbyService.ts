@@ -14,6 +14,7 @@ export type WithClient<T> = T & { clientIndex: number };
 
 export interface Lobby {
   id: string;
+  dbGameId: number;
   code: string;
   players: Player[];
   maxPlayers: number;
