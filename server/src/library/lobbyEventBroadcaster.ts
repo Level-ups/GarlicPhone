@@ -51,18 +51,37 @@ export function broadcastLobbyUpdate(lobby: Lobby, eventName: string = "lobby_up
   }
   
   const clients = lobbyClients.get(lobbyId) as LobbyClient[];
-  
+  console.log("PHASE PLAYER ASSIGNMENTS:", lobby.phasePlayerAssignments);
+  const chs = [...new Set(lobby.phasePlayerAssignments.map(x => x.chain.id))];
+  chs.sort((a, b) => a - b);
+  console.log("CHS:", chs);
+  for (let p = 0; p < clients.length; p++) {
+    
+    const chains = (lobby.phasePlayerAssignments.filter(x => (
+      x.phase.index == p
+    )));
+    chains.sort((a, b) => a.chain.id - b.chain.id)
+    // for (let c = 0; c < clients.length; c++) {
+      const players = chains.map(x => x.player.id);
+
+      console.log(`[${p}]:`, players);
+
+    // }
+    // console.log("---");
+  }
+  console.log("\n----------")
+
   let i = 0;
   for (const client of clients) {
     try {
+      // Send ALL phase player assignments for the current phase to each client
+      // This ensures each client has the complete chain information
       const assignments = lobby.phasePlayerAssignments.filter(x => (
-        lobby.phases.getCurrentPhase().index == x.phase.index &&
-        lobby.players[i].id == x.player.id
+        lobby.phases.getCurrentPhase().index == x.phase.index
       ));
-
-      console.log("\n\n")
-      console.log("LOBBY:", JSON.stringify(lobby, null, 2));
-      console.log("-------------------------------------\n\n")
+      
+      // Sort assignments by chain ID to ensure consistent order
+      assignments.sort((a, b) => a.chain.id - b.chain.id);
 
       const payload = {
         ...lobby,
@@ -120,4 +139,4 @@ export function cleanupInactiveClients(): void {
       lobbyClients.set(lobbyId, activeClients);
     }
   }
-} 
+}

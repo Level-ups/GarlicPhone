@@ -3,7 +3,7 @@ import { apiFetch, apiFetchRawBody } from "../lib/fetch";
 import { forEl, parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 import { timer } from "../lib/timer";
-import { drawLine, paint, floodFill } from "../lib/util/canvasUtils";
+import { drawLine, floodFill, paint } from "../lib/util/canvasUtils";
 import type { Lobby, WithClient } from "../services/lobbyService";
 import eraserToolIcon from "/assets/canvas/eraser-tool.svg";
 import fillToolIcon from "/assets/canvas/fill-tool.svg";
@@ -224,8 +224,62 @@ function getCanvasContext() {
   return canvasConfig.canvasContext;
 }
 
+// Flag to track if event listeners have been attached
+let drawPageListenersAttached = false;
+
+// Function to clean up event listeners when page is unloaded
+function cleanupDrawPageListeners() {
+  if (drawPageListenersAttached && sseHandler) {
+    sseHandler.removeEventListener("before_lobby_update", beforeLobbyUpdateHandler);
+    sseHandler.removeEventListener("after_lobby_update", afterLobbyUpdateHandler);
+    drawPageListenersAttached = false;
+  }
+  
+  // Reset drawing state
+  isDrawing = false;
+  canvasConfig.canvasContext = undefined;
+  activeColourButton = null;
+  activeToolButton = null;
+}
+
+// Event handler functions
+async function beforeLobbyUpdateHandler(e: Event) {
+  const lobby: WithClient<Lobby> = JSON.parse((e as any).data);
+  const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+  
+  // Find the assignment for the current player
+  const playerAssignment = lobby.phasePlayerAssignments.find(
+    assignment => assignment.player.id === Number(lobby.players[lobby.clientIndex].id)
+  );
+  
+  if (playerAssignment) {
+    const uploadedImage = await uploadCanvasImage(canvas, playerAssignment.chain.id, lobby.players[lobby.clientIndex].id);
+  }
+}
+
+async function afterLobbyUpdateHandler(e: Event) {
+  const lobby: WithClient<Lobby> = JSON.parse((e as any).data);
+  
+  // Find the assignment for the current player
+  const playerAssignment = lobby.phasePlayerAssignments.find(
+    assignment => assignment.player.id === Number(lobby.players[lobby.clientIndex].id)
+  );
+  
+  if (playerAssignment) {
+    const promptForPlayer = await getPromptForPLayer(playerAssignment.chain.id);
+    promptSignal(promptForPlayer.text);
+  }
+}
+
+// Store prompt signal in a variable that can be accessed by the handlers
+let promptSignal: ReturnType<typeof sig<string>>;
+
 export const drawPage: PageRenderer = ({ app }) => {
-  const prompt = sig<string>("Loading...");
+  promptSignal = sig<string>("Loading...");
+  const prompt = promptSignal;
+  
+  // Initialize canvas when the page is loaded
+  initializeCanvas();
 
   const colourButtons: ColourButtonConfig[] = [
     { colour: "rgb(255, 0, 0)" },
@@ -294,20 +348,29 @@ export const drawPage: PageRenderer = ({ app }) => {
     },
   ];
 
-  sseHandler?.addEventListener("before_lobby_update", async (e) => {
-    const lobby: WithClient<Lobby> = JSON.parse(e.data);
-    const canvas = document.getElementById("canvas") as HTMLCanvasElement;  
-    const uploadedImage = await uploadCanvasImage(canvas, lobby.phasePlayerAssignments[0].chain.id, lobby.players[lobby.clientIndex].id);
-  });
-
-  sseHandler?.addEventListener("after_lobby_update", async (e) => {
-    const lobby: WithClient<Lobby> = JSON.parse(e.data);
-    const promptForPlayer = await getPromptForPLayer(lobby.phasePlayerAssignments[0].chain.id);
-    prompt(promptForPlayer.text);
-  });
+  // Clean up any existing listeners first
+  cleanupDrawPageListeners();
+  
+  // Attach event listeners
+  if (sseHandler) {
+    sseHandler.addEventListener("before_lobby_update", beforeLobbyUpdateHandler);
+    sseHandler.addEventListener("after_lobby_update", afterLobbyUpdateHandler);
+    drawPageListenersAttached = true;
+    
+    // Add cleanup when page is unloaded or navigated away from
+    window.addEventListener("beforeunload", cleanupDrawPageListeners);
+    
+    // Also clean up when navigating to a different page
+    const originalVisit = window.visit;
+    window.visit = function(page: string) {
+      if (page !== "draw") {
+        cleanupDrawPageListeners();
+      }
+      originalVisit(page);
+    };
+  }
 
   isolateContainer("app");
-
   return parseInto(app, {
     "|section.draw-page": {
       "|div.draw-page-header-ctn": {
@@ -432,46 +495,57 @@ async function uploadCanvasImage(canvas: HTMLCanvasElement, chainId: number, use
   return result; // image object returned from your API
 }
 
-// sseHandler?.addEventListener("lobby_update", async (e) => {
-//   // const x = canvasConfig.canvasContext
-//   (document.getElementById("canvas") as HTMLCanvasElement).toBlob(() => {
-//   });
-//   // const data: WithClient<Lobby> = JSON.parse(e.data);
-//   // if (gameCode != "") { refreshLobbyState(gameCode, players); }
-// });
+// Commented code removed for clarity
 
-// Initial calls
+// Initialize canvas and controls when the page is loaded
+function initializeCanvas() {
+  // Create a new observer each time to ensure it runs on every page visit
+  const observer = new MutationObserver((mutations, obs) => {
+    const colourButtons =
+      document.querySelectorAll<HTMLButtonElement>(".colour-button");
+    const toolButtons =
+      document.querySelectorAll<HTMLButtonElement>(".canvas-button");
+    const element = document.getElementById("canvas") as HTMLCanvasElement;
+    
+    if (element && colourButtons.length > 0 && toolButtons.length > 0) {
+      // Setting canvas context
+      canvasConfig.canvasContext = element.getContext("2d", {
+        willReadFrequently: true,
+      });
 
-const observer = new MutationObserver((mutations, obs) => {
-  const colourButtons =
-    document.querySelectorAll<HTMLButtonElement>(".colour-button");
-  const toolButtons =
-    document.querySelectorAll<HTMLButtonElement>(".canvas-button");
-  const element = document.getElementById("canvas") as HTMLCanvasElement;
-  if (element && colourButtons.length > 0 && toolButtons.length > 0) {
-    //setting canvas context
-    canvasConfig.canvasContext = element.getContext("2d", {
-      willReadFrequently: true,
-    });
-
-    //setting active colour button
-    colourButtons.forEach((button) => {
-      if (button.classList.contains("colour-button-active")) {
-        activeColourButton = button;
+      // Clear canvas to ensure a fresh start
+      if (canvasConfig.canvasContext) {
+        canvasConfig.canvasContext.fillStyle = "#ffffff";
+        canvasConfig.canvasContext.fillRect(0, 0, element.width, element.height);
       }
-    });
 
-    //setting active tool button
-    toolButtons.forEach((button) => {
-      if (button.classList.contains("canvas-button-active")) {
-        activeToolButton = button;
-      }
-    });
+      // Setting active colour button
+      colourButtons.forEach((button) => {
+        if (button.classList.contains("colour-button-active")) {
+          activeColourButton = button;
+          // Ensure the color is set correctly
+          if (canvasConfig.canvasContext && !canvasConfig.modes.erase) {
+            canvasConfig.canvasContext.fillStyle = button.style.backgroundColor;
+            canvasConfig.pencilContext.colour = button.style.backgroundColor;
+          }
+        }
+      });
 
-    obs.disconnect();
-  }
-});
-observer.observe(document.body, {
-  childList: true,
-  subtree: true,
-});
+      // Setting active tool button
+      toolButtons.forEach((button) => {
+        if (button.classList.contains("canvas-button-active")) {
+          activeToolButton = button;
+        }
+      });
+
+      obs.disconnect();
+    }
+  });
+  
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+}
+
+// Call initializeCanvas when the page is loaded

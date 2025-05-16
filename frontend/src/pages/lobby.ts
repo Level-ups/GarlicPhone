@@ -1,10 +1,10 @@
 import { der, sig, type Signal } from "../../../lib/signal";
 import { titleCard } from "../components/menuNav";
-import { createButton, createInput, createRadioboxList, createToggleSwitch, createCheckboxList, createSlider, createItemList } from "../components/ui";
+import { createButton, createInput, createItemList } from "../components/ui";
 import { wrapAsCard } from "../lib/card";
 import { apiFetch } from "../lib/fetch";
-import { DEFAULT_FLEX_CONFIG, GALLERY_FLEX_CONFIG, NAV_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
-import { forEl, parseInto, react } from "../lib/parse";
+import { DEFAULT_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
+import { parseInto, react } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 import { updateSSEHandler } from "../lib/sse";
 import type { Lobby, WithClient } from "../services/lobbyService";
@@ -104,10 +104,31 @@ export const lobbyPage: PageRenderer = ({ page }) => {
         }
 
         // Listen on state refresh
-        sseHandler?.addEventListener("lobby_update", (e) => {
-            const data: WithClient<Lobby> = JSON.parse(e.data);
-            if (gameCode != "") { refreshLobbyState(gameCode, players); }
-        });
+        // Flag to track if event listeners have been attached
+    let lobbyPageListenersAttached = false;
+
+    // Function to clean up event listeners when page is unloaded
+    function cleanupLobbyPageListeners() {
+        if (lobbyPageListenersAttached && sseHandler) {
+            sseHandler.removeEventListener("lobby_update", lobbyUpdateHandler);
+            lobbyPageListenersAttached = false;
+        }
+    }
+
+    // Event handler function
+    function lobbyUpdateHandler(e: Event) {
+        const data: WithClient<Lobby> = JSON.parse((e as any).data);
+        if (gameCode != "") { refreshLobbyState(gameCode, players); }
+    }
+
+    // Attach event listeners only if they haven't been attached yet
+    if (!lobbyPageListenersAttached && sseHandler) {
+        sseHandler.addEventListener("lobby_update", lobbyUpdateHandler);
+        lobbyPageListenersAttached = true;
+        
+        // Add cleanup when page is unloaded
+        window.addEventListener("beforeunload", cleanupLobbyPageListeners);
+    }
 
     })();
 

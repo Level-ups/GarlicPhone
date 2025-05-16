@@ -5,7 +5,7 @@ import { wrapAsCard, wrapAsRowCards } from "../lib/card";
 import { apiFetch } from "../lib/fetch";
 import { parseInto, react } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
-import type { WithClient, Lobby } from "../services/lobbyService";
+import type { Lobby, WithClient } from "../services/lobbyService";
 
 async function getReviewData(gameId: number): Promise<ChainInfo[]> {
     const res = await apiFetch("get", `/api/chains/game/${gameId}`, undefined);
@@ -13,11 +13,33 @@ async function getReviewData(gameId: number): Promise<ChainInfo[]> {
     return data;
 }
 
+// Flag to track if event listeners have been attached
+let reviewPageListenersAttached = false;
+
+// Function to clean up event listeners when page is unloaded
+function cleanupReviewPageListeners() {
+    if (reviewPageListenersAttached && sseHandler) {
+        sseHandler.removeEventListener("after_lobby_update", afterLobbyUpdateHandler);
+        reviewPageListenersAttached = false;
+    }
+}
+
+// Store signals in variables that can be accessed by the handlers
+let chainsSignal: ReturnType<typeof sig<ChainInfo[]>>;
+
+// Event handler function
+async function afterLobbyUpdateHandler(e: Event) {
+    const lobby: WithClient<Lobby> = JSON.parse((e as any).data);
+    
+    const reviewData = await getReviewData(lobby.dbGameId);
+    chainsSignal(reviewData);
+}
+
 export const reviewPage: PageRenderer = ({ page }) => {
     const selectedChain = sig<number>(0);
     const scStr = der<string>(() => selectedChain().toString());
 
-    const chains = sig<ChainInfo[]>([
+    chainsSignal = sig<ChainInfo[]>([
         { name: "Chain 1", links: [
             { type: "prompt", prompt: "Rudolph eating a vegetarian burger" },
             { type: "image", url: "https://picsum.photos/250" },
@@ -34,14 +56,16 @@ export const reviewPage: PageRenderer = ({ page }) => {
             { type: "prompt", prompt: "Probably something fished out of the Bermuda triangle" },
         ] },
     ])
+    const chains = chainsSignal;
 
-    sseHandler?.addEventListener("after_lobby_update", async (e) => {
-        const lobby: WithClient<Lobby> = JSON.parse(e.data);
+    // Attach event listeners only if they haven't been attached yet
+    if (!reviewPageListenersAttached && sseHandler) {
+        sseHandler.addEventListener("after_lobby_update", afterLobbyUpdateHandler);
+        reviewPageListenersAttached = true;
         
-        const reviewData = await getReviewData(lobby.dbGameId);
-
-        chains(reviewData);
-    });
+        // Add cleanup when page is unloaded
+        window.addEventListener("beforeunload", cleanupReviewPageListeners);
+    }
 
     isolateContainer("page");
 
