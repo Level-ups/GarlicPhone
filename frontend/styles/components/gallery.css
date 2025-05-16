@@ -1,7 +1,7 @@
 /* styles.css */
   .highlight {
     font-weight: bold;
-    color: #9c57d3;
+    color: black;
     font-family: 'Rubik Beastly', cursive, sans-serif;
   }
  
@@ -23,11 +23,14 @@
  
   .gallery-header h2 {
     font-size: 1.5rem;
-    color: #9c57d3;
+    color: black;
     margin-bottom: 0.2rem;
     font-family: 'Rowdies';
   }
  
+  .galleryCaption{
+    color: black;
+  }
   .game-gallery {
     padding: 1rem;
     display: flex;
@@ -37,10 +40,11 @@
   .game-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1rem;
+    gap: 3rem;
     width: 90%;
     max-width: 1050px;
   }
+
  
   /* GAME CARD */
   .game-card {
@@ -48,7 +52,7 @@
     border-radius: 10px;
     padding: 0.5rem;
     position: relative;
-    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    box-shadow: .3rem .4rem black;
   }
  
   .game-card:hover {

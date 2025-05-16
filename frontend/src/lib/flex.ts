@@ -12,7 +12,7 @@ export const DEFAULT_FLEX_CONFIG: FlexConfig = {
   flexDirection: "column",
   justifyContent: "center",
   alignItems: "stretch",
-  gap: "1rem",
+  gap: "2rem",
   flexWrap: "nowrap"
 };
 
@@ -20,7 +20,7 @@ export const LIST_FLEX_CONFIG: FlexConfig = {
   flexDirection: "column",
   justifyContent: "center",
   alignItems: "center",
-  gap: "1rem",
+  gap: "2rem",
   flexWrap: "nowrap"
 };
 
@@ -36,7 +36,7 @@ export const GALLERY_FLEX_CONFIG: FlexConfig = {
   flexDirection: "row",
   justifyContent: "center",
   alignItems: "flex-start",
-  gap: "1rem",
+  gap: "2rem",
   flexWrap: "wrap"
 };
 

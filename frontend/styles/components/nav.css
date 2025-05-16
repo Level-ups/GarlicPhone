@@ -1,0 +1,32 @@
+.nav{
+  background-color: transparent;
+  box-shadow: none;
+  border: none;
+  display: flex;
+  align-items: center;
+}
+
+.nav-logo{
+    width: 6rem;
+}
+
+.nav-buttons{
+    display: flex;
+    gap: 2rem;
+    margin-left: auto;
+}
+
+.nav-title{
+    font-size: 3rem;
+    font-family: "Rock Salt", cursive;
+    color: black;
+    margin-right: 1rem;
+    font-weight: 600;
+    /* text-decoration: underline; */
+      font-family: "Playwrite DK Loopet", cursive;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+    font-style: italic;
+    text-shadow: .1rem .1rem black;
+}

@@ -1,5 +1,3 @@
-
-
 .login {
   width: 100%;
   height: 100vh;
@@ -25,11 +23,18 @@
 }
 .login-heading {
   font-size: 3rem;
-  font-family: "Rock Salt", cursive;
+        font-family: "Playwrite DK Loopet", cursive;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+    font-style: italic;
+  color: black;    
+  text-shadow: .1rem .1rem black;
 }
 
 .login-subheading {
   margin-bottom: 3rem;
+  color: black;
 }
 
 .login-google-button {

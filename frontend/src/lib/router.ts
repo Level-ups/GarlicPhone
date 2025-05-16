@@ -1,6 +1,9 @@
 export type PageRenderer = (containers: ContainerMap) => void;
 export type RedirectFn = (path: string) => string | null;
-export type ContainerMap = { [key: string]: HTMLElement } & { app: HTMLElement, page: HTMLElement };
+export type ContainerMap = { [key: string]: HTMLElement } & {
+  app: HTMLElement;
+  page: HTMLElement;
+};
 
 declare global {
   function visit(page: string): void;
@@ -29,7 +32,7 @@ export class PageRouter {
     this.isolateContainer = this.isolateContainer.bind(this);
 
     // Listen to browser navigation
-    window.addEventListener('popstate', this.handlePopState);
+    window.addEventListener("popstate", this.handlePopState);
 
     // Global exposures
     (window as any).visit = this.visit;
@@ -43,7 +46,12 @@ export class PageRouter {
     for (const redir of this.redirects) {
       const target = redir(path);
       if (target && this.pages[target]) {
-        return target;
+        if (target !== "login") {
+          // return localStorage.getItem("google-id-token") ? target : "login";
+          return target;
+        } else {
+          return target;
+        }
       }
     }
     return path;
@@ -52,7 +60,7 @@ export class PageRouter {
   // Handle browser URL change
   private handlePopState(): void {
     const fullPath = window.location.pathname;
-    const path = fullPath
+    const path = fullPath;
     const pageName = this.applyRedirects(path);
     this.render(pageName);
   }
@@ -63,7 +71,7 @@ export class PageRouter {
       console.warn(`Page "${page}" not found, staying on current page.`);
       return;
     }
-    history.pushState({}, '', `/${page}`);
+    history.pushState({}, "", `/${page}`);
     this.render(page);
   }
 
@@ -79,7 +87,9 @@ export class PageRouter {
   // Clear page content & render new page
   private render(page: string): void {
     const renderer = this.pages[page];
-    Object.entries(this.containers).forEach(([_, v]) => { v.innerHTML = ""; });
+    Object.entries(this.containers).forEach(([_, v]) => {
+      v.innerHTML = "";
+    });
 
     if (!renderer) {
       this.containers.app.innerHTML = `<h1>404: Page '${page}' Not Found</h1>`;
