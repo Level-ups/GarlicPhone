@@ -144,8 +144,8 @@ app.get('/events/health', createServerSentEventHandler<string>(sendEvent => {
 
 
 //---------- FRONTEND ----------//
-// const fePath = path.join(__dirname, '..', '..', 'public');
-const fePath = path.join(__dirname, '..', 'dist', 'public');
+const fePath = path.join(__dirname, '..', '..', 'public');
+// const fePath = path.join(__dirname, '..', 'dist', 'public');
 app.use(express.static(fePath));
 app.get('/*', (_, res) => {
   res.sendFile(path.join(fePath, 'index.html'));
