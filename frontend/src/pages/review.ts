@@ -1,4 +1,4 @@
-import { der, sig } from "../../../lib/signal";
+import { der, sig } from "../lib/signal";
 import { titleCard } from "../components/menuNav";
 import { createChainDisplay, createItemList, type ChainInfo } from "../components/ui";
 import { wrapAsCard, wrapAsRowCards } from "../lib/card";

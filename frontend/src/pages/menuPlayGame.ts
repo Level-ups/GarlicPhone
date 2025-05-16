@@ -3,7 +3,7 @@ import { parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 import { menuNav, titleCard } from "../components/menuNav";
 import * as lobbyService from "../services/lobbyService";
-import { der, sig, type Signal } from "../../../lib/signal";
+import { der, sig, type Signal } from "../lib/signal";
 import { apiFetch } from "../lib/fetch";
 
 type PlayerInfo = {

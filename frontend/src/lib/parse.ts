@@ -1,4 +1,4 @@
-import { bind, der, eff, maybeBind, maybeSub, multiSub, sig, type MaybeReactive, type Reactive } from "../../../lib/signal";
+import { bind, der, eff, maybeBind, maybeSub, multiSub, sig, type MaybeReactive, type Reactive } from "./signal";
 
 //-------------------- Types --------------------//
 export type ElemTree_Meta = {

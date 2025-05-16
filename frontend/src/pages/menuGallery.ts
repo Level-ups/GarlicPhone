@@ -1,7 +1,7 @@
 import { wrapAsCard } from "../lib/card";
 import { GALLERY_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { parseInto, forEl, type StyleDict } from "../lib/parse";
-import { der, eff, sig } from "../../../lib/signal";
+import { der, eff, sig } from "../lib/signal";
 import type { PageRenderer } from "../lib/router";
 import { menuNav } from "../components/menuNav";
 

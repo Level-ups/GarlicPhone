@@ -1,4 +1,4 @@
-import { sig } from "../../../lib/signal";
+import { sig } from "../lib/signal";
 import { apiFetch } from "../lib/fetch";
 import { forEl, parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";

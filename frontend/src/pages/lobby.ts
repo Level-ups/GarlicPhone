@@ -4,7 +4,7 @@ import type { PageRenderer } from "../lib/router";
 import { menuNav, titleCard } from "../components/menuNav";
 import * as lobbyService from "../services/lobbyService";
 import type { Player } from "../services/lobbyService";
-import { der, sig, type Signal } from "../../../lib/signal";
+import { der, sig, type Signal } from "../lib/signal";
 import { wrapAsCard } from "../lib/card";
 import { apiFetch } from "../lib/fetch";
 import { GALLERY_FLEX_CONFIG} from "../lib/flex";

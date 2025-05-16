@@ -1,5 +1,5 @@
 import { ManagedUpload } from 'aws-sdk/clients/s3';
-import { Either } from '../../../lib/types';
+import { Either } from '../library/types';
 import pool from '../library/db';
 import { ErrorDetails } from '../library/error-types';
 import { imageMapper } from '../library/mappers';

@@ -1,4 +1,4 @@
-import { der, sig, type Reactive } from "../../../lib/signal";
+import { der, sig, type Reactive } from "../lib/signal";
 import { titleCard } from "../components/menuNav";
 import { createButton, createImage, createInput } from "../components/ui";
 import { apiFetch } from "../lib/fetch";

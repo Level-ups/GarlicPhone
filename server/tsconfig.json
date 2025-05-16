@@ -13,6 +13,6 @@
     "forceConsistentCasingInFileNames": true,
      "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src/**/*", "src/index.ts", "../lib/**/*.ts"],
+  "include": ["src/**/*", "src/index.ts", "../lib/**/*.ts", "../frontend/src/lib/signal.ts", "../frontend/src/lib/types.ts"],
   "exclude": ["node_modules", "dist"]
 }

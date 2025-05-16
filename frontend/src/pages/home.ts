@@ -1,4 +1,4 @@
-import { der, sig } from "../../../lib/signal";
+import { der, sig } from "../lib/signal";
 //import { titleCard } from "../components/menuNav";
 import { createButton, createCheckboxList, createInput, createRadioboxList, createSlider, createToggleSwitch } from "../components/ui";
 import { wrapAsCard } from "../lib/card";

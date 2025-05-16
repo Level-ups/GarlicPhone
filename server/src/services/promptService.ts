@@ -1,4 +1,4 @@
-import { Either } from "../../../lib/types";
+import { Either } from "../library/types";
 import { ErrorDetails, InsertErrorDetails, NotFoundErrorDetails } from "../library/error-types";
 import { Prompt, PromptDto } from "../models/Prompt";
 import promptRepository from "../repositories/promptRepository";
