@@ -2,8 +2,45 @@ import { UUID } from "crypto";
 import { Router } from "express";
 import { ErrorDetails, ErrorType, ValidationErrorDetails } from "../library/error-types";
 import fullChainDetailsService from "../services/fullChainDetailsService";
+import { FullChainDetail } from "../models/FullChainDetail";
 
 const router = Router();
+
+export type ChainPrompt = { type: "prompt", prompt: string };
+export type ChainImage = { type: "image", url: string };
+export type ChainLink = ChainPrompt | ChainImage;
+export type ChainInfo = {
+    name: string,
+    links: ChainLink[]
+};
+
+export function mapFullChainDetailsToChainInfoArray(
+  fullChainDetails: FullChainDetail[]
+): ChainInfo[] {
+  return fullChainDetails.map(detail => {
+      const links: ChainLink[] = [];
+
+      detail.prompts.forEach(p => {
+        if (p.image) {
+          links.push({ type: "image", url: p.image.s3Url } as ChainImage);
+        } else {
+          links.push({ type: "prompt", prompt: p.prompt.text } as ChainPrompt);
+        }
+      });
+
+      // Use the first prompt's text as the name for ChainInfo
+      // Default to an empty string if there are no prompts or the first prompt has no text
+      const chainName = detail.prompts.length > 0 && detail.prompts[0].prompt 
+                          ? detail.prompts[0].prompt.text 
+                          : "";
+
+      return {
+          name: chainName, // Updated to use the first prompt's text
+          links: links
+      };
+  });
+}
+
 
 // Get all chain details for a game
 router.get("/game/:gameId", async (req, res) => {
@@ -24,7 +61,9 @@ router.get("/game/:gameId", async (req, res) => {
     const [chainDetails, error] = await fullChainDetailsService.getFullChainDetailsByGameId(gameId as UUID);
 
     if (chainDetails) {
-      return res.status(200).json(chainDetails);
+      
+      const chainInfo: ChainInfo[] = mapFullChainDetailsToChainInfoArray(chainDetails);
+      return res.status(200).json(chainInfo);
     } else {
       if (error.type === ErrorType.NotFound) {
         return res.status(404).json(error);

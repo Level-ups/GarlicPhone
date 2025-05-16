@@ -42,6 +42,7 @@ export const createLobby = (hostId: number, hostName: string, hostAvatarUrl: str
     lastActivity: new Date(),
     phases: phases,
     phasePlayerAssignments: [],
+    dbGameId: 0
   };
   
   lobbies.set(id, lobby);
@@ -209,6 +210,8 @@ async function performGameStartActivities(lobby: Lobby): Promise<Either<Lobby, E
   if (!game) {
     return [undefined, gameCreationError];
   }
+
+  lobby.dbGameId = game.id;
 
   for (let i = 0; i < lobby.players.length - 1; i++) {
     lobby.phases.addNextGameLoopPhase(); // This should add Draw, then Guess, etc.

@@ -1,5 +1,5 @@
 import { sig } from "../../../lib/signal";
-import { apiFetch } from "../lib/fetch";
+import { apiFetch, apiFetchRawBody } from "../lib/fetch";
 import { forEl, parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 import { timer } from "../lib/timer";
@@ -396,17 +396,27 @@ async function getPromptForPLayer(chainId: number) {
   return data;
 }
 
+function dataURLtoBlob(dataURL: any) {
+  const byteString = atob(dataURL.split(',')[1]);
+  const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  for (let i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+  return new Blob([ab], { type: mimeString });
+}
+
 async function uploadCanvasImage(canvas: HTMLCanvasElement, chainId: number, userId: string) {
-  // Convert canvas to Blob (PNG format)
-  const blob = await new Promise((resolve) =>
-    canvas.toBlob(resolve, "image/png")
-  );
+
+  const imageData = canvas.toDataURL('image/png');
+  const blob = dataURLtoBlob(imageData);
 
   if (!blob) {
     throw new Error("Failed to convert canvas to PNG blob");
   }
 
-  const response = await apiFetch(
+  const response = await apiFetchRawBody(
     "post",
     `/api/chain/${chainId}/latest-image?userId=${userId}`,
     blob,
