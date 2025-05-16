@@ -11,6 +11,7 @@ import { reviewPage } from './pages/review';
 import { homePage } from './pages/home';
 import { updateSSEHandler } from './lib/sse';
 import { menuPlayGamePage } from './pages/menuPlayGame';
+import { demoPage } from './pages/demo';
 
 //---------- Setup ----------//
 const containers: ContainerMap = {
@@ -29,7 +30,8 @@ const pages: { [key: string]: PageRenderer } = {
   "prompt": c => promptPage(c),
   "draw": c => drawPage(c),
   "guess": c => guessPage(c),
-  "review": c => reviewPage(c)
+  "review": c => reviewPage(c),
+  "demo": c => demoPage(c)
 };
  
 const redirects: RedirectFn[] = [
@@ -46,7 +48,9 @@ const redirects: RedirectFn[] = [
   path => path === '/guess'   ? 'guess' : null,
   path => path === '/draw'    ? 'draw' : null,
 
-  path => path === '/review'  ? 'review' : null
+  path => path === '/review'  ? 'review' : null,
+
+  path => path === '/demo'  ? 'demo' : null
 ];
 
 const router = new PageRouter({ pages, redirects, containers });

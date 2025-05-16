@@ -1,7 +1,6 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
-import fs from 'fs';
 import path from 'path';
 import { ErrorDetails, NotFoundErrorDetails, ValidationErrorDetails } from './library/error-types';
 import { cleanupInactiveClients, registerClient, removeClient } from './library/lobbyEventBroadcaster';
@@ -43,11 +42,12 @@ const EC2_HOST =  process.env.EC2_HOST
 app.use(cors());
 
 // the upload image route should not be parsed as JSON
-app.use('/api/chain/:chainId/latest-image', express.raw({ type: 'image/png', limit: '10mb' }));
-app.post('/api/chain/:chainId/latest-image', authenticateRequest, async (req, res) => {
+app.post('/api/chain/:chainId/latest-image', authenticateRequest, express.raw({ type: 'image/png', limit: '10mb' }), async (req, res) => {
   try {
     const { chainId } = req.params;
     const userId = req.user?.id;
+
+    console.log("Image buffer length:", req.body.length);
 
     if (!userId) {
       res.status(401).json(new ErrorDetails("Unauthorized"));
@@ -63,16 +63,13 @@ app.post('/api/chain/:chainId/latest-image', authenticateRequest, async (req, re
     if (validationResult.length) {
       res.status(400).json(new ValidationErrorDetails("Error uploading image", validationResult));
     } else {
-      const imageAsBuffer = Buffer.from(await (req.body as Blob).arrayBuffer());
-
-      fs.writeFileSync('./PHOTO.png', imageAsBuffer)
 
       const imageName = `prompts/${chainId}/image.png`;
     
       const [image, error] = await imageService.createImage({
         userId: Number(userId), 
         chainId: Number(chainId), 
-        image: imageAsBuffer
+        image: req.body
       }, imageName);
     
       if (error) {

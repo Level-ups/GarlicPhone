@@ -21,12 +21,12 @@ async function uploadPrompt(chainId: number, index: number, text: string, userId
 export const promptPage: PageRenderer = ({ page }) => {
     const promptInput = sig<string>("");
     
-    sseHandler?.addEventListener("before_lobby_update", async (e) => {
-        const lobby: WithClient<Lobby> = JSON.parse(e.data);
-        console.log("Before Lobby Update (prompts/guess)", lobby);
+    // sseHandler?.addEventListener("before_lobby_update", async (e) => {
+    //     const lobby: WithClient<Lobby> = JSON.parse(e.data);
+    //     console.log("Before Lobby Update (prompts/guess)", lobby);
         
-        const uploadedPrompt = await uploadPrompt(lobby.phasePlayerAssignments[0].chain.id, lobby.phases.index, promptInput(), Number(lobby.players[lobby.clientIndex].id));
-    });
+    //     const uploadedPrompt = await uploadPrompt(lobby.phasePlayerAssignments[0].chain.id, lobby.phases.index, promptInput(), Number(lobby.players[lobby.clientIndex].id));
+    // });
 
     isolateContainer("page");
 

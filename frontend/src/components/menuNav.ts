@@ -28,7 +28,7 @@ export function menuNav(): ElemTree {
       "|img.nav-logo": {
         "@": { src: garlicPhoneLogo, alt: "Garlic Phone" },
       },
-      "|div.nav-buttons": {
+      "|section.nav-buttons": {
         ...forEl(links, (_, l) => createLink(l)),
       },
 
@@ -40,7 +40,7 @@ export function menuNav(): ElemTree {
 export function titleCard(title: string): ElemTree {
   return {
     "|nav.nav.card.title-card": {
-      "|div.title-and-logo": {
+      "|section.title-and-logo": {
         "|p.nav-title": { _: "Garlic Phone" },
         "|img.nav-logo": {
           "@": { src: garlicPhoneLogo, alt: "Garlic Phone" },

@@ -2,45 +2,25 @@ import { der, sig } from "../lib/signal";
 //import { titleCard } from "../components/menuNav";
 import { createButton, createCheckboxList, createInput, createRadioboxList, createSlider, createToggleSwitch } from "../components/ui";
 import { wrapAsCard } from "../lib/card";
-import { DEFAULT_FLEX_CONFIG, NAV_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
-import { parseInto } from "../lib/parse";
+import { DEFAULT_FLEX_CONFIG, NAV_FLEX_CONFIG, ROW_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
+import { forEl, parseInto } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 import { menuNav, titleCard } from "../components/menuNav";
 import * as lobbyService from "../services/lobbyService";
 
 export const homePage: PageRenderer = ({ page }) => {
     isolateContainer("page");
-    const inpStr = sig<string>("");
-    const inpNum = sig<number>(10);
-    const inpBool = sig<boolean>(false);
 
     // Render page
     parseInto(page, {
         ...titleCard("Home"),
+        ...forEl(4, { "|br": {} }),
         ...wrapAsFlex({
             ...wrapAsCard({
-                "|p": { _: der(() => `${inpStr()} - ${inpNum()} - ${inpBool()}`) },
                 ...createButton("Login", () => { visit("login"); }),
-
-                ...createInput("Input here", inpStr),
-
-                ...createRadioboxList("asdf", [
-                    { label: "Hearts", value: "hearts" },
-                    { label: "Diamonds", value: "diamonds" },
-                    { label: "Spades", value: "spades" },
-                    { label: "Clubs", value: "clubs" },
-                ]),
-                ...createToggleSwitch(inpBool),
-                ...createCheckboxList([
-                    { label: "Hearts", value: "hearts" },
-                    { label: "Diamonds", value: "diamonds" },
-                    { label: "Spades", value: "spades" },
-                    { label: "Clubs", value: "clubs" },
-                ]),
-                ...createSlider(0, 20, inpNum),
                 $: {
-                    textAlign: "center",
-                    width: "50%"
+                    width: "40%",
+                    minWidth: "12em"
                 }
             }),
         }, NAV_FLEX_CONFIG)

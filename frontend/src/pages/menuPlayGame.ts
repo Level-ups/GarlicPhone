@@ -146,7 +146,6 @@ export const menuPlayGamePage: PageRenderer = ({ page }) => {
     // Render page
     return parseInto(page, {
         ...menuNav(),
-        ...titleCard("Garlic Phone"),
         "|section.game-entry": {
             $: {
                 maxWidth: "900px",

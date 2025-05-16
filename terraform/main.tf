@@ -140,7 +140,7 @@ resource "aws_db_subnet_group" "rds_subnet_group" {
 # EC2 Instance
 resource "aws_instance" "ec2_instance" {
   ami             = "ami-01ff9fc7721895c6b"
-  instance_type   = "t2.micro"
+  instance_type   = "t2.small"
   key_name        = "garlicPhone-key-pair"
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]  # Attach EC2 security group
   subnet_id       = aws_subnet.public_1.id  

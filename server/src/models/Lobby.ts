@@ -9,6 +9,7 @@ export type LobbyStatus = 'waiting' | 'started' | 'finished';
 
 export type Lobby = {
   id: UUID;
+  dbGameId: number;
   code: string;
   players: Player[];
   maxPlayers: number;
