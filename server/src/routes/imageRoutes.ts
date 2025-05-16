@@ -50,15 +50,15 @@ router.get("/prompt/:promptId", async (req, res) => {
   }
 
   try {
-    const [images, error] = await imageService.getImagesByPromptId(promptId);
+    const [images, err] = await imageService.getImagesByPromptId(promptId);
   
-    if (error) {
-      return res.status(500).json(new ErrorDetails("Error fetching images", error.details));
+    if (err) {
+      return res.status(500).json(new ErrorDetails("Error fetching images", err.details));
     } else {
       return res.status(200).json(images);
     }
-  } catch (error: any) {
-    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
+  } catch (err: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [err.message], err.stack));
   }
 });
 
@@ -79,15 +79,15 @@ router.get("/chain/:chainId", async (req, res) => {
   }
 
   try {
-    const [images, error] = await imageService.getLatestImageByChainId(chainId);
+    const [images, err] = await imageService.getLatestImageByChainId(chainId);
 
-    if (error) {
-      return res.status(500).json(new ErrorDetails("Error fetching images", error.details));
+    if (err) {
+      return res.status(500).json(new ErrorDetails("Error fetching images", err.details));
     } else {
       return res.status(200).json(images);
     }
-  } catch (error: any) {
-    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
+  } catch (err: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [err.message], err.stack));
   }
 });
 

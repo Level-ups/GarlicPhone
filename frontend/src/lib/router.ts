@@ -1,3 +1,5 @@
+import { updateSSEHandler } from "./sse";
+
 export type PageRenderer = (containers: ContainerMap) => void;
 export type RedirectFn = (path: string) => string | null;
 export type ContainerMap = { [key: string]: HTMLElement } & {

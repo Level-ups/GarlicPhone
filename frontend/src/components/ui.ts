@@ -231,7 +231,7 @@ export function createChainDisplay(links: ChainLink[]): ElemTree {
       ...forEl(links, (_, link) => renderLink(link)),
 
       // Modal overlay
-      '|div#image-modal.modal-overlay': {
+      '|figure#image-modal.modal-overlay': {
           $: { display: der(() => showModal() ? 'flex' : 'none') },
           '%click': handleModalMouseEvent,
           "%mouseleave": handleModalMouseEvent,

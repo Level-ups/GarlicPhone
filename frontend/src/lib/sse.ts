@@ -35,7 +35,7 @@ export const sseHandlers: SSEHandlers = {
     // visit("prompt");
   },
   "health": (data) => {
-    console.log("HEALTH:", data);
+    log("HEALTH:", data);
   }
 };
 
@@ -60,13 +60,13 @@ export function updateSSEHandler(url?: string) {
       try {
         handler(JSON.parse(e.data));
       } catch (err) {
-        console.error(`Error handling event '${event}':`, err);
+        error(`Error handling event '${event}':`, err);
       }
     });
   }
 
   source.onerror = (err) => {
-    console.error("SSE connection error:", err);
+    error("SSE connection error:", err);
   };
 
   (window as any).sseHandler = source; // expose globally

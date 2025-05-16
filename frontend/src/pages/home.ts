@@ -1,12 +1,9 @@
-import { der, sig } from "../lib/signal";
-//import { titleCard } from "../components/menuNav";
-import { createButton, createCheckboxList, createInput, createRadioboxList, createSlider, createToggleSwitch } from "../components/ui";
+import { createButton, } from "../components/ui";
 import { wrapAsCard } from "../lib/card";
-import { DEFAULT_FLEX_CONFIG, NAV_FLEX_CONFIG, ROW_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
+import { NAV_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { forEl, parseInto } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
-import { menuNav, titleCard } from "../components/menuNav";
-import * as lobbyService from "../services/lobbyService";
+import { titleCard } from "../components/menuNav";
 
 export const homePage: PageRenderer = ({ page }) => {
     isolateContainer("page");
@@ -14,6 +11,7 @@ export const homePage: PageRenderer = ({ page }) => {
     // Render page
     parseInto(page, {
         ...titleCard("Home"),
+        "|h1": { _: "", $: { textAlign: "center", color: "var(--black)" } },
         ...forEl(4, { "|br": {} }),
         ...wrapAsFlex({
             ...wrapAsCard({

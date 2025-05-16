@@ -22,7 +22,7 @@ async function createLobby(playerId: string | number) {
     });
 
     const data = await res.json();
-    console.log("CREATE LOBBY:", data);
+    log("CREATE LOBBY:", data);
 
     return data;
 }
@@ -36,7 +36,7 @@ async function joinLobby(gameCode: string, playerId: string | number, players: S
     });
 
     const data = await res.json();
-    console.log("JOIN LOBBY:", data);
+    log("JOIN LOBBY:", data);
     players(data.players);
 
     return data;

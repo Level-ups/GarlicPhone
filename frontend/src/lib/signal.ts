@@ -34,7 +34,7 @@ export function isReactive<T>(v: any): v is Reactive<T> {
 
 // Unpack a MaybeReactive<T> and just return it's current value
 export function just<T>(v: MaybeReactive<T>): T {
-  console.log(`JUST [${isReactive<T>(v) ? 1 : 0}]:`, v);
+  log(`JUST [${isReactive<T>(v) ? 1 : 0}]:`, v);
   return isReactive<T>(v) ? v.get() : v;
 }
 
@@ -133,5 +133,5 @@ export function maybeBind<T, P extends WritableKeys<T>>(obj: T, prop: P, sig: Ma
 
 // bind(myObj, "someProp", stringy);
 
-// eff(() => console.log("Count:", count()));
-// eff(() => console.log("Doubled:", doubled()));
+// eff(() => log("Count:", count()));
+// eff(() => log("Doubled:", doubled()));

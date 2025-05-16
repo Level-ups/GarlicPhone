@@ -19,6 +19,16 @@ const containers: ContainerMap = {
   "page": document.getElementById("page")!
 };
 
+(window as any).DEBUG = true;
+(window as any).log = function(...params: any[])   { if (DEBUG) console.log(...params) };
+(window as any).error = function(...params: any[]) { if (DEBUG) console.error(...params) };
+
+declare global {
+  const DEBUG: boolean;
+  function log(...data: any[]): void;
+  function error(...data: any[]): void;
+};
+
 //---------- Page routing ----------//
 const pages: { [key: string]: PageRenderer } = {
   "home": c => homePage(c),
@@ -58,5 +68,3 @@ const router = new PageRouter({ pages, redirects, containers });
 // Trigger navigation via buttons:
 document.getElementById('toAbout')?.addEventListener('click', () => visit('about'));
 document.getElementById('toContact')?.addEventListener('click', () => visit('contact'));
-
-updateSSEHandler()

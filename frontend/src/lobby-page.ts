@@ -1,5 +1,5 @@
 import * as lobbyService from './services/lobbyService.js';
-import { Lobby, Player } from './services/lobbyService.js';
+import type { Lobby } from './services/lobbyService.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   // DOM elements

@@ -1,12 +1,12 @@
 import { 
-  Lobby, 
-  Player, 
   createLobby,
   joinLobbyByCode,
   leaveLobby,
   setPlayerReady,
   startGame,
-  connectToLobbyEvents
+  connectToLobbyEvents,
+  type Lobby,
+  type Player
 } from '../services/lobbyService';
 
 export class LobbyUI {
@@ -244,10 +244,10 @@ export class LobbyUI {
         this.currentLobby = lobby;
         this.renderLobbyScreen();
       },
-      onError: (error) => {
-        console.error('Lobby event error:', error);
+      onError: (err) => {
+        error('Lobby event error:', err);
         // If we get a 404, it means the lobby was deleted
-        if (error.status === 404) {
+        if (err.status === 404) {
           alert('The lobby no longer exists.');
           this.eventSource?.close();
           this.eventSource = null;

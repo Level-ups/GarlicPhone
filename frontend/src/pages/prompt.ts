@@ -35,7 +35,7 @@ let promptInputSignal: ReturnType<typeof sig<string>>;
 // Event handler function
 async function beforeLobbyUpdateHandler(e: Event) {
     const lobby: WithClient<Lobby> = JSON.parse((e as any).data);
-    console.log("Before Lobby Update (prompts/guess)", lobby);
+    log("Before Lobby Update (prompts/guess)", lobby);
     
     // Find the assignment for the current player
     const playerAssignment = lobby.phasePlayerAssignments.find(

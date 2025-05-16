@@ -37,18 +37,21 @@ export function menuNav(): ElemTree {
   };
 }
 
-export function titleCard(title: string): ElemTree {
+export function titleCard(title: string, showLogo: boolean = true): ElemTree {
   return {
     "|nav.nav.card.title-card": {
-      "|section.title-and-logo": {
-        "|p.nav-title": { _: "Garlic Phone" },
-        "|img.nav-logo": {
-          "@": { src: garlicPhoneLogo, alt: "Garlic Phone" },
+      ...(showLogo ? {
+        "|section.title-and-logo": {
+          "|p.nav-title": { _: "Garlic Phone" },
+          "|img.nav-logo": {
+            "@": { src: garlicPhoneLogo, alt: "Garlic Phone" },
+          },
         },
-      },
+      } : {}),
       "|h1": { _: title },
       $: {
-        marginBottom: "2em",
+        marginBottom: showLogo ? "2em" : "1em",
+        ...(showLogo ? { padding: "0" } : {}),
         textAlign: "center",
       },
     },
