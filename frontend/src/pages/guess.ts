@@ -1,6 +1,6 @@
-import { der, sig, type Reactive } from "../lib/signal";
+import { sig, type Reactive } from "../lib/signal";
 import { titleCard } from "../components/menuNav";
-import { createButton, createImage, createInput } from "../components/ui";
+import { createImage, createInput } from "../components/ui";
 import { apiFetch } from "../lib/fetch";
 import { LIST_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { parseInto, type ElemTree } from "../lib/parse";
@@ -37,16 +37,83 @@ export function createGuessPage(
     };
 }
 
-export const guessPage: PageRenderer = ({ page }) => {
-    const promptInput = sig<string>("");
-    const imgSrc = sig<string>("");
+// Flag to track if event listeners have been attached
+let guessPageListenersAttached = false;
 
-    // sseHandler?.addEventListener("after_lobby_update", async (e) => {
-    //     const lobby: WithClient<Lobby> = JSON.parse(e.data);
+// Function to clean up event listeners when page is unloaded
+function cleanupGuessPageListeners() {
+    if (guessPageListenersAttached && sseHandler) {
+        sseHandler.removeEventListener("after_lobby_update", afterLobbyUpdateHandler);
+        guessPageListenersAttached = false;
+    }
+}
+
+// Event handler function
+async function afterLobbyUpdateHandler(e: Event) {
+    const lobby: WithClient<Lobby> = JSON.parse((e as any).data);
+    
+    // Find the assignment for the current player
+    const playerAssignment = lobby.phasePlayerAssignments.find(
+        assignment => assignment.player.id === Number(lobby.players[lobby.clientIndex].id)
+    );
+    
+    if (playerAssignment) {
+        const image = await getImage(playerAssignment.chain.id);
+        imgSrcSignal(image.s3Url);
+    }
+}
+
+async function uploadPrompt(chainId: number, index: number, text: string, userId: number) {
+    
+    const res = await apiFetch("post", "/api/prompts", {
+        chainId,
+        index,
+        text,
+        userId
+    });
+
+    const data = await res.json()  
+    return data;
+}
+
+async function beforeLobbyUpdateHandler(e: Event) {
+    const lobby: WithClient<Lobby> = JSON.parse((e as any).data);
+    console.log("Before Lobby Update (prompts/guess)", lobby);
+    
+    // Find the assignment for the current player
+    const playerAssignment = lobby.phasePlayerAssignments.find(
+        assignment => assignment.player.id === Number(lobby.players[lobby.clientIndex].id)
+    );
+    
+    if (playerAssignment) {
+        const uploadedPrompt = await uploadPrompt(
+            playerAssignment.chain.id, 
+            lobby.phases.index, 
+            promptInputSignal(), 
+            Number(lobby.players[lobby.clientIndex].id)
+        );
+    }
+}
+
+// Store signals in variables that can be accessed by the handlers
+let promptInputSignal: ReturnType<typeof sig<string>>;
+let imgSrcSignal: ReturnType<typeof sig<string>>;
+
+export const guessPage: PageRenderer = ({ page }) => {
+    promptInputSignal = sig<string>("");
+    imgSrcSignal = sig<string>("https://picsum.photos/200");
+    const promptInput = promptInputSignal;
+    const imgSrc = imgSrcSignal;
+
+    // Attach event listeners only if they haven't been attached yet
+    if (!guessPageListenersAttached && sseHandler) {
+        sseHandler.addEventListener("after_lobby_update", afterLobbyUpdateHandler);
+        sseHandler.addEventListener("before_lobby_update", beforeLobbyUpdateHandler);
+        guessPageListenersAttached = true;
         
-    //     const image = await getImage(lobby.phasePlayerAssignments[0].chain.id);
-    //     imgSrc(image.s3Url);
-    // });
+        // Add cleanup when page is unloaded
+        window.addEventListener("beforeunload", cleanupGuessPageListeners);
+    }
 
     // Render page
     isolateContainer("page");

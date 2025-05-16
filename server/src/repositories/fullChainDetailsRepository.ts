@@ -32,7 +32,8 @@ export async function getFullChainDetailsByGameId(gameId: UUID): Promise<FullCha
       image_user_role_id,
       image_user_role_name
     FROM full_chain_details
-    WHERE game_id = $1`,
+    WHERE game_id = $1
+    ORDER BY chain_id, prompt_index`,
     [gameId]
   );
 

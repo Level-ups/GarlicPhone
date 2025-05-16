@@ -18,16 +18,53 @@ async function uploadPrompt(chainId: number, index: number, text: string, userId
     return data;
 }
 
-export const promptPage: PageRenderer = ({ page }) => {
-    const promptInput = sig<string>("");
-    
-    // sseHandler?.addEventListener("before_lobby_update", async (e) => {
-    //     const lobby: WithClient<Lobby> = JSON.parse(e.data);
-    //     console.log("Before Lobby Update (prompts/guess)", lobby);
-        
-    //     const uploadedPrompt = await uploadPrompt(lobby.phasePlayerAssignments[0].chain.id, lobby.phases.index, promptInput(), Number(lobby.players[lobby.clientIndex].id));
-    // });
+// Flag to track if event listeners have been attached
+let promptPageListenersAttached = false;
 
+// Function to clean up event listeners when page is unloaded
+function cleanupPromptPageListeners() {
+    if (promptPageListenersAttached && sseHandler) {
+        sseHandler.removeEventListener("before_lobby_update", beforeLobbyUpdateHandler);
+        promptPageListenersAttached = false;
+    }
+}
+
+// Store prompt signal in a variable that can be accessed by the handler
+let promptInputSignal: ReturnType<typeof sig<string>>;
+
+// Event handler function
+async function beforeLobbyUpdateHandler(e: Event) {
+    const lobby: WithClient<Lobby> = JSON.parse((e as any).data);
+    console.log("Before Lobby Update (prompts/guess)", lobby);
+    
+    // Find the assignment for the current player
+    const playerAssignment = lobby.phasePlayerAssignments.find(
+        assignment => assignment.player.id === Number(lobby.players[lobby.clientIndex].id)
+    );
+    
+    if (playerAssignment) {
+        const uploadedPrompt = await uploadPrompt(
+            playerAssignment.chain.id, 
+            lobby.phases.index, 
+            promptInputSignal(), 
+            Number(lobby.players[lobby.clientIndex].id)
+        );
+    }
+}
+
+export const promptPage: PageRenderer = ({ page }) => {
+    promptInputSignal = sig<string>("");
+    const promptInput = promptInputSignal;
+
+    // Attach event listeners only if they haven't been attached yet
+    if (!promptPageListenersAttached && sseHandler) {
+        sseHandler.addEventListener("before_lobby_update", beforeLobbyUpdateHandler);
+        promptPageListenersAttached = true;
+        
+        // Add cleanup when page is unloaded
+        window.addEventListener("beforeunload", cleanupPromptPageListeners);
+    }
+    
     isolateContainer("page");
 
     // Render page
@@ -35,5 +72,5 @@ export const promptPage: PageRenderer = ({ page }) => {
         "Think quick - write a prompt!",
         promptInput,
         () => { /* visit("draw") */ }
-    ));
+    ))
 };

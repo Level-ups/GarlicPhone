@@ -70,7 +70,7 @@ router.post("/", async (req, res) => {
     const validationResult = validateCreatePrompt({
       chainId,
       index,
-      text,
+      text: text ?? 'unanswered',
       userId,
     });
 
@@ -83,7 +83,7 @@ router.post("/", async (req, res) => {
     const [createdPrompt, error] = await promptService.createPrompt({
       chainId,
       index,
-      text,
+      text: text?? 'unanswered',
       userId,
     });
 
