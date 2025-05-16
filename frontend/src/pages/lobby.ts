@@ -75,11 +75,11 @@ export const lobbyPage: PageRenderer = ({ page }) => {
     const isHost = sessionStorage.getItem('isHost') === 'true';
     
     // Validate necessary data
-    if (!playerId || !playerName || !lobbyId || !lobbyCode) {
-        alert('Missing player or lobby information. Redirecting to home page...');
-        visit('home');
-        return;
-    }
+    // if (!playerId || !playerName || !lobbyId || !lobbyCode) {
+    //     alert('Missing player or lobby information. Redirecting to home page...');
+    //     visit('home');
+    //     return;
+    // }
 
     // Handle player ready button
     const handleReadyClick = async (): Promise<void> => {
@@ -347,7 +347,7 @@ export const lobbyPage: PageRenderer = ({ page }) => {
 
     // Render page
     return parseInto(page, {
-        ...menuNav(),
+        // ...menuNav(),
         ...titleCard("Lobby"),
         "|section.lobby-container": {
             $: {

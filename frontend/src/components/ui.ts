@@ -1,5 +1,5 @@
-import { bind, der, sig, type Reactive } from "../../../lib/signal";
-import { forEl, parse, type ElemTree } from "../lib/parse";
+import { bind, der, eff, sig, type Reactive } from "../../../lib/signal";
+import { forEl, parse, react, type ElemTree } from "../lib/parse";
 
 export function defineCustomElem (
   elemName: `${string}-${string}`,
@@ -224,4 +224,37 @@ export function createChainDisplay(links: ChainLink[]): ElemTree {
       }
     }
   };
+}
+
+
+
+
+type Toast = {
+  title: string;
+  message: string;
+  durationSec?: number;
+};
+
+const toastList = sig<Toast[]>([]);
+
+export function createToast(toast: Toast): void {
+  toastList(t => [...t, toast]);
+
+  setTimeout(() => {
+    toastList(t => t.slice(1));
+  }, (toast.durationSec ?? 5) * 1000);
+}
+
+export function renderToasts(): ElemTree {
+  return react([toastList], () => ({
+    "|div#toast-container": {
+      ...forEl(toastList(), (i, { title, message }) => ({
+        "|div.toast.show": {
+          $: { animationDelay: `${i * 100}ms` },
+          "|strong": { _: title },
+          "|p": { _: message }
+        }
+      }))
+    }
+  }));
 }

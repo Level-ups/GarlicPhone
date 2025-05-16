@@ -1,6 +1,6 @@
 import { der, sig } from "../../../lib/signal";
 import { titleCard } from "../components/menuNav";
-import { createChainDisplay, createItemList, type ChainInfo } from "../components/ui";
+import { createChainDisplay, createItemList, createToast, renderToasts, type ChainInfo } from "../components/ui";
 import { wrapAsCard, wrapAsRowCards } from "../lib/card";
 import { parseInto, react } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
@@ -33,11 +33,18 @@ export const reviewPage: PageRenderer = ({ page }) => {
     parseInto(page, {
         ...titleCard("Review"),
         ...wrapAsRowCards({
-            ...createItemList(chains, (i, _) => { selectedChain(i); }),
+            ...createItemList(chains, (i, _) => {
+                selectedChain(i);
+                createToast({
+                    title: "Hello world",
+                    message: "ajsdfklasjfdkl"
+                });
+            }),
             ...react([selectedChain], () => createChainDisplay(chains[selectedChain()].links))
         }, [1, 2], "1em"),
         "|br": {},
         // ...wrapAsCard({
         // }),
+        ...renderToasts()
     });
 }
