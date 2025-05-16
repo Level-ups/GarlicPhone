@@ -2,7 +2,7 @@
   "name": "express-typescript-api",
   "version": "1.0.0",
   "description": "Minimal Express API server using TypeScript",
-  "main": "dist/server/src/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "NODE_OPTIONS='--max-old-space-size=4096' tsc",
     "start": "node dist/index.js",
