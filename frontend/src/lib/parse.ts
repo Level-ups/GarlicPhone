@@ -1,5 +1,4 @@
 import { bind, der, eff, maybeBind, maybeSub, multiSub, sig, type MaybeReactive, type Reactive } from "../../../lib/signal";
-import { generate, randHex, tryCall } from "../../../lib/types";
 
 //-------------------- Types --------------------//
 export type ElemTree_Meta = {
@@ -240,11 +239,28 @@ export function react(sigs: Reactive<any>[], tree: ElemTreeGenerator): ElemTree 
         [`|div #${reactiveId} .reactiveParent`]: {
             "%": (el: HTMLElement) => multiSub(sigs, () => {
                 el.innerHTML = "";
-                parseInto(el, generate(tree, []));
+                parseInto(el, generate(tree as any, []));
             }),
             ...tree
         }
     };
+}
+
+// If the object is a function, call it
+// Otherwise, return it's value
+export function tryCall<T>(x: T, args: any[] = []) {
+  if (typeof x === "function") return x(...args);
+  return x;
+}
+
+// Run generator with args if its a function, otherwise just return it's value
+export function generate<T, Args extends any[]>(x: Generator<T, Args>, args: Args): T {
+  return (typeof x === "function") ? (x as (_: Args) => T)(args) : x;
+}
+
+// Generate a random hexadecimal string of length `n`
+export function randHex(n: number) {
+  return [...Array(n)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
 }
 
 

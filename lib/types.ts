@@ -18,20 +18,3 @@ export type WritableKeys<T> = Exclude<{
 export type Generator<T, Args extends any[] = []> = T | ((...args: Args) => T);
 
 //----- Value utils -----//
-
-// If the object is a function, call it
-// Otherwise, return it's value
-export function tryCall<T>(x: T, args: any[] = []) {
-  if (typeof x === "function") return x(...args);
-  return x;
-}
-
-// Run generator with args if its a function, otherwise just return it's value
-export function generate<T, Args extends any[]>(x: Generator<T, Args>, args: Args): T {
-  return (typeof x === "function") ? (x as (_: Args) => T)(args) : x;
-}
-
-// Generate a random hexadecimal string of length `n`
-export function randHex(n: number) {
-  return [...Array(n)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
-}
