@@ -1,3 +1,4 @@
+import { PoolClient } from "pg";
 import pool from "../library/db";
 import { chainMapper, playerGameMapper } from "../library/mappers";
 import { Chain, ChainDto } from "../models/Chain";
@@ -33,7 +34,7 @@ async function getChainsByGameId(chainDto: ChainDto): Promise<Chain[]> {
   return result.rows.map((row) => chainMapper.toDomain(row))
 }
 
-async function insertChain(chainDto: ChainDto): Promise<Chain | null> {
+async function insertChain(chainDto: ChainDto, client?: PoolClient): Promise<Chain | null> {
   const query = `
     WITH inserted_chain AS (
       INSERT INTO chains (game_id)
@@ -48,7 +49,7 @@ async function insertChain(chainDto: ChainDto): Promise<Chain | null> {
     FROM inserted_chain c
       INNER JOIN games g ON g.id = c.game_id
   `
-  const result = await pool.query(query, [chainDto.gameId]);
+  const result = await (client ?? pool).query(query, [chainDto.gameId]);
   return result.rows.length ? playerGameMapper.toDomain(result.rows[0]) : null;
 }
 

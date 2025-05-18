@@ -6,6 +6,7 @@ import { SUBMISSION_ALERT } from "./gameTypes";
 import { Router, Request, Response } from 'express';
 import { SSECoordinator } from "./sseCoordinator";
 import { getChainIdxForPlayer, transition } from "./transition";
+import { saveGameDataToDb } from "./saveGame";
 
 //---------- Setup ----------//
 
@@ -88,10 +89,15 @@ function progressState(gameCode: GameCode): ProgressStateResult {
 
     //----- Transition -----//
     // Alert all players of state transition
+    let isReviewState = false;
     for(let pIdx = 0; pIdx < gameData.players.length; pIdx++) {
         const alert = transition(pIdx, gameData, timeStarted);
-
+        isReviewState ||= alert.phaseType == "review";
         coord.dispatch(pIdx, alert, "transition");
+    }
+
+    if (isReviewState) {
+        saveGameDataToDb(gameData); // Async save game data to db
     }
 
     return "success";
