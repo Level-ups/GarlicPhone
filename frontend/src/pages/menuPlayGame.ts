@@ -17,13 +17,12 @@ async function createGame() {
     const res = await apiFetch("post", "/api/games/create", {});
 
     const data = await res.json();
-    log("CREATE LOBBY:", data);
 
-    return data;
+    return data as { gameCode: string };
 }
 
 async function joinGame(gameCode: string) {
-    const res = await apiFetch("post", `/api/lobbies/join/${gameCode}`, {});
+    const res = await apiFetch("post", `/api/games/join/${gameCode}`, {});
 
     const data = await res.json();
     log("JOIN LOBBY:", data);
@@ -33,12 +32,15 @@ async function joinGame(gameCode: string) {
 
 
 
-export const menuPlayGamePage: PageRenderer = ({ page }) => {
+export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate }) => {
     //----- Initialization ----//
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
     const urlCode = params.get('code');
-    if (token) localStorage.setItem("google-id-token", token);
+    if (token) {
+        sessionStorage.setItem("google-id-token", token);
+        (window as any).router?.initializeSSEIfAuthenticated();
+    }
 
     //----- Page state signals -----//
     const playerNameInp = sig<string>("");
@@ -55,18 +57,21 @@ export const menuPlayGamePage: PageRenderer = ({ page }) => {
 
     //----- Button handlers -----//
     // Create a new lobby and redirect to lobby page
-    async function handleCreateGame() {
+    function handleCreateGame() {
+        console.log("Creating game...");
         if (!playerName()) { alert('Please enter your name'); return; }
         
         creatingGame(true);
 
         try {
             // Use local createLobby function instead of lobbyService.createLobby
-            const gameCode = await createGame();
-
-            // Redirect to lobby page
-            visit('lobby');
-            
+            (async () => {
+                const gameCode = await createGame();
+                globalState.playerName = playerName;
+                globalState.lobbyCode = gameCode.gameCode;
+                // Redirect to lobby page
+                visit('lobby');
+            })();
         } catch (error) {
             alert(`Error creating lobby: ${error instanceof Error ? error.message : 'Unknown error'}`);
             creatingGame(false);
@@ -152,4 +157,4 @@ export const menuPlayGamePage: PageRenderer = ({ page }) => {
             }
         }
     });
-}; 
+};

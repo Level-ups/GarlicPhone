@@ -2,8 +2,12 @@ import { menuNav } from "../components/menuNav";
 import { apiFetch } from "../lib/fetch";
 import { forEl, parseInto, react } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
-import { der, sig, type Signal } from "../lib/signal";
 import { createButton } from "../components/ui";
+import { der, sig, type Signal } from "../lib/signal";
+import avocadoAvatar from "/assets/avatars/avatar-avocado-food-svgrepo-com.svg";
+import batAvatar from "/assets/avatars/avatar-batman-comics-svgrepo-com.svg";
+import zombieAvatar from "/assets/avatars/avatar-dead-monster-svgrepo-com.svg";
+import presidentAvatar from "/assets/avatars/avatar-male-president-svgrepo-com.svg";
 
 type PlayerInfo = {
   id: number;
@@ -31,16 +35,21 @@ async function refreshLobbyState(
   players(data.players);
 }
 
-export const lobbyPage: PageRenderer = ({ page }, { onUpdate }) => {
+export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => {
   const params = new URLSearchParams(window.location.search);
   const token = params.get("token");
-  if (token) localStorage.setItem("google-id-token", token);
+  if (token) {
+    sessionStorage.setItem("google-id-token", token);
+    // Initialize SSE connection after token is set
+    (window as any).router?.initializeSSEIfAuthenticated();
+    globalState.authToken = token;
+  }
 
   const players = sig<PlayerInfo[]>([]);
-  const gameCode = sig<string>("asdf");
+  const gameCode = sig<string>(globalState.lobbyCode);
 
-  const playerId = Number(localStorage.getItem("playerId"));
-  localStorage.setItem("playerId", `${playerId}`);
+  const playerId = Number(sessionStorage.getItem("playerId"));
+  sessionStorage.setItem("playerId", `${playerId}`);
 
   const isHost = sig<boolean>(false);
 
@@ -70,7 +79,7 @@ export const lobbyPage: PageRenderer = ({ page }, { onUpdate }) => {
         "|section.lobby-code": {
           "|div.lobby-code-info": {
             "|p": { _: "Game Code" },
-            "|h2.lobby-code-title": { _: gameCode },
+            "|h2.lobby-code-title": { _: gameCode() },
           },
 
           ...createButton("Leave lobby", handleLeaveLobby, ["base-button--danger", "leave-lobby-btn"])

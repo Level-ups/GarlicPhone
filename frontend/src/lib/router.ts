@@ -39,7 +39,7 @@ export class PageRouter {
   private containers: ContainerMap;
   private redirects: RedirectFn[];
   private clientId: string;
-  private sseSource: EventSource;
+  private sseSource: EventSource | null = null;
 
   private globalState: GlobalState = {};
 
@@ -61,23 +61,23 @@ export class PageRouter {
     this.globalState = {};
 
     // Obtain/Generate client id
-    this.clientId = localStorage.getItem("clientId") ?? randHex(20);
-    localStorage.setItem("clientId", `${this.clientId}`);
+    this.clientId = sessionStorage.getItem("clientId") ?? randHex(20);
+    sessionStorage.setItem("clientId", `${this.clientId}`);
 
     // Bind methods to this instance
     this.handlePopState = this.handlePopState.bind(this);
     this.visit = this.visit.bind(this);
     this.isolateContainer = this.isolateContainer.bind(this);
-
-    // Create SSE source & bind handlers
-    this.sseSource = createSSESource(`/api/games/connect`, this.sseHandlers);
-
+    
     // Listen to browser navigation
     window.addEventListener("popstate", this.handlePopState);
 
     // Global exposures
     (window as any).visit = this.visit;
     (window as any).isolateContainer = this.isolateContainer;
+    
+    // Check if user is already authenticated and initialize SSE if so
+    this.initializeSSEIfAuthenticated();
 
     // Initial route handling
     this.handlePopState();
@@ -88,7 +88,7 @@ export class PageRouter {
       const target = redir(path);
       if (target && this.pages[target]) {
         if (target !== "login") {
-          // return localStorage.getItem("google-id-token") ? target : "login";
+          // return sessionStorage.getItem("google-id-token") ? target : "login";
           return target;
         } else {
           return target;
@@ -159,5 +159,27 @@ export class PageRouter {
 
   public getState() {
     return this.globalState;
+  }
+  
+  /**
+   * Initializes the SSE connection if the user is authenticated (has a JWT token)
+   * This should be called after successful login
+   */
+  public initializeSSEIfAuthenticated(): void {
+    const token = sessionStorage.getItem('google-id-token');
+    
+    if (token) {
+      this.closeSSEConnection();
+      this.sseSource = createSSESource(`/api/games/connect`, this.sseHandlers);
+      console.log('SSE connection established after authentication');
+    }
+  }
+
+  public closeSSEConnection(): void {
+    if (this.sseSource) {
+      this.sseSource.close();
+      this.sseSource = null;
+      console.log('SSE connection closed');
+    }
   }
 }

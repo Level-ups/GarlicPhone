@@ -39,46 +39,6 @@ export type EventHandler = (e: Event) => void;
 export type EventHandlerDict = { [eventName: string]: EventHandler; }
 
 
-
-//-------------------- Trinkets --------------------//
-class Signal<T> { val: T;
-    deps: any[];
-
-    constructor(val: T, deps: any[] = []) {
-        this.val = val;
-        this.deps = deps;
-    }
-
-    set(setter: T | ((v: T) => T)) {
-        this.val = typeof setter === "function" ? (setter as Function)(this.val) : setter;
-        this.notify();
-    }
-
-    notify() { this.deps.forEach(x => x()); }
-    addDep(dep: (v: T) => void){ this.deps.push(dep); }
-}
-
-let x = new Signal(10);
-x.set(20);
-
-let silentRegisterCaller = (_: any) => {};
-
-function init() {
-    const $state = new Proxy({}, {
-        get(target: { [key: string]: Signal<any> }, prop: string) {
-            if (typeof prop === "symbol") return;
-
-            // Silently add dependency when getting signal element
-            const signal = target[prop];
-            if (typeof silentRegisterCaller === "function") {
-                signal.addDep(silentRegisterCaller);
-            }
-            return signal;
-        }
-    })
-}
-
-
 //-------------------- Parser --------------------//
 // Parse an ElemTree and set it as the subtree of the given parent
 // Any _,$,@,% set on the root of the tree are ignored

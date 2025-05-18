@@ -1,15 +1,15 @@
 
-import { PageRouter, type ContainerMap, type PageRenderer, type RedirectFn } from './lib/router'
+import { PageRouter, type ContainerMap, type PageRenderer, type RedirectFn } from './lib/router';
+import { demoPage } from './pages/demo';
+import { drawPage } from './pages/draw';
+import { guessPage } from './pages/guess';
+import { homePage } from './pages/home';
+import { lobbyPage } from './pages/lobby';
 import { loginPage } from './pages/login';
 import { menuGalleryPage } from './pages/menuGallery';
-import { drawPage } from './pages/draw';
-import { lobbyPage } from './pages/lobby';
-import { promptPage } from './pages/prompt';
-import { guessPage } from './pages/guess';
-import { reviewPage } from './pages/review';
-import { homePage } from './pages/home';
 import { menuPlayGamePage } from './pages/menuPlayGame';
-import { demoPage } from './pages/demo';
+import { promptPage } from './pages/prompt';
+import { reviewPage } from './pages/review';
 
 //---------- Setup ----------//
 const containers: ContainerMap = {
@@ -58,6 +58,9 @@ const redirects: RedirectFn[] = [
 ];
 
 const router = new PageRouter({ pages, redirects, containers });
+
+// Make router accessible globally for token-based SSE initialization
+(window as any).router = router;
 
 // Trigger navigation via buttons:
 document.getElementById('toAbout')?.addEventListener('click', () => visit('about'));
