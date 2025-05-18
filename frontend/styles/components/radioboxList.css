@@ -1,0 +1,20 @@
+.radiobox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+.radiobox-list label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.radiobox-list input[type="radio"] {
+  margin-right: 0.5em;
+  width: 1.1em;
+  height: 1.1em;
+  accent-color: #2575fc;
+  transition: transform 0.1s ease;
+}
+.radiobox-list input[type="radio"]:checked {
+  transform: scale(1.2);
+}
