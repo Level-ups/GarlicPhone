@@ -16,7 +16,7 @@ type PlayerInfo = {
 };
 
 async function createLobby(playerId: number) {
-  const res = await apiFetch("post", "/api/lobbies", {
+  const res = await apiFetch("post", "/api/games/create", {
     hostId: playerId,
     hostName: "Host Player",
   });
@@ -76,7 +76,7 @@ async function refreshLobbyState(
   players(data.players);
 }
 
-export const lobbyPage: PageRenderer = ({ page }) => {
+export const lobbyPage: PageRenderer = ({ page }, { onUpdate }) => {
   const params = new URLSearchParams(window.location.search);
   const token = params.get("token");
   if (token) localStorage.setItem("google-id-token", token);
@@ -99,37 +99,38 @@ export const lobbyPage: PageRenderer = ({ page }) => {
   let gameCode = "",
     gameId = "";
 
-  (async () => {
-    if (urlGameCode === "lobby") {
-      // Create new lobby
-      const res = await createLobby(playerId);
+  // (async () => {
+  //   if (urlGameCode === "lobby") {
+  //     // Create new lobby
+  //     const res = await createLobby(playerId);
 
-      gameCode = res.code;
-      gameId = res.id;
-      lobbyCode(gameCode);
-      setAsReady(res.id, playerId, players);
-    } else {
-      // Join existing lobby
-      const res = await joinLobby(urlGameCode, playerId, players);
-      if (res?.message != null) {
-        // There was an error
-        message(res.message);
-        return;
-      }
+  //     gameCode = res.code;
+  //     gameId = res.id;
+  //     lobbyCode(gameCode);
+  //     setAsReady(res.id, playerId, players);
+  //   } else {
+  //     // Join existing lobby
+  //     const res = await joinLobby(urlGameCode, playerId, players);
+  //     if (res?.message != null) {
+  //       // There was an error
+  //       message(res.message);
+  //       return;
+  //     }
 
-      gameCode = res.code;
-      gameId = res.id;
-      setAsReady(res.id, playerId, players);
-    }
+  //     gameCode = res.code;
+  //     gameId = res.id;
+  //     setAsReady(res.id, playerId, players);
+  //   }
+
+  // })();
 
     // Listen on state refresh
-    sseHandler?.addEventListener("lobby_update", (e) => {
+    onUpdate((alert) => {
       const data: WithClient<Lobby> = JSON.parse(e.data);
       if (gameCode != "") {
         refreshLobbyState(gameCode, players);
       }
     });
-  })();
 
   isolateContainer("page");
 

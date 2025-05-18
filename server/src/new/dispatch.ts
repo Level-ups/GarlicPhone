@@ -26,13 +26,10 @@ const randAlNum = () => GAME_CODE_CHARS[Math.floor(Math.random() * GAME_CODE_CHA
 // Generate a random hexadecimal string of length `n`
 const genGameCode = (n: number = 5) => [...Array(n)].map(randAlNum).join('');
 
-function createNewGame(host: PlayerId, hostRes: Response): GameCode {
+function createNewGame(host: PlayerId): GameCode {
     const createdAt = Date.now()
     const gameId: GameId = 0;
     const gameCode = genGameCode();
-
-    const coord = new SSECoordinator();
-    coord.addClient(host, hostRes);
 
     currentGames[gameCode] = {
         gameId,
@@ -46,14 +43,13 @@ function createNewGame(host: PlayerId, hostRes: Response): GameCode {
 }
 
 type AddPlayerResult = "success" | "invalidGame" | "gameAlreadyStarted" | "gameFull";
-function addPlayerToGame(gameCode: GameCode, playerId: PlayerId, playerRes: Response): AddPlayerResult {
+function addPlayerToGame(gameCode: GameCode, playerId: PlayerId): AddPlayerResult {
     if (!(gameCode in currentGames)) return "invalidGame";
     const gameData = currentGames[gameCode];
     if (gameData.phase > 0) return "gameAlreadyStarted";
     if (gameData.players.length >= 10) return "gameFull";
 
     gameData.players.push(playerId);
-    // currentGames[gameCode].coord.addClient(playerId, playerRes); // REMOVED
 
     return "success";
 }
@@ -106,7 +102,7 @@ function alertPlayer(playerId: PlayerId, alert: Alert) {
 type SubmissionResult = "success" | "invalidGame" | "invalidPlayer";
 function submitChainLink(gameCode: GameCode, playerId: PlayerId, link: ChainLink): SubmissionResult {
     if (!(gameCode in currentGames)) return "invalidGame";
-    const gameData = currentGames[gameCode].data;
+    const gameData = currentGames[gameCode];
     const playerIdx = gameData.players.indexOf(playerId);
     if (playerIdx === -1) return "invalidPlayer";
 
@@ -121,7 +117,7 @@ const DEFAULT_STALENESS = _1hr;
 function clearStaleGames(staleness: number = DEFAULT_STALENESS) {
     let toDel: string[] = [];
     for(let g in currentGames) {
-        toDel = [...toDel, ...( (Date.now() - currentGames[g].data.createdAt > staleness) ? [g] : [] ) ];
+        toDel = [...toDel, ...( (Date.now() - currentGames[g].createdAt > staleness) ? [g] : [] ) ];
     }
     toDel.forEach(deleteGame);
 }
@@ -177,7 +173,7 @@ gameRouter.post('/connect', checker(["playerId"], (req: Request, res: Response) 
 // Create a new game
 gameRouter.post('/create', checker(["playerId"], (req: Request, res: Response) => {
     const playerId = req.user!.id;
-    const gameCode = createNewGame(playerId, res);
+    const gameCode = createNewGame(playerId);
     
     return res.status(201).json({ gameCode });
 }));
@@ -187,7 +183,7 @@ gameRouter.post('/join/:gameCode', checker(["playerId"], (req: Request, res: Res
     const playerId = req.user!.id;
     const { gameCode } = req.params;
 
-    const addRes = addPlayerToGame(gameCode, playerId, res);
+    const addRes = addPlayerToGame(gameCode, playerId);
     return handleFailableReturn(addRes, res);
 }));
 

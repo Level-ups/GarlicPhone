@@ -30,36 +30,36 @@ declare global {
 
 //---------- Page routing ----------//
 const pages: { [key: string]: PageRenderer } = {
-  "home": c => homePage(c),
-  "login": c => loginPage(c),
-  "menuGallery": c => menuGalleryPage(c),
-  "menuPlay": c => menuPlayPage(c),
-  "menuPlayGame": c => menuPlayGamePage(c),
-  "lobby": c => lobbyPage(c),
-  "prompt": c => promptPage(c),
-  "draw": c => drawPage(c),
-  "guess": c => guessPage(c),
-  "review": c => reviewPage(c),
-  "demo": c => demoPage(c)
+  "home":         homePage,
+  "login":        loginPage,
+  "menuGallery":  menuGalleryPage,
+  "menuPlay":     menuPlayPage,
+  "menuPlayGame": menuPlayGamePage,
+  "lobby":        lobbyPage,
+  "prompt":       promptPage,
+  "draw":         drawPage,
+  "guess":        guessPage,
+  "review":       reviewPage,
+  "demo":         demoPage
 };
  
 const redirects: RedirectFn[] = [
-  path => path === '/'        ? 'home' : null,
-  path => path === '/login'   ? 'login' : null,
-  // path => path === '/play'    ? 'menuPlay' : null,
-  path => path === '/playgame' ? 'menuPlayGame' : null,
-  path => path === '/gallery' ? 'menuGallery' : null,
+  path => path === '/'                ? 'home' : null,
+  path => path === '/login'           ? 'login' : null,
+  // path => path === '/play'            ? 'menuPlay' : null,
+  path => path === '/playgame'        ? 'menuPlayGame' : null,
+  path => path === '/gallery'         ? 'menuGallery' : null,
 
-  path => path === '/game'    ? 'menuPlay' : null,
+  path => path === '/game'            ? 'menuPlay' : null,
 
   path => path.startsWith('/lobby')   ? 'lobby' : null,
-  path => path === '/prompt'  ? 'prompt' : null,
-  path => path === '/guess'   ? 'guess' : null,
-  path => path === '/draw'    ? 'draw' : null,
+  path => path === '/prompt'          ? 'prompt' : null,
+  path => path === '/guess'           ? 'guess' : null,
+  path => path === '/draw'            ? 'draw' : null,
 
-  path => path === '/review'  ? 'review' : null,
+  path => path === '/review'          ? 'review' : null,
 
-  path => path === '/demo'  ? 'demo' : null
+  path => path === '/demo'            ? 'demo' : null
 ];
 
 const router = new PageRouter({ pages, redirects, containers });
