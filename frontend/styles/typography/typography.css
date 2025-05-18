@@ -1,5 +1,12 @@
-body{
-    font-family: "Cal Sans", sans-serif;
-    letter-spacing: 2px;
-    color: #000;
+body {
+  font-family: "Cal Sans", sans-serif;
+  letter-spacing: 2px;
+  color: var(--black);
+}
+
+.large-heading {
+  font-size: 3.2em;
+  line-height: 1.1;
+
+  color: var(--black);
 }

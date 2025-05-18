@@ -1,10 +1,15 @@
 
 import { ROW_FLEX_CONFIG, wrapAsFlex } from "./flex";
-import { getElems, tryCall, type ElemTree, type ElemTree_Elems } from "./parse";
+import { getElems, tryCall, type ElemTree, type ElemTree_Elems, type StyleDict } from "./parse";
 
 // Wrap the given tree as a card element
-export function wrapAsCard(tree: ElemTree, label: string = ""): ElemTree {
-  return { [`${label}|article.card`]: { ...tree } };
+export function wrapAsCard(tree: ElemTree, label: string = "", additionalClasses: string[] = [], additionalStyling: StyleDict = {}): ElemTree {
+  return { 
+    [`${label}|article.card${joinWithLeadingSeparator(additionalClasses, '.')}`]: { 
+      ...tree,
+      ...(additionalStyling ? { $: additionalStyling } : {}),
+    } 
+  };
 }
 
 export function wrapAsRowCard(tree: ElemTree, label: string = ""): ElemTree {
@@ -41,4 +46,8 @@ export function wrapAsRowCards(tree: ElemTree, ratios: number[] = [], gap: strin
   }
 
   return wrapAsFlex(res, ROW_FLEX_CONFIG);
+}
+
+function joinWithLeadingSeparator(arr: any[], separator = ',') {
+  return arr.map(item => separator + item).join('');
 }

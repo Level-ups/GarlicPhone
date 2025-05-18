@@ -353,23 +353,23 @@ export const drawPage: PageRenderer = ({ app }) => {
   cleanupDrawPageListeners();
   
   // Attach event listeners
-  if (sseHandler) {
-    sseHandler.addEventListener("before_lobby_update", beforeLobbyUpdateHandler);
-    sseHandler.addEventListener("after_lobby_update", afterLobbyUpdateHandler);
-    drawPageListenersAttached = true;
+  // if (sseHandler) {
+  //   sseHandler.addEventListener("before_lobby_update", beforeLobbyUpdateHandler);
+  //   sseHandler.addEventListener("after_lobby_update", afterLobbyUpdateHandler);
+  //   drawPageListenersAttached = true;
     
-    // Add cleanup when page is unloaded or navigated away from
-    window.addEventListener("beforeunload", cleanupDrawPageListeners);
+  //   // Add cleanup when page is unloaded or navigated away from
+  //   window.addEventListener("beforeunload", cleanupDrawPageListeners);
     
-    // Also clean up when navigating to a different page
-    const originalVisit = window.visit;
-    window.visit = function(page: string) {
-      if (page !== "draw") {
-        cleanupDrawPageListeners();
-      }
-      originalVisit(page);
-    };
-  }
+  //   // Also clean up when navigating to a different page
+  //   const originalVisit = window.visit;
+  //   window.visit = function(page: string) {
+  //     if (page !== "draw") {
+  //       cleanupDrawPageListeners();
+  //     }
+  //     originalVisit(page);
+  //   };
+  // }
 
   isolateContainer("app");
   return parseInto(app, {

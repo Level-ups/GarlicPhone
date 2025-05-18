@@ -1,4 +1,3 @@
-import { NAV_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { forEl, type ElemTree } from "../lib/parse";
 import garlicPhoneLogo from "/assets/logo.svg";
 
@@ -9,8 +8,8 @@ type Link = {
 
 function createLink({ name, url }: Link): ElemTree {
   return {
-    "|a.menuButton": {
-      _: name,
+    "|a.menuButton.base-button": {
+      "|span": { _: name },
       "@": { href: url },
     },
   };
@@ -24,10 +23,13 @@ export function menuNav(): ElemTree {
 
   return {
     "|nav.nav.card": {
-      "|p.nav-title": { _: "Garlic Phone" },
-      "|img.nav-logo": {
-        "@": { src: garlicPhoneLogo, alt: "Garlic Phone" },
+      "|section.nav-info": {
+        "|p.nav-title.large-heading": { _: "Garlic Phone" },
+        "|img.nav-logo": {
+          "@": { src: garlicPhoneLogo, alt: "Garlic Phone" },
+        },
       },
+
       "|section.nav-buttons": {
         ...forEl(links, (_, l) => createLink(l)),
       },
@@ -39,21 +41,25 @@ export function menuNav(): ElemTree {
 
 export function titleCard(title: string, showLogo: boolean = true): ElemTree {
   return {
-    "|nav.nav.card.title-card": {
-      ...(showLogo ? {
-        "|section.title-and-logo": {
-          "|p.nav-title": { _: "Garlic Phone" },
-          "|img.nav-logo": {
-            "@": { src: garlicPhoneLogo, alt: "Garlic Phone" },
-          },
-        },
-      } : {}),
-      "|h1": { _: title },
+    "|nav.nav.card": {
+      "|h1.large-heading": { _: title },
       $: {
         marginBottom: showLogo ? "2em" : "1em",
         ...(showLogo ? { padding: "0" } : {}),
         textAlign: "center",
       },
+    },
+  };
+}
+
+export function titleNav(): ElemTree {
+  return {
+    "|nav.nav.card": {
+      "garlic|h1.large-heading.nav-title": { _: "Garlic" },
+      "|img.nav-logo": {
+        "@": { src: garlicPhoneLogo, alt: "Garlic Phone" },
+      },
+      "phone|h1.large-heading.nav-title": { _: "Phone" },
     },
   };
 }

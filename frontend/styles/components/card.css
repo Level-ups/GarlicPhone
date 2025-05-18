@@ -1,0 +1,25 @@
+.card {
+  display: block;
+  width: 100%;
+  min-height: 5em;
+  padding: 2em;
+  background: var(--white);
+  /* border: 1px solid green; */
+  border-radius: 1rem;
+  border: 3px solid black;  
+  overflow: hidden;
+  box-shadow: .4rem .5rem black;
+  transition: transform 0.2s ease;
+}
+
+.card-with-overflow {
+  overflow: visible;
+}
+
+.hover-card:hover {
+  transform: translateY(-4px);
+}
+
+/* .card:hover {
+  transform: translateY(-4px);
+} */

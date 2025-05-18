@@ -18,10 +18,10 @@ let reviewPageListenersAttached = false;
 
 // Function to clean up event listeners when page is unloaded
 function cleanupReviewPageListeners() {
-    if (reviewPageListenersAttached && sseHandler) {
-        sseHandler.removeEventListener("after_lobby_update", afterLobbyUpdateHandler);
-        reviewPageListenersAttached = false;
-    }
+    // if (reviewPageListenersAttached && sseHandler) {
+    //     sseHandler.removeEventListener("after_lobby_update", afterLobbyUpdateHandler);
+    //     reviewPageListenersAttached = false;
+    // }
 }
 
 // Store signals in variables that can be accessed by the handlers
@@ -83,8 +83,5 @@ export const reviewPage: PageRenderer = ({ page }) => {
             ...createItemList(chains(), (i, _) => { selectedChain(i); }),
              ...createChainDisplay(chains()[selectedChain()].links)
             }, [1, 2], "1em")),
-        "|br": {},
-        // ...wrapAsCard({
-        // }),
     });
 }

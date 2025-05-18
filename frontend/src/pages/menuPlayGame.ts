@@ -149,18 +149,17 @@ export const menuPlayGamePage: PageRenderer = ({ page }) => {
         "|section.game-entry": {
             $: {
                 maxWidth: "900px",
-                margin: "0 auto",
                 width: "100%"
             },
-            "|article.player-setup.card": {
-                "|h2": { _: "Welcome to Garlic Phone" },
+            "|article.card": {
+                "|h2.welcome-heading": { _: "Welcome to Garlic Phone" },
                 "|form#player-form": {
-                    "|fieldset": {
+                    "|fieldset.name-fieldset": {
                         "|label": { 
                             _: "Your Name:",
                             "@": { for: "player-name" }
                         },
-                        "|input#player-name": {
+                        "|input#player-name.base-input": {
                             "@": { 
                                 type: "text", 
                                 placeholder: "Enter your name", 
@@ -196,8 +195,8 @@ export const menuPlayGamePage: PageRenderer = ({ page }) => {
                 },
                 "|article.create-game.card": {
                     "|h3": { _: "Create a New Game" },
-                    "|button#create-lobby-btn": {
-                        _: "Create Game",
+                    "|button#create-lobby-btn .base-button .base-button--accent": {
+                        "|span": { _: "Create Game" },
                         "@": { type: "button" },
                         "%click": handleCreateLobby
                     },
@@ -209,9 +208,9 @@ export const menuPlayGamePage: PageRenderer = ({ page }) => {
                     }
                 },
                 "|article.join-game.card": {
-                    "|h3": { _: "Join a Lobby:" },
+                    "|h3": { _: "Join a Lobby" },
                     "|form#join-form": {
-                        "|input#lobby-code": {
+                        "|input#lobby-code.base-input": {
                             "@": { 
                                 type: "text", 
                                 placeholder: "Enter lobby code", 
@@ -226,8 +225,8 @@ export const menuPlayGamePage: PageRenderer = ({ page }) => {
                                 }
                             }
                         },
-                        "|button#join-lobby-btn": {
-                            _: "Join Game",
+                        "|button#join-lobby-btn .base-button .base-button--accent": {
+                            "|span": { _: "Join Game" },
                             "@": { type: "button" },
                             "%click": handleJoinLobby
                         }

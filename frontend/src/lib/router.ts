@@ -24,6 +24,7 @@ interface RouterOptions {
   pages: Record<string, PageRenderer>;
   containers: ContainerMap;
   redirects?: RedirectFn[];
+  state?: Record<string, any>;
 }
 
 export class PageRouter {
@@ -140,5 +141,16 @@ export class PageRouter {
     const globalState = this.globalState;
 
     renderer(this.containers, { globalState, onUpdate, onSubmit });
+  }
+
+  public updateState(state: Record<string, any>) {
+    this.globalState = {
+      ...this.globalState,
+      ...state,
+    };
+  }
+
+  public getState() {
+    return this.globalState;
   }
 }

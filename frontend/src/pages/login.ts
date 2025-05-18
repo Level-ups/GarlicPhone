@@ -18,7 +18,7 @@ export const loginPage: PageRenderer = ({ app }) => {
         "|p.login-subheading": {
           _: "Friends don’t let friends draw alone.",
         },
-        "|button#google-login-button.login-google-button": {
+        "|button#google-login-button.login-google-button.base-button": {
           "%click": (event) => {
             event.preventDefault();
             startGoogleLogin(event as MouseEvent);
@@ -26,7 +26,7 @@ export const loginPage: PageRenderer = ({ app }) => {
           '@': {
             type: "button",
           },
-          "|p.login-google-button-text": { _: "Login with Google" },
+          "|span.login-google-button-text": { _: "Login with Google" },
           "|img.login-google-image": {
             "@": { src: googleLogo, alt: "Google" },
           },

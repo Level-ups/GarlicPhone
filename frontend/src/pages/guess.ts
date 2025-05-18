@@ -1,12 +1,13 @@
 import { sig, type Reactive } from "../lib/signal";
-import { titleCard } from "../components/menuNav";
+import { titleCard, titleNav } from "../components/menuNav";
 import { createImage, createInput } from "../components/ui";
+import { wrapAsCard } from "../lib/card";
 import { apiFetch } from "../lib/fetch";
-import { LIST_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
+import { LIST_FLEX_CONFIG, ROW_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
-import type { Lobby, WithClient } from "../services/lobbyService";
 import { timer } from "../lib/timer";
+import type { Lobby, WithClient } from "../services/lobbyService";
 
 export type Image = {
   id: number;
@@ -20,39 +21,53 @@ async function getImage(chainId: number): Promise<Image> {
 }
 
 export function createGuessPage(
-    title: string,
+    prompt: string,
     promptInput: Reactive<string>,
     callBack: () => void,
-    imgSrc?: Reactive<string>
+    imgSrc?: Reactive<string>,
+    timeInSeconds?: number
 ): ElemTree {
     return {
-        "|section": wrapAsFlex({
-            ...titleCard(title),
-            ...(imgSrc == null ? {} : createImage(imgSrc, "")),
-            ...createInput("Enter a prompt", promptInput),
-            ...timer(30),
-            // ...createButton("Submit", () => { /* visit("draw"); */ }),
-            // "|p.promptNudge": { _: der(() => `PROMPT: ${promptInput()}`) }
+        ...titleNav(),
+        "|main#guess-page-main": wrapAsFlex({
+            "|header#guess-page-header": {
+                ...wrapAsFlex({
+                    ...wrapAsCard({
+                        "|p.guess-text": {
+                            "_": prompt,
+                        }
+                    }, 'PromptCard', ['flex-main-item-size', 'card-with-overflow']),
+                    ...(timeInSeconds? {
+                        ...wrapAsCard({
+                            ...timer(timeInSeconds)
+                        }, 'TimerCard', ['flex-equal-size-item', 'card-with-overflow'])
+                    }: {}),
+                }, ROW_FLEX_CONFIG),
+            },
+            ...(imgSrc ? {
+                ...wrapAsCard({
+                    ...createImage(imgSrc, ""),
+                }, 'GuessImageCard'),
+            }: {}),
+            ...wrapAsCard({
+                ...wrapAsFlex({
+                    ...createInput("Enter a prompt", promptInput),
+                   "|button.base-button.base-button--accent": {
+                          "|span": { _: "Submit" },
+                       "%click": () => {
+                           callBack();
+                       }
+                   }
+                }, ROW_FLEX_CONFIG)
+            }, 'GuessImagePromptCard')
         }, LIST_FLEX_CONFIG)
     };
 }
 
-// Flag to track if event listeners have been attached
-let guessPageListenersAttached = false;
 
-// Function to clean up event listeners when page is unloaded
-function cleanupGuessPageListeners() {
-    if (guessPageListenersAttached && sseHandler) {
-        sseHandler.removeEventListener("after_lobby_update", afterLobbyUpdateHandler);
-        guessPageListenersAttached = false;
-    }
-}
-
-// Event handler function
 async function afterLobbyUpdateHandler(e: Event) {
     const lobby: WithClient<Lobby> = JSON.parse((e as any).data);
     
-    // Find the assignment for the current player
     const playerAssignment = lobby.phasePlayerAssignments.find(
         assignment => assignment.player.id === Number(lobby.players[lobby.clientIndex].id)
     );
@@ -78,9 +93,7 @@ async function uploadPrompt(chainId: number, index: number, text: string, userId
 
 async function beforeLobbyUpdateHandler(e: Event) {
     const lobby: WithClient<Lobby> = JSON.parse((e as any).data);
-    log("Before Lobby Update (prompts/guess)", lobby);
     
-    // Find the assignment for the current player
     const playerAssignment = lobby.phasePlayerAssignments.find(
         assignment => assignment.player.id === Number(lobby.players[lobby.clientIndex].id)
     );
@@ -95,7 +108,6 @@ async function beforeLobbyUpdateHandler(e: Event) {
     }
 }
 
-// Store signals in variables that can be accessed by the handlers
 let promptInputSignal: ReturnType<typeof sig<string>>;
 let imgSrcSignal: ReturnType<typeof sig<string>>;
 
@@ -104,24 +116,13 @@ export const guessPage: PageRenderer = ({ page }) => {
     imgSrcSignal = sig<string>("https://picsum.photos/200");
     const promptInput = promptInputSignal;
     const imgSrc = imgSrcSignal;
-
-    // Attach event listeners only if they haven't been attached yet
-    if (!guessPageListenersAttached && sseHandler) {
-        sseHandler.addEventListener("after_lobby_update", afterLobbyUpdateHandler);
-        sseHandler.addEventListener("before_lobby_update", beforeLobbyUpdateHandler);
-        guessPageListenersAttached = true;
-        
-        // Add cleanup when page is unloaded
-        window.addEventListener("beforeunload", cleanupGuessPageListeners);
-    }
-
-    // Render page
     isolateContainer("page");
 
     return parseInto(page, createGuessPage(
         "Time to guess - take a swing!",
         promptInput,
         () => { /* visit("draw") */ },
-        imgSrc
+        imgSrc,
+        30
     ));
 }
