@@ -5,7 +5,7 @@ import { ErrorDetails, InsertErrorDetails, NotFoundErrorDetails, UnauthorizedErr
 import { broadcastLobbyUpdate } from '../library/lobbyEventBroadcaster';
 import { PhasePlayerAssignment } from "../models/PhasePlayerAssignment";
 import * as lobbyRepository from '../repositories/lobbyRepository';
-import { Either } from '../../../lib/types';
+import { Either } from '../library/types';
 
 // Create a new lobby
 export const createLobby = (hostId: number, hostName: string, hostAvatarUrl: string, maxPlayers = constants.MAXIMUM_PLAYERS): Either<Lobby, ErrorDetails> => {

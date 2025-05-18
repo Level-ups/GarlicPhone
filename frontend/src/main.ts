@@ -1,4 +1,4 @@
-import './style.css'
+import './lobbyStyle.css'
 import { PageRouter, type ContainerMap, type PageRenderer, type RedirectFn } from './lib/router'
 import { loginPage } from './pages/login';
 import { menuGalleryPage } from './pages/menuGallery';
@@ -10,11 +10,23 @@ import { guessPage } from './pages/guess';
 import { reviewPage } from './pages/review';
 import { homePage } from './pages/home';
 import { updateSSEHandler } from './lib/sse';
+import { menuPlayGamePage } from './pages/menuPlayGame';
+import { demoPage } from './pages/demo';
 
 //---------- Setup ----------//
 const containers: ContainerMap = {
   "app": document.getElementById("app")!,
   "page": document.getElementById("page")!
+};
+
+(window as any).DEBUG = true;
+(window as any).log = function(...params: any[])   { if (DEBUG) console.log(...params) };
+(window as any).error = function(...params: any[]) { if (DEBUG) console.error(...params) };
+
+declare global {
+  const DEBUG: boolean;
+  function log(...data: any[]): void;
+  function error(...data: any[]): void;
 };
 
 //---------- Page routing ----------//
@@ -23,17 +35,20 @@ const pages: { [key: string]: PageRenderer } = {
   "login": c => loginPage(c),
   "menuGallery": c => menuGalleryPage(c),
   "menuPlay": c => menuPlayPage(c),
+  "menuPlayGame": c => menuPlayGamePage(c),
   "lobby": c => lobbyPage(c),
   "prompt": c => promptPage(c),
   "draw": c => drawPage(c),
   "guess": c => guessPage(c),
-  "review": c => reviewPage(c)
+  "review": c => reviewPage(c),
+  "demo": c => demoPage(c)
 };
  
 const redirects: RedirectFn[] = [
   path => path === '/'        ? 'home' : null,
   path => path === '/login'   ? 'login' : null,
   path => path === '/play'    ? 'menuPlay' : null,
+  path => path === '/playgame' ? 'menuPlayGame' : null,
   path => path === '/gallery' ? 'menuGallery' : null,
 
   path => path === '/game'    ? 'menuPlay' : null,
@@ -43,7 +58,9 @@ const redirects: RedirectFn[] = [
   path => path === '/guess'   ? 'guess' : null,
   path => path === '/draw'    ? 'draw' : null,
 
-  path => path === '/review'  ? 'review' : null
+  path => path === '/review'  ? 'review' : null,
+
+  path => path === '/demo'  ? 'demo' : null
 ];
 
 const router = new PageRouter({ pages, redirects, containers });
@@ -51,5 +68,3 @@ const router = new PageRouter({ pages, redirects, containers });
 // Trigger navigation via buttons:
 document.getElementById('toAbout')?.addEventListener('click', () => visit('about'));
 document.getElementById('toContact')?.addEventListener('click', () => visit('contact'));
-
-updateSSEHandler()

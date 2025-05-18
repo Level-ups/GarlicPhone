@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
-import userRepository from '../repositories/userRepository';
+import userRepository from '../repositories/userRepository.js';
 
 const googleJWKs = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
 

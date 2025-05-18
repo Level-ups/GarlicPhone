@@ -1,4 +1,3 @@
-import { NAV_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { forEl, type ElemTree } from "../lib/parse";
 import garlicPhoneLogo from "/assets/logo.svg";
 
@@ -28,7 +27,7 @@ export function menuNav(): ElemTree {
       "|img.nav-logo": {
         "@": { src: garlicPhoneLogo, alt: "Garlic Phone" },
       },
-      "|div.nav-buttons": {
+      "|section.nav-buttons": {
         ...forEl(links, (_, l) => createLink(l)),
       },
 
@@ -37,12 +36,13 @@ export function menuNav(): ElemTree {
   };
 }
 
-export function titleCard(title: string): ElemTree {
+export function titleCard(title: string, showLogo: boolean = true): ElemTree {
   return {
     "|nav.nav.card": {
       "|h1.large-heading": { _: title },
       $: {
-        marginBottom: "2em",
+        marginBottom: showLogo ? "2em" : "1em",
+        ...(showLogo ? { padding: "0" } : {}),
         textAlign: "center",
       },
     },

@@ -1,5 +1,5 @@
 import { UUID } from 'crypto';
-import { Either } from '../../../lib/types';
+import { Either } from '../library/types';
 import { constants } from '../library/constants';
 import { ErrorDetails, InsertErrorDetails, NotFoundErrorDetails } from '../library/error-types';
 import { broadcastLobbyUpdate } from '../library/lobbyEventBroadcaster';

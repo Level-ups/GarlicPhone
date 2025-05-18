@@ -20,11 +20,19 @@ import { cleanupExpiredLobbies } from './services/lobbyService';
 import { authenticateRequest, requireRole } from './library/authMiddleware';
 import { validateLobbyUrlId } from './models/Lobby';
 
-//---------- SETUP ----------//
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
+// “__dirname” and “__filename” aren’t built-in under ESM,
+// so we derive them from import.meta.url:
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+
+//---------- SETUP ----------//
+//
 // Load environment variables
 dotenv.config();
-
 // Initialize express app
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;

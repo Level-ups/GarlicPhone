@@ -1,5 +1,6 @@
-import { bind, der, eff, maybeBind, maybeSub, multiSub, sig, type MaybeReactive, type Reactive } from "../../../lib/signal";
-import { generate, randHex, tryCall } from "../../../lib/types";
+import { bind, der, eff, maybeBind, maybeSub, multiSub, sig, type MaybeReactive, type Reactive } from "./signal";
+
+export type Generator<T, Args extends any[] = []> = T | ((...args: Args) => T);
 
 //-------------------- Types --------------------//
 export type ElemTree_Meta = {
@@ -114,7 +115,7 @@ export function parse(tree: ElemTree, par: ElemData = createEmptyElemData()): HT
                 const childData = createEmptyElemData();
                 const tokData = parseElemToken(tok);
                 if (typeof tokData === "string") {
-                    console.error(`Invalid element token:\n${tok}\n${tokData}`);
+                    error(`Invalid element token:\n${tok}\n${tokData}`);
                     break;
                 }
                 [childData.tag, childData.id, childData.classList] = tokData;
@@ -240,11 +241,28 @@ export function react(sigs: Reactive<any>[], tree: ElemTreeGenerator): ElemTree 
         [`|div #${reactiveId} .reactiveParent`]: {
             "%": (el: HTMLElement) => multiSub(sigs, () => {
                 el.innerHTML = "";
-                parseInto(el, generate(tree, []));
+                parseInto(el, generate(tree as any, []));
             }),
             ...tree
         }
     };
+}
+
+// If the object is a function, call it
+// Otherwise, return it's value
+export function tryCall<T>(x: T, args: any[] = []) {
+  if (typeof x === "function") return x(...args);
+  return x;
+}
+
+// Run generator with args if its a function, otherwise just return it's value
+export function generate<T, Args extends any[]>(x: Generator<T, Args>, args: Args): T {
+  return (typeof x === "function") ? (x as (_: Args) => T)(args) : x as any;
+}
+
+// Generate a random hexadecimal string of length `n`
+export function randHex(n: number) {
+  return [...Array(n)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
 }
 
 
@@ -267,7 +285,7 @@ const elemTreeSpec: ElemTree = {
     },
 
     // %<event> allows calling functions on HTML element events
-    "%click": (_: Event) => { console.log("Do something here"); },
+    "%click": (_: Event) => { log("Do something here"); },
 
     // @ allows arbitrary attribute overrides
     // Setting the `style`, `class`, and `id` attributes here is forbidden
@@ -298,7 +316,7 @@ function signalSpec(): ElemTree {
     count(x => x * 2)       // New value is 10
 
     // Create reactive effect which runs when either `count` or `prog` changes
-    eff(() => console.log("COUNT EFFECT:", count(), prog()));
+    eff(() => log("COUNT EFFECT:", count(), prog()));
 
     return {
         "|input": { _: "asdf" }, // TODO: two-way input binding

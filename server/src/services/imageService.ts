@@ -1,4 +1,4 @@
-import { Either } from "../../../lib/types";
+import { Either } from "../library/types";
 import { ErrorDetails, InsertErrorDetails, NotFoundErrorDetails } from "../library/error-types";
 import { Image, ImageUploadDto, InsertImageDto } from "../models/Image";
 import imageRepository from "../repositories/imageRepository";

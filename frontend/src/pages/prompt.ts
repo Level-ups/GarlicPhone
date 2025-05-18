@@ -1,4 +1,4 @@
-import { sig } from "../../../lib/signal";
+import { sig } from "../lib/signal";
 import { apiFetch } from "../lib/fetch";
 import { parseInto } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
@@ -24,6 +24,10 @@ let promptInputSignal: ReturnType<typeof sig<string>>;
 // Event handler function
 async function beforeLobbyUpdateHandler(e: Event) {
     const lobby: WithClient<Lobby> = JSON.parse((e as any).data);
+<<<<<<< HEAD
+=======
+    log("Before Lobby Update (prompts/guess)", lobby);
+>>>>>>> baf4f92a39b216f49a1eeab814e6c103cef986b2
     
     // Find the assignment for the current player
     const playerAssignment = lobby.phasePlayerAssignments.find(

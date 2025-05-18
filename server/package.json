@@ -2,11 +2,16 @@
   "name": "express-typescript-api",
   "version": "1.0.0",
   "description": "Minimal Express API server using TypeScript",
-  "main": "dist/index.js",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' tsc",
+    "dev_old": "ts-node-dev --watch --poll --respawn --transpile-only src/index.ts",
+    "build_old": "NODE_OPTIONS='--max-old-space-size=4096' tsc",
+
+    "dev": "sh -c \"vite --config vite.config.ts\"",
+    "build": "sh -c \"vite build --config vite.config.ts\"",
     "start": "node dist/index.js",
-    "dev": "ts-node-dev --watch --poll --respawn --transpile-only src/index.ts",
+
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint . --ext .ts",
@@ -45,6 +50,9 @@
     "supertest": "^6.3.3",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3",
+    "vite": "^6.3.5",
+    "vite-plugin-dts": "^4.5.4",
+    "vite-plugin-node": "^5.0.1",
     "vitest": "^3.1.2"
   }
 }

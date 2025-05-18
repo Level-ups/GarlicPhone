@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { importJWK, JWK, jwtVerify } from 'jose';
+
 import { constants } from '../library/constants';
 import { ErrorDetails, ValidationErrorDetails } from '../library/error-types';
 import userService from '../services/userService';
@@ -97,7 +98,7 @@ router.get('/callback', async (req, res) => {
       }
     }
 
-    res.redirect(`/lobby?token=${idToken}`);
+    res.redirect(`/playgame?token=${idToken}`);
   } catch (error) {
     console.error('Error during OAuth callback handling:', error);
     return res.status(500).send('Internal Server Error');

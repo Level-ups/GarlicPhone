@@ -1,4 +1,4 @@
-import { der, eff, sig } from "../../../lib/signal";
+import { der, eff, sig } from "./signal";
 import type { ElemTree } from "./parse";
 
 export function timer(seconds: number, callback: () => void = () => {}): ElemTree {

@@ -1,4 +1,4 @@
-import { der, sig, type Reactive } from "../../../lib/signal";
+import { sig, type Reactive } from "../lib/signal";
 import { titleCard, titleNav } from "../components/menuNav";
 import { createImage, createInput } from "../components/ui";
 import { wrapAsCard } from "../lib/card";

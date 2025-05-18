@@ -1,7 +1,7 @@
-import { der, sig } from "../../../lib/signal";
-import { titleCard } from "../components/menuNav";
+import { der, sig } from "../lib/signal";
+import { menuNav, titleCard } from "../components/menuNav";
 import { createChainDisplay, createItemList, type ChainInfo } from "../components/ui";
-import { wrapAsCard, wrapAsRowCards } from "../lib/card";
+import { wrapAsRowCards } from "../lib/card";
 import { apiFetch } from "../lib/fetch";
 import { parseInto, react } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
@@ -59,19 +59,25 @@ export const reviewPage: PageRenderer = ({ page }) => {
     const chains = chainsSignal;
 
     // Attach event listeners only if they haven't been attached yet
-    // if (!reviewPageListenersAttached && sseHandler) {
-    //     sseHandler.addEventListener("after_lobby_update", afterLobbyUpdateHandler);
-    //     reviewPageListenersAttached = true;
-        
-    //     // Add cleanup when page is unloaded
-    //     window.addEventListener("beforeunload", cleanupReviewPageListeners);
-    // }
+    try {
+        if (!reviewPageListenersAttached && sseHandler) {
+            sseHandler.addEventListener("after_lobby_update", afterLobbyUpdateHandler);
+            reviewPageListenersAttached = true;
+            
+            // Add cleanup when page is unloaded
+            window.addEventListener("beforeunload", cleanupReviewPageListeners);
+        }
+    } catch (e) {
+        if (e instanceof ReferenceError) { error("Cannot get value", e.message); }
+        else { error(e); }
+    }
 
     isolateContainer("page");
 
     // Render page
     parseInto(page, {
-        ...titleCard("Review"),
+        ...menuNav(),
+        ...titleCard("Review", false),
         ...react([selectedChain, chains], () => 
             wrapAsRowCards({
             ...createItemList(chains(), (i, _) => { selectedChain(i); }),

@@ -1,4 +1,4 @@
-import { bind, der, sig, type Reactive } from "../../../lib/signal";
+import { bind, der, sig, type Reactive } from "../lib/signal";
 import { forEl, parse, type ElemTree } from "../lib/parse";
 
 export function defineCustomElem (
@@ -136,18 +136,30 @@ export function createToggleSwitch(
   };
 }
 
-export function createImage(
-  src: Reactive<string>,
-  alt: string = ''
-): ElemTree {
+export function createImage(url: Reactive<string>, alt: string = "image"): ElemTree {
+  const isLoaded = sig(false);
+
   return {
-    '|div.image-wrapper': {
-      '|img.responsive-img': {
-        '@': { src, alt },
+    "|section.image-wrapper": {
+      "|section.loader": {
+        $: { display: der(() => [url(), isLoaded()][1] ? "none" : "block") },
+        _: "Loading image..."
+      },
+      "|img.responsive-img": {
+        "@": { src: url, alt },
+        $: {
+          display: der(() => [url(), isLoaded()][1] ? "block" : "none"),
+          maxWidth: "100%",
+          margin: "0 auto",
+          borderRadius: "12px",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)"
+        },
+        "%load": () => isLoaded(true)
       }
     }
   };
 }
+
 
 export function createItemList<T extends { name: string }>(
   items: T[],
@@ -188,13 +200,13 @@ export function createChainDisplay(links: ChainLink[]): ElemTree {
   function renderLink(link: ChainLink): ElemTree {
     if (link.type === 'prompt') {
       return {
-        '|div.chat-row.left': {
+        '|section.chat-row.left': {
           '|p.prompt-bubble': { _: link.prompt }
         }
       };
     } else {
       return {
-        '|div.chat-row.right': {
+        '|section.chat-row.right': {
           '|img.chat-image': {
             '@': { src: link.url, alt: "Chat image" },
             '%click': () => {
@@ -207,19 +219,22 @@ export function createChainDisplay(links: ChainLink[]): ElemTree {
     }
   }
 
+  function handleModalMouseEvent(e: Event) {
+    if ((e.target as HTMLElement).id === 'image-modal') {
+      showModal(false);
+    }
+  }
+
+
   return {
     '|section.chat-container': {
       ...forEl(links, (_, link) => renderLink(link)),
 
       // Modal overlay
-      '|div#image-modal.modal-overlay': {
-        $: { display: der(() => showModal() ? 'flex' : 'none') },
-
-        '%click': (e: Event) => {
-          if ((e.target as HTMLElement).id === 'image-modal') {
-            showModal(false);
-          }
-        },
+      '|figure#image-modal.modal-overlay': {
+          $: { display: der(() => showModal() ? 'flex' : 'none') },
+          '%click': handleModalMouseEvent,
+          "%mouseleave": handleModalMouseEvent,
         '|img.modal-image': { "@": { src: modalImage } }
       }
     }
