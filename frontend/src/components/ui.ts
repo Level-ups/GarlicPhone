@@ -42,8 +42,8 @@ export function createButton(
   onClick: (e: Event) => void = () => {}
 ): ElemTree {
   return {
-    '|button.gradient-btn': {
-      _: label,
+    '|button.base-button': {
+      "|span": { _: label },
       '%click': onClick
     }
   };

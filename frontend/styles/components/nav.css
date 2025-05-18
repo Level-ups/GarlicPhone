@@ -17,9 +17,7 @@
 }
 
 .nav-title{
-    font-size: 3rem;
     font-family: "Rock Salt", cursive;
-    color: black;
     margin-right: 1rem;
     font-weight: 600;
     /* text-decoration: underline; */
@@ -29,4 +27,13 @@
   font-style: normal;
     font-style: italic;
     text-shadow: .1rem .1rem black;
+}
+
+.menuButton{
+  border-radius: 2rem;
+  border: black 2px solid;
+  background-color: white;
+  color: var(--black);
+  padding: 0.5rem 1rem;
+  box-shadow: .1rem .2rem ;
 }
