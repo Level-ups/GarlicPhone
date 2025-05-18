@@ -3,7 +3,6 @@ import { PageRouter, type ContainerMap, type PageRenderer, type RedirectFn } fro
 import { loginPage } from './pages/login';
 import { menuGalleryPage } from './pages/menuGallery';
 import { drawPage } from './pages/draw';
-import { menuPlayPage } from './pages/menuPlay';
 import { lobbyPage } from './pages/lobby';
 import { promptPage } from './pages/prompt';
 import { guessPage } from './pages/guess';
@@ -33,8 +32,7 @@ const pages: { [key: string]: PageRenderer } = {
   "home":         homePage,
   "login":        loginPage,
   "menuGallery":  menuGalleryPage,
-  "menuPlay":     menuPlayPage,
-  "menuPlayGame": menuPlayGamePage,
+  "menuPlay":     menuPlayGamePage,
   "lobby":        lobbyPage,
   "prompt":       promptPage,
   "draw":         drawPage,
@@ -46,10 +44,8 @@ const pages: { [key: string]: PageRenderer } = {
 const redirects: RedirectFn[] = [
   path => path === '/'        ? 'home' : null,
   path => path === '/login'   ? 'login' : null,
-  path => path === '/play' ? 'menuPlayGame' : null,
+  path => path === '/play'    ? 'menuPlay' : null,
   path => path === '/gallery' ? 'menuGallery' : null,
-
-  path => path === '/game'            ? 'menuPlay' : null,
 
   path => path.startsWith('/lobby')   ? 'lobby' : null,
   path => path === '/prompt'          ? 'prompt' : null,

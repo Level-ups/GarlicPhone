@@ -6,7 +6,12 @@ export type AlertSubHelper = (listener: AlertCallback) => void
 export type GlobalState = { [key: string]: any };
 export type PageRenderer = (
   containers: ContainerMap,
-  other: { globalState: GlobalState, onUpdate: AlertSubHelper, onSubmit: AlertSubHelper }
+  other: {
+    params: Params,
+    globalState: GlobalState,
+    onUpdate: AlertSubHelper,
+    onSubmit: AlertSubHelper
+  }
 ) => void;
 
 export type RedirectFn = (path: string) => string | null;
@@ -15,8 +20,10 @@ export type ContainerMap = { [key: string]: HTMLElement } & {
   page: HTMLElement;
 };
 
+type Params = { [key: string]: any };
+
 declare global {
-  function visit(page: string): void;
+  function visit(page: string, params?: Params): void;
   function isolateContainer(container: string): void;
 }
 
@@ -43,7 +50,7 @@ export class PageRouter {
   private sseHandlers: SSEHandlers = {
     "update": (alert) =>     { this.onUpdateSubs.forEach(fn => fn(alert)); },
     "submission": (alert) => { this.onSubmitSubs.forEach(fn => fn(alert)); },
-    "transition": (alert) => { visit(alert.phaseType); }
+    "transition": (alert) => { visit(alert.phaseType, { alert }); }
   };
 
 
@@ -100,13 +107,13 @@ export class PageRouter {
   }
 
   // Redirect to specific page in `pages`
-  public visit(page: string): void {
+  public visit(page: string, params: Params = {}): void {
     if (!this.pages[page]) {
       console.warn(`Page "${page}" not found, staying on current page.`);
       return;
     }
     history.pushState({}, "", `/${page}`);
-    this.render(page);
+    this.render(page, params);
   }
 
   public isolateContainer(container: keyof ContainerMap | "all") {
@@ -119,7 +126,7 @@ export class PageRouter {
   }
 
   // Clear page content & render new page
-  private render(page: string): void {
+  private render(page: string, params: Params = {}): void {
     // Remove subscribers from previous page
     this.onUpdateSubs = [];
     this.onSubmitSubs = [];
@@ -140,7 +147,7 @@ export class PageRouter {
     const onSubmit = (listener: (alert: any) => void) => { this.onUpdateSubs.push(listener); };
     const globalState = this.globalState;
 
-    renderer(this.containers, { globalState, onUpdate, onSubmit });
+    renderer(this.containers, { params, globalState, onUpdate, onSubmit });
   }
 
   public updateState(state: Record<string, any>) {

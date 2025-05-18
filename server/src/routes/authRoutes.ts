@@ -83,7 +83,7 @@ router.get('/callback', async (req, res) => {
       audience: clientId,
     });
  
-    if(payload.sub){
+    if(payload.sub) {
       const [user, error] = await userService.getUserByGoogleId(payload.sub);
       if (!user) {
         const newUser = await userService.createUser({
@@ -98,7 +98,7 @@ router.get('/callback', async (req, res) => {
       }
     }
 
-    res.redirect(`/playgame?token=${idToken}`);
+    res.redirect(`/play?token=${idToken}`);
   } catch (error) {
     console.error('Error during OAuth callback handling:', error);
     return res.status(500).send('Internal Server Error');

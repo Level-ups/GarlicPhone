@@ -1,13 +1,12 @@
 import { sig, type Reactive } from "../lib/signal";
-import { titleCard, titleNav } from "../components/menuNav";
-import { createImage, createInput } from "../components/ui";
+import { titleNav } from "../components/menuNav";
+import { createImage, createInput, type ChainLink } from "../components/ui";
 import { wrapAsCard } from "../lib/card";
 import { apiFetch } from "../lib/fetch";
 import { LIST_FLEX_CONFIG, ROW_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 import { timer } from "../lib/timer";
-import type { Lobby, WithClient } from "../services/lobbyService";
 
 export type Image = {
   id: number;
@@ -22,8 +21,9 @@ async function getImage(chainId: number): Promise<Image> {
 
 export function createGuessPage(
     prompt: string,
+    type: "guess" | "prompt",
     promptInput: Reactive<string>,
-    callBack: () => void,
+    callback: () => void,
     imgSrc?: Reactive<string>,
     timeInSeconds?: number
 ): ElemTree {
@@ -33,9 +33,7 @@ export function createGuessPage(
             "|header#guess-page-header": {
                 ...wrapAsFlex({
                     ...wrapAsCard({
-                        "|p.guess-text": {
-                            "_": prompt,
-                        }
+                        "|p.guess-text": { "_": prompt, }
                     }, 'PromptCard', ['flex-main-item-size', 'card-with-overflow']),
                     ...(timeInSeconds? {
                         ...wrapAsCard({
@@ -51,12 +49,10 @@ export function createGuessPage(
             }: {}),
             ...wrapAsCard({
                 ...wrapAsFlex({
-                    ...createInput("Enter a prompt", promptInput),
+                    ...createInput(`Enter a ${type}`, promptInput),
                    "|button.base-button.base-button--accent": {
                           "|span": { _: "Submit" },
-                       "%click": () => {
-                           callBack();
-                       }
+                       "%click": callback
                    }
                 }, ROW_FLEX_CONFIG)
             }, 'GuessImagePromptCard')
@@ -64,62 +60,26 @@ export function createGuessPage(
     };
 }
 
-
-async function afterLobbyUpdateHandler(e: Event) {
-    const lobby: WithClient<Lobby> = JSON.parse((e as any).data);
-    
-    const playerAssignment = lobby.phasePlayerAssignments.find(
-        assignment => assignment.player.id === Number(lobby.players[lobby.clientIndex].id)
-    );
-    
-    if (playerAssignment) {
-        const image = await getImage(playerAssignment.chain.id);
-        imgSrcSignal(image.s3Url);
-    }
-}
-
-async function uploadPrompt(chainId: number, index: number, text: string, userId: number) {
-    
+async function uploadPrompt() {
     const res = await apiFetch("post", "/api/prompts", {
-        chainId,
-        index,
-        text,
-        userId
-    });
+        link: { type: "image", url: "" }
+    } as { link: ChainLink });
 
-    const data = await res.json()  
+    const data = await res.json();
     return data;
 }
 
-async function beforeLobbyUpdateHandler(e: Event) {
-    const lobby: WithClient<Lobby> = JSON.parse((e as any).data);
-    
-    const playerAssignment = lobby.phasePlayerAssignments.find(
-        assignment => assignment.player.id === Number(lobby.players[lobby.clientIndex].id)
-    );
-    
-    if (playerAssignment) {
-        const uploadedPrompt = await uploadPrompt(
-            playerAssignment.chain.id, 
-            lobby.phases.index, 
-            promptInputSignal(), 
-            Number(lobby.players[lobby.clientIndex].id)
-        );
-    }
-}
+export const guessPage: PageRenderer = ({ page }, { onSubmit }) => {
+    const promptInput = sig<string>("asdf");
+    const imgSrc = sig<string>("https://picsum.photos/200");
 
-let promptInputSignal: ReturnType<typeof sig<string>>;
-let imgSrcSignal: ReturnType<typeof sig<string>>;
+    onSubmit(() => { uploadPrompt(); });
 
-export const guessPage: PageRenderer = ({ page }) => {
-    promptInputSignal = sig<string>("");
-    imgSrcSignal = sig<string>("https://picsum.photos/200");
-    const promptInput = promptInputSignal;
-    const imgSrc = imgSrcSignal;
     isolateContainer("page");
 
     return parseInto(page, createGuessPage(
         "Time to guess - take a swing!",
+        "guess",
         promptInput,
         () => { /* visit("draw") */ },
         imgSrc,
