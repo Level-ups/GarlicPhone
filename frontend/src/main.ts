@@ -1,4 +1,4 @@
-import './lobbyStyle.css'
+
 import { PageRouter, type ContainerMap, type PageRenderer, type RedirectFn } from './lib/router'
 import { loginPage } from './pages/login';
 import { menuGalleryPage } from './pages/menuGallery';
@@ -47,8 +47,8 @@ const pages: { [key: string]: PageRenderer } = {
 const redirects: RedirectFn[] = [
   path => path === '/'        ? 'home' : null,
   path => path === '/login'   ? 'login' : null,
-  path => path === '/play'    ? 'menuPlay' : null,
-  path => path === '/playgame' ? 'menuPlayGame' : null,
+  // path => path === '/play'    ? 'menuPlay' : null,
+  path => path === '/play' ? 'menuPlayGame' : null,
   path => path === '/gallery' ? 'menuGallery' : null,
 
   path => path === '/game'    ? 'menuPlay' : null,

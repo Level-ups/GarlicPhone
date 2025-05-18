@@ -1,4 +1,4 @@
-import { titleCard, titleNav } from "../components/menuNav";
+import { menuNav, titleCard, titleNav } from "../components/menuNav";
 import { createButton, createInput, createItemList } from "../components/ui";
 import { wrapAsCard } from "../lib/card";
 import { apiFetch } from "../lib/fetch";
@@ -8,6 +8,10 @@ import type { PageRenderer } from "../lib/router";
 import { der, sig, type Signal } from "../lib/signal";
 import { updateSSEHandler } from "../lib/sse";
 import type { Lobby, WithClient } from "../services/lobbyService";
+import batAvatar from "/assets/avatars/avatar-batman-comics-svgrepo-com.svg";
+import presidentAvatar from "/assets/avatars/avatar-male-president-svgrepo-com.svg";
+import zombieAvatar from "/assets/avatars/avatar-dead-monster-svgrepo-com.svg";
+import avocadoAvatar from "/assets/avatars/avatar-avocado-food-svgrepo-com.svg";
 
 type PlayerInfo = {
   id: number;
@@ -138,40 +142,109 @@ export const lobbyPage: PageRenderer = ({ page }) => {
   isolateContainer("page");
 
   // Render page
-  return parseInto(page, {
-    ...titleNav(),
-    ...wrapAsFlex(
-      {
-        ...wrapAsCard({
-          ...createButton("Login", () => {
-            visit("login");
-          }),
-          ...createInput("Lobby Code", lobbyCode),
-          ...react([message], () => wrapAsCard({ _: `Error: ${message()}` })),
-          $: {
-            textAlign: "center",
-            width: "50%",
-          },
-        }),
-        ...wrapAsCard(
-          {
-            "|p#lobbyCode": {
-              _: lobbyCode,
-            },
-          },
-          "Lobby Code"
-        ),
-        ...react([players], () => createItemList(players())),
-      },
-      DEFAULT_FLEX_CONFIG
-    ),
-    "|button.base-button.base-button--accent": {
-      "|span": { _: "Play" },
+  //   return parseInto(page, {
+  //     ...titleNav(),
+  //     ...wrapAsFlex(
+  //       {
+  //         ...wrapAsCard({
+  //           ...createButton("Login", () => {
+  //             visit("login");
+  //           }),
+  //           ...createInput("Lobby Code", lobbyCode),
+  //           ...react([message], () => wrapAsCard({ _: `Error: ${message()}` })),
+  //           $: {
+  //             textAlign: "center",
+  //             width: "50%",
+  //           },
+  //         }),
+  //         ...wrapAsCard(
+  //           {
+  //             "|p#lobbyCode": {
+  //               _: lobbyCode,
+  //             },
+  //           },
+  //           "Lobby Code"
+  //         ),
+  //         ...react([players], () => createItemList(players())),
+  //       },
+  //       DEFAULT_FLEX_CONFIG
+  //     ),
+  //     "|button.base-button.base-button--accent": {
+  //       "|span": { _: "Play" },
 
-      "%click": () => {
-        if (gameId != "") startGame(gameId, playerId);
+  //       "%click": () => {
+  //         if (gameId != "") startGame(gameId, playerId);
+  //       },
+  //       $: { display: der(() => (isHost() ? "inline-block" : "none")) },
+  //     },
+  //   });
+
+  return parseInto(page, {
+    ...menuNav(),
+    "|section.lobby-page": {
+      "|article.card.lobby-info": {
+        "|section.lobby-code": {
+          "|div.lobby-code-info": {
+            "|p": { _: "Lobby Code" },
+            "|h2.lobby-code-title": { _: "123456" },
+          },
+
+          "|button.base-button.base-button--danger.leave-lobby-btn": {
+            "|span": { _: "Leave lobby" },
+          },
+        },
       },
-      $: { display: der(() => (isHost() ? "inline-block" : "none")) },
+      "|article.card.lobby-players": {
+        "|seciton.lobby-players-info": {
+             "|p.lobby-players-title": { _: "Players in lobby" },
+             "|p.lobby-players-count": {_ : "2/8" },
+        },
+        "|ul.lobby-players-list": {
+            // ...createItemList(players(), (index, player) => ({
+            //     "|li.lobby-player": {
+            //     "|span.lobby-player-name": { _: player.name },
+            //     "|span.lobby-player-status": {
+            //         _: player.isReady ? "Ready" : "Not Ready",
+            //     },
+            //     $: {
+            //         backgroundColor: der(() =>
+            //         player.isReady ? "#4CAF50" : "#f44336"
+            //         ),
+            //     },
+            //     },
+            // })),
+            "|li.lobby-player#1": {
+                "|img.lobby-player-avatar": {
+                    "@": { src: batAvatar, alt: "Player Avatar" },
+                },
+                "|p.lobby-player-name": { _: "Kyle" },
+            },
+             "|li.lobby-player#2": {
+                "|img.lobby-player-avatar": {
+                    "@": { src: presidentAvatar, alt: "Player Avatar" },
+                },
+                "|p.lobby-player-name": { _: "Kat" },
+            },
+             "|li.lobby-player#3": {
+                "|img.lobby-player-avatar": {
+                    "@": { src: zombieAvatar, alt: "Player Avatar" },
+                },
+                "|p.lobby-player-name": { _: "Dino" },
+            },
+            "|li.lobby-player#4": {
+                "|img.lobby-player-avatar": {
+                    "@": { src: avocadoAvatar, alt: "Player Avatar" },
+                },
+                "|p.lobby-player-name": { _: "Carl" },
+            },
+        },
+       
+      },
+      "|article.card.lobby-start": {
+        "|button.base-button.base-button--accent.start-game-btn": {
+            "|span": { _: "Start Game" },
+        },
+      },
     },
   });
 };

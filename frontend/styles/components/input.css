@@ -4,9 +4,10 @@
   padding: var(--padding-tiny);
   width: auto;
   flex: 1;
+  background-color: var(--yellow);
+  box-shadow: .2rem .3rem var(--black);
 }
 
 .base-input:focus {
   outline: none;
-  border-color: #007bff;
 }

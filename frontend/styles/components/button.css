@@ -53,7 +53,7 @@
     transform-origin: left;
     transform: skew(-20deg);
     z-index: 0;
-    transition: width 0.4s linear ;  
+    transition: width 0.3s ease-out ;  
 }
 
 .base-button:hover::after{
@@ -74,5 +74,14 @@
 }
 
 .base-button--accent::after{
+   filter: brightness(1.1);
+}
+
+.base-button--danger{
+    background-color: var(--red);
+    color: var(--white);
+}
+
+.base-button--danger::after{
    filter: brightness(1.1);
 }

@@ -122,6 +122,7 @@ export const guessPage: PageRenderer = ({ page }) => {
         "Time to guess - take a swing!",
         promptInput,
         () => { /* visit("draw") */ },
-        imgSrc
+        imgSrc,
+        30
     ));
 }

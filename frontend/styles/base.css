@@ -21,10 +21,10 @@
 :root {
   --white:  #EEEEEE;
   --grey:   #DDDDDD;
-  --yellow: #FBF3C1;
+  --yellow: #FADA7A;
   --green:  #64E2B7;
   --purple: #9B7EBD;
-  --red:    #D50B8B;
+  --red:    #DA6C6C;
   --navy:   #2A4759;
   --black:rgb(20, 30, 36);
 
@@ -49,10 +49,13 @@
   --padding-medium: 2rem;
   
   /* base border */
-  --border-standard: 0.2rem solid var(--border);
+  --border-standard: 2px solid var(--black);
   
   /* base radius */
   --border-radius-standard: 1rem;
+
+  /* base shadow */
+  --shadow-standard-small: 0.2rem 0.3rem var(--black);
 }
 
 /* Dark theme */
@@ -114,6 +117,20 @@ background-size: 80px 80px;
 background-position: 0 0,40px 40px; 
 }
 
+/* Extra large screens (e.g. 4K monitors) */
+@media (min-width: 1921px) {
+  html {
+    font-size: clamp(18px, 1vw + 1rem, 24px);
+  }
+}
+
+/* Large screens (e.g. desktops, 1440px and up) */
+@media (min-width: 1441px) and (max-width: 1920px) {
+  html {
+    font-size: clamp(16px, 1vw + 1rem, 20px);
+  }
+}
+
 /* Medium screens (tablet) */
 @media (max-width: 1200px) {
   html {
@@ -124,33 +141,33 @@ background-position: 0 0,40px 40px;
 /* Small screens (large phones) */
 @media (max-width: 992px) {
   html {
-      font-size: clamp(8px, 2vw + 1rem, 14px);
+    font-size: clamp(8px, 2vw + 1rem, 14px);
   }
 }
 
 /* Extra small screens (small phones) */
 @media (max-width: 768px) {
   html {
-      font-size: clamp(7px, 2vw + 1rem, 13px);
+    font-size: clamp(7px, 2vw + 1rem, 13px);
   }
 }
 
 /* Tiny screens (very small devices) */
 @media (max-width: 576px) {
   html {
-      font-size: clamp(6px, 2vw + 1rem, 12px);
+    font-size: clamp(6px, 2vw + 1rem, 12px);
   }
 }
 
 @media (max-width: 375px) {
   html {
-      font-size: clamp(5px, 2vw + 1rem, 11px);
+    font-size: clamp(5px, 2vw + 1rem, 11px);
   }
 }
 
 @media (max-width: 345px) {
   html {
-      font-size: clamp(4px, 2vw + 1rem, 10px);
+    font-size: clamp(4px, 2vw + 1rem, 10px);
   }
 }
 
@@ -168,6 +185,12 @@ body {
   margin: 0;
   display: flex;
   box-sizing: border-box;
+}
+
+fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
 }
 
 @keyframes gradient {
@@ -212,6 +235,9 @@ a {
   padding-bottom: var(--botPad);
   min-height: fit-content;
   /* border: 1px solid var(--dark_turquios); */
+  padding-left: 1rem;
+  padding-right: 1rem;
+  container-type: inline-size;
 }
   
 .btnGuess {

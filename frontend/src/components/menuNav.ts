@@ -8,8 +8,8 @@ type Link = {
 
 function createLink({ name, url }: Link): ElemTree {
   return {
-    "|a.menuButton": {
-      _: name,
+    "|a.menuButton.base-button": {
+      "|span": { _: name },
       "@": { href: url },
     },
   };
@@ -23,10 +23,13 @@ export function menuNav(): ElemTree {
 
   return {
     "|nav.nav.card": {
+      "|section.nav-info": {
         "|p.nav-title.large-heading": { _: "Garlic Phone" },
-      "|img.nav-logo": {
-        "@": { src: garlicPhoneLogo, alt: "Garlic Phone" },
+        "|img.nav-logo": {
+          "@": { src: garlicPhoneLogo, alt: "Garlic Phone" },
+        },
       },
+
       "|section.nav-buttons": {
         ...forEl(links, (_, l) => createLink(l)),
       },
