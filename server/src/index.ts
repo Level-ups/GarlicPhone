@@ -131,7 +131,7 @@ app.get('/api/lobbies/:lobbyId/events', createServerSentEventHandler(sendEvent =
     sendEvent('error', new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
 }));
-app.use('/api/games', gameRouter); // TODO: authenticateRequest
+app.use('/api/games', authenticateRequest, gameRouter); // TODO: authenticateRequest
 app.use('/api/users', authenticateRequest, userRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/lobbies', authenticateRequest, lobbyRouter);

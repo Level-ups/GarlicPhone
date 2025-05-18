@@ -18,6 +18,8 @@ const _1hr = 60_000;
 setInterval(clearStaleGames, _1hr);
 
 
+const sleep: ((ms: number) => void) = (ms) => new Promise(res => setTimeout(res, ms));
+
 //---------- Game manipulation ----------//
 
 const GAME_CODE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -78,20 +80,19 @@ function progressState(gameCode: GameCode): ProgressStateResult {
 
     //----- Gather player data -----//
     coord.broadcast(gameData.players, SUBMISSION_ALERT, "submission");
+    sleep(2000); // Wait for players to submit their data
 
-    setTimeout(() => {
-        //----- Progress phase -----//
-        gameData.phase += 1;
-        const timeStarted = Date.now();
+    //----- Progress phase -----//
+    gameData.phase += 1;
+    const timeStarted = Date.now();
 
-        //----- Transition -----//
-        // Alert all players of state transition
-        for(let pIdx = 0; pIdx < gameData.players.length; pIdx++) {
-            const alert = transition(pIdx, gameData, timeStarted);
+    //----- Transition -----//
+    // Alert all players of state transition
+    for(let pIdx = 0; pIdx < gameData.players.length; pIdx++) {
+        const alert = transition(pIdx, gameData, timeStarted);
 
-            coord.dispatch(pIdx, alert, "transition");
-        }
-    }, 1000);
+        coord.dispatch(pIdx, alert, "transition");
+    }
 
     return "success";
 }
