@@ -1,0 +1,12 @@
+.base-input {
+  border: var(--border-standard);
+  border-radius: var(--border-radius-standard);
+  padding: var(--padding-tiny);
+  width: auto;
+  flex: 1;
+}
+
+.base-input:focus {
+  outline: none;
+  border-color: #007bff;
+}

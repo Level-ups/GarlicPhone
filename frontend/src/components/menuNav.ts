@@ -52,11 +52,11 @@ export function titleCard(title: string): ElemTree {
 export function titleNav(): ElemTree {
   return {
     "|nav.nav.card": {
-      "|h1.large-heading.nav-title": { _: "Garlic Phone" },
+      "garlic|h1.large-heading.nav-title": { _: "Garlic" },
       "|img.nav-logo": {
         "@": { src: garlicPhoneLogo, alt: "Garlic Phone" },
       },
-
+      "phone|h1.large-heading.nav-title": { _: "Phone" },
     },
   };
 }

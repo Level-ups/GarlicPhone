@@ -77,8 +77,5 @@ export const reviewPage: PageRenderer = ({ page }) => {
             ...createItemList(chains(), (i, _) => { selectedChain(i); }),
              ...createChainDisplay(chains()[selectedChain()].links)
             }, [1, 2], "1em")),
-        "|br": {},
-        ...wrapAsCard({
-        }),
     });
 }

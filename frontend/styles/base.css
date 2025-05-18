@@ -43,7 +43,16 @@
   --dark_turquios: #6EB9AD; 
 
   /*base spaceing*/
-  --gap: 2rem
+  --gap: 2rem;
+  --padding-tiny: 0.5rem;
+  --padding-small: 1rem;
+  --padding-medium: 2rem;
+  
+  /* base border */
+  --border-standard: 0.2rem solid var(--border);
+  
+  /* base radius */
+  --border-radius-standard: 1rem;
 }
 
 /* Dark theme */
@@ -216,8 +225,22 @@ a {
   border-color: #817503;
 }
 
+.flex-equal-size-item {
+  flex: 1;
+}
 
+.flex-main-item-size {
+  flex: 1 0 50%;
+}
 
+.flex-container {
+  width: 100%;
+}
+
+.guess-text {
+  font-size: 1.5rem;
+  text-align: center;
+}
 
 /*------------------------------------------------------------------------------*/
 

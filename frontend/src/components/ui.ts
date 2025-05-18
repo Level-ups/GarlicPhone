@@ -54,7 +54,7 @@ export function createInput(
   val: Reactive<string>
 ): ElemTree {
   return {
-    '|input.gradient-input': {
+    '|input.gradient-input.base-input': {
       '@': { placeholder },
       '%input': (e: Event) => { val((e.target as HTMLInputElement).value); }
     }
@@ -156,7 +156,7 @@ export function createItemList<T extends { name: string }>(
   function renderItem(index: number, item: T): ElemTree {
     return {
       '|li.item-button': {
-        '|button.gradient-btn': {
+        '|button.base-button': {
           _: item.name,
           '%click': () => onSelect(index, item),
         }

@@ -12,7 +12,14 @@
   transition: transform 0.2s ease;
 }
 
+.card-with-overflow {
+  overflow: visible;
+}
 
-.card:hover {
+.hover-card:hover {
   transform: translateY(-4px);
 }
+
+/* .card:hover {
+  transform: translateY(-4px);
+} */
