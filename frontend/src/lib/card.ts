@@ -1,10 +1,6 @@
 
 import { ROW_FLEX_CONFIG, wrapAsFlex } from "./flex";
-<<<<<<< HEAD
-import { getElems, type ElemTree, type ElemTree_Elems, type StyleDict } from "./parse";
-=======
-import { getElems, tryCall, type ElemTree, type ElemTree_Elems } from "./parse";
->>>>>>> baf4f92a39b216f49a1eeab814e6c103cef986b2
+import { getElems, tryCall, type ElemTree, type ElemTree_Elems, type StyleDict } from "./parse";
 
 // Wrap the given tree as a card element
 export function wrapAsCard(tree: ElemTree, label: string = "", additionalClasses: string[] = [], additionalStyling: StyleDict = {}): ElemTree {
