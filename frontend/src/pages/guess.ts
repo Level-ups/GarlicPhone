@@ -52,8 +52,8 @@ export function createGuessPage(
             ...wrapAsCard({
                 ...wrapAsFlex({
                     ...createInput("Enter a prompt", promptInput),
-                   "|button.base-button": {
-                       "_": "Submit",
+                   "|button.base-button.base-button--accent": {
+                          "|span": { _: "Submit" },
                        "%click": () => {
                            callBack();
                        }
