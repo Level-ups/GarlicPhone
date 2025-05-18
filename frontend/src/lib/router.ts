@@ -14,17 +14,23 @@ interface RouterOptions {
   pages: Record<string, PageRenderer>;
   containers: ContainerMap;
   redirects?: RedirectFn[];
+  state?: Record<string, any>;
 }
 
 export class PageRouter {
   private pages: Record<string, PageRenderer>;
   private containers: ContainerMap;
   private redirects: RedirectFn[];
+  private globalState: Record<string, any> = {};
 
   constructor(options: RouterOptions) {
     this.pages = options.pages;
     this.containers = options.containers;
     this.redirects = options.redirects || [];
+    this.globalState = {
+      ...this.globalState,
+      ...options.state,
+    };
 
     // Bind methods to this instance
     this.handlePopState = this.handlePopState.bind(this);
@@ -98,5 +104,16 @@ export class PageRouter {
     }
 
     renderer(this.containers);
+  }
+
+  public updateState(state: Record<string, any>) {
+    this.globalState = {
+      ...this.globalState,
+      ...state,
+    };
+  }
+
+  public getState() {
+    return this.globalState;
   }
 }
