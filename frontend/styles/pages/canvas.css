@@ -1,10 +1,8 @@
 .draw-page {
-  width: 100%;
-  height: 100vh;
+  height: auto;
   display: grid;
-  grid-template-rows: auto auto 65%;
+  grid-template-rows: auto auto;
   gap: 2rem;
-  padding: 3rem 8rem;
   container-type: inline-size;
 }
 
@@ -14,10 +12,6 @@
   }
 }
 
-.draw-page > div {
-  width: 100%;
-  height: 100%;
-}
 
 .draw-page-header-ctn {
   grid-column: span 3;
@@ -45,12 +39,17 @@
 
 .draw-page-controls {
   display: grid;
-  grid-template-columns: 4rem 4rem;
-  grid-auto-rows: 4rem;
+  grid-template-columns: 3.5rem 3.5rem;
+  grid-auto-rows: 3.5rem;
   gap: 2rem;
   align-content: center;
   justify-content: center;
   border-radius: 2rem;
+}
+
+.draw-page-nav{
+  /* padding-left: 4rem;
+  padding-right: 4rem; */
 }
 
 .draw-page-controls{
@@ -78,6 +77,7 @@
   row-gap: 2rem;
   justify-content: center;
   align-items: center; 
+  height: 26rem;
 }
 
 .canvas-wrapper {
@@ -260,6 +260,13 @@
     grid-template-rows: auto auto 40% auto auto;
     gap: 1rem;
     padding: 1rem;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  .canvas-container {
+    margin-bottom: 2rem;
   }
 
   .canvas {
@@ -303,6 +310,7 @@
     align-items: center;
     justify-content: center;
     gap: 2rem;
+    margin-top: 1rem;
   }
 
   .pixel-slider-ctn {

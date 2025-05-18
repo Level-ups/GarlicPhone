@@ -9,8 +9,10 @@
   max-width: 100%;
   height: auto;
   border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  box-shadow:.3rem .4rem var(--black);
+  border: 3px solid var(--black);
   transition: transform 0.3s ease;
+  margin: 0 auto;
 }
 
 .responsive-img:hover {

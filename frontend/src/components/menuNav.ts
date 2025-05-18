@@ -1,4 +1,5 @@
 import { forEl, type ElemTree } from "../lib/parse";
+import { timer } from "../lib/timer";
 import garlicPhoneLogo from "/assets/logo.svg";
 
 type Link = {
@@ -52,14 +53,30 @@ export function titleCard(title: string, showLogo: boolean = true): ElemTree {
   };
 }
 
-export function titleNav(): ElemTree {
+export function titleNav(modifyClass?: string): ElemTree {
   return {
-    "|nav.nav.card": {
-      "garlic|h1.large-heading.nav-title": { _: "Garlic" },
-      "|img.nav-logo": {
-        "@": { src: garlicPhoneLogo, alt: "Garlic Phone" },
+    [`|nav.nav.card.solo-nav.${modifyClass}`]: {
+      "|section.nav-info": {
+        "|p.nav-title.large-heading": { _: "Garlic Phone" },
+        "|img.nav-logo": {
+          "@": { src: garlicPhoneLogo, alt: "Garlic Phone" },
+        },
       },
-      "phone|h1.large-heading.nav-title": { _: "Phone" },
+    },
+  };
+}
+
+
+export function titleNavWithTimer(time: number, modifyClass?: string): ElemTree {
+  return {
+    [`|nav.nav.card.nav-with-timer.${modifyClass}`]: {
+      "|section.nav-info": {
+        "|p.nav-title.large-heading": { _: "Garlic Phone" },
+        "|img.nav-logo": {
+          "@": { src: garlicPhoneLogo, alt: "Garlic Phone" },
+        },
+      },
+      ...timer(time),
     },
   };
 }

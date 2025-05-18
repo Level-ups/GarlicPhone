@@ -1,9 +1,7 @@
-import { DEFAULT_FLEX_CONFIG, ROW_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
-import { parseInto, type ElemTree } from "../lib/parse";
+import { parseInto } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
-import { menuNav, titleCard } from "../components/menuNav";
-import * as lobbyService from "../services/lobbyService";
-import { der, sig, type Signal } from "../lib/signal";
+import { menuNav } from "../components/menuNav";
+import { sig, type Signal } from "../lib/signal";
 import { apiFetch } from "../lib/fetch";
 
 type PlayerInfo = {

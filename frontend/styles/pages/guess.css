@@ -1,3 +1,39 @@
 #guess-page-header {
   width: 100%;
 }
+
+#guess-page-header .card{
+  min-height: 3em;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+}
+
+.guess-image {
+  width: 18rem;
+}
+
+.guess-image .responsive-img {
+  width: 100%;
+}
+
+#guess-page-main{
+  width: 80%;
+  margin: 0 auto;
+}
+
+.guess-submit-button{
+  width: 7rem;
+}
+
+@container (max-width: 675px) {
+  #guess-page-main{
+    width: 100%;
+  }
+
+  .guess-image {
+  width: 22rem;
+}
+}

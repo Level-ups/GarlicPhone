@@ -77,7 +77,6 @@ export const reviewPage: PageRenderer = ({ page }) => {
     // Render page
     parseInto(page, {
         ...menuNav(),
-        ...titleCard("Review", false),
         ...react([selectedChain, chains], () => 
             wrapAsRowCards({
             ...createItemList(chains(), (i, _) => { selectedChain(i); }),

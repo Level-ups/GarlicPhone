@@ -50,6 +50,8 @@ export const promptPage: PageRenderer = ({ page }) => {
     return parseInto(page, createGuessPage(
         "Think quick - write a prompt!",
         promptInput,
-        () => { /* visit("draw") */ }
+        () => { /* visit("draw") */ },
+        undefined,
+        30
     ))
 };

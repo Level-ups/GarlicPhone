@@ -1,9 +1,16 @@
 .timer {
-  font-size: 2rem;
-  background-color: black;
+  font-size: 1.75rem;
+  background-color: var(--white);
+  width: 12rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  color: white;
-  border-radius: 1.5rem;
+  color: var(--black);
+  border-radius: 1rem;
+  border: 3px solid var(--black);
+  box-shadow: 0.3rem 0.4rem var(--black);
 
   padding: 1rem 2rem;
 }

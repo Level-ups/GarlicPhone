@@ -38,21 +38,19 @@ export function createGuessPage(
                         }
                     }, 'PromptCard', ['flex-main-item-size', 'card-with-overflow']),
                     ...(timeInSeconds? {
-                        ...wrapAsCard({
-                            ...timer(timeInSeconds)
-                        }, 'TimerCard', ['flex-equal-size-item', 'card-with-overflow'])
+                        ...timer(timeInSeconds)
                     }: {}),
                 }, ROW_FLEX_CONFIG),
             },
             ...(imgSrc ? {
-                ...wrapAsCard({
-                    ...createImage(imgSrc, ""),
-                }, 'GuessImageCard'),
+               "|section.guess-image": {
+                 ...createImage(imgSrc, ""),
+               },
             }: {}),
             ...wrapAsCard({
                 ...wrapAsFlex({
                     ...createInput("Enter a prompt", promptInput),
-                   "|button.base-button.base-button--accent": {
+                   "|button.base-button.base-button--accent.guess-submit-button": {
                           "|span": { _: "Submit" },
                        "%click": () => {
                            callBack();
