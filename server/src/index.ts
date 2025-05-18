@@ -12,6 +12,7 @@ import { imageRouter } from './routes/imageRoutes';
 import { lobbyRouter } from './routes/lobbyRoutes';
 import { promptRouter } from './routes/promptRoutes';
 import { userRouter } from './routes/userRoutes';
+import { gameRouter } from './new/dispatch';
 import imageService from './services/imageService';
 import * as lobbyService from './services/lobbyService';
 import { cleanupExpiredLobbies } from './services/lobbyService';
@@ -130,6 +131,7 @@ app.get('/api/lobbies/:lobbyId/events', createServerSentEventHandler(sendEvent =
     sendEvent('error', new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
 }));
+app.use('/api/games', gameRouter); // TODO: authenticateRequest
 app.use('/api/users', authenticateRequest, userRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/lobbies', authenticateRequest, lobbyRouter);

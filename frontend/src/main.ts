@@ -9,7 +9,6 @@ import { promptPage } from './pages/prompt';
 import { guessPage } from './pages/guess';
 import { reviewPage } from './pages/review';
 import { homePage } from './pages/home';
-import { updateSSEHandler } from './lib/sse';
 import { menuPlayGamePage } from './pages/menuPlayGame';
 import { demoPage } from './pages/demo';
 
@@ -47,7 +46,7 @@ const pages: { [key: string]: PageRenderer } = {
 const redirects: RedirectFn[] = [
   path => path === '/'        ? 'home' : null,
   path => path === '/login'   ? 'login' : null,
-  path => path === '/play'    ? 'menuPlay' : null,
+  // path => path === '/play'    ? 'menuPlay' : null,
   path => path === '/playgame' ? 'menuPlayGame' : null,
   path => path === '/gallery' ? 'menuGallery' : null,
 

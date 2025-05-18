@@ -4,6 +4,8 @@ import userRepository from '../repositories/userRepository.js';
 
 const googleJWKs = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
 
+import { constants } from '../library/constants';
+
 export async function authenticateRequest(req: Request, res: Response, next: NextFunction) {
   try {
     const authHeader = req.headers.authorization;
@@ -14,7 +16,7 @@ export async function authenticateRequest(req: Request, res: Response, next: Nex
 
     const { payload } = await jwtVerify(token, googleJWKs, {
       issuer: ['https://accounts.google.com', 'accounts.google.com'],
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: constants.GOOGLE_CLIENT_ID,
     });
 
     let userRole
@@ -25,7 +27,6 @@ export async function authenticateRequest(req: Request, res: Response, next: Nex
     } else{
         res.status(500).json({error: "Internal server error"})
     }
-
 
     next();
   } catch (error) {

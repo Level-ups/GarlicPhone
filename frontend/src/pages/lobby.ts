@@ -5,7 +5,6 @@ import { apiFetch } from "../lib/fetch";
 import { parseInto, react } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 import { der, sig, type Signal } from "../lib/signal";
-import { updateSSEHandler } from "../lib/sse";
 import type { Lobby, WithClient } from "../services/lobbyService";
 
 type PlayerInfo = {
@@ -108,7 +107,6 @@ export const lobbyPage: PageRenderer = ({ page }) => {
       gameCode = res.code;
       gameId = res.id;
       lobbyCode(gameCode);
-      updateSSEHandler(`/api/lobbies/${res.id}/events`);
       setAsReady(res.id, playerId, players);
     } else {
       // Join existing lobby
@@ -121,7 +119,6 @@ export const lobbyPage: PageRenderer = ({ page }) => {
 
       gameCode = res.code;
       gameId = res.id;
-      updateSSEHandler(`/api/lobbies/${res.id}/events`);
       setAsReady(res.id, playerId, players);
     }
 

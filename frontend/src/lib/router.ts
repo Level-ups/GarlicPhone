@@ -1,6 +1,14 @@
-import { updateSSEHandler } from "./sse";
+import { randHex } from "./parse";
+import { createSSESource, type SSEHandlers } from "./sse";
 
-export type PageRenderer = (containers: ContainerMap) => void;
+export type AlertCallback = (alert: any) => void; // TODO: Add types
+export type AlertSubHelper = (listener: AlertCallback) => void
+export type GlobalState = { [key: string]: any };
+export type PageRenderer = (
+  containers: ContainerMap,
+  other: { globalState: GlobalState, onUpdate: AlertSubHelper, onSubmit: AlertSubHelper }
+) => void;
+
 export type RedirectFn = (path: string) => string | null;
 export type ContainerMap = { [key: string]: HTMLElement } & {
   app: HTMLElement;
@@ -22,16 +30,39 @@ export class PageRouter {
   private pages: Record<string, PageRenderer>;
   private containers: ContainerMap;
   private redirects: RedirectFn[];
+  private clientId: string;
+  private sseSource: EventSource;
+
+  private globalState: GlobalState = {};
+
+  // onUpdate subscribers
+  private onUpdateSubs: Array<(alert: any) => void> = [];
+  private onSubmitSubs: Array<(alert: any) => void> = [];
+
+  private sseHandlers: SSEHandlers = {
+    "update": (alert) =>     { this.onUpdateSubs.forEach(fn => fn(alert)); },
+    "submission": (alert) => { this.onSubmitSubs.forEach(fn => fn(alert)); },
+    "transition": (alert) => { visit(alert.phaseType); }
+  };
+
 
   constructor(options: RouterOptions) {
     this.pages = options.pages;
     this.containers = options.containers;
     this.redirects = options.redirects || [];
+    this.globalState = {};
+
+    // Obtain/Generate client id
+    this.clientId = localStorage.getItem("clientId") ?? randHex(20);
+    localStorage.setItem("clientId", `${this.clientId}`);
 
     // Bind methods to this instance
     this.handlePopState = this.handlePopState.bind(this);
     this.visit = this.visit.bind(this);
     this.isolateContainer = this.isolateContainer.bind(this);
+
+    // Create SSE source & bind handlers
+    this.sseSource = createSSESource(`/game/connect`, this.sseHandlers);
 
     // Listen to browser navigation
     window.addEventListener("popstate", this.handlePopState);
@@ -88,6 +119,10 @@ export class PageRouter {
 
   // Clear page content & render new page
   private render(page: string): void {
+    // Remove subscribers from previous page
+    this.onUpdateSubs = [];
+    this.onSubmitSubs = [];
+
     const renderer = this.pages[page];
     Object.entries(this.containers).forEach(([_, v]) => {
       v.innerHTML = "";
@@ -99,6 +134,11 @@ export class PageRouter {
       return;
     }
 
-    renderer(this.containers);
+    // Construct subscription functions
+    const onUpdate = (listener: (alert: any) => void) => { this.onUpdateSubs.push(listener); };
+    const onSubmit = (listener: (alert: any) => void) => { this.onUpdateSubs.push(listener); };
+    const globalState = this.globalState;
+
+    renderer(this.containers, { globalState, onUpdate, onSubmit });
   }
 }
