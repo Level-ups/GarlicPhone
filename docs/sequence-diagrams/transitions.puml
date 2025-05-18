@@ -1,0 +1,29 @@
+@startuml
+start
+
+if (Current Phase == 0) then (Lobby Phase)
+  :Initialize game chains[];
+  :Set phase = 1;
+else (Other Phases)
+  if (Phase % 2 == 1) then (Odd Phase)
+    :Calculate chainIdx = (playerIdx + phase - 1)
+    % numPlayers;
+    if (Phase Type == Draw) then
+      :Set prompt = previous ChainPrompt;
+    else
+      :Set imgSrc = previous ChainImage;
+    endif
+  elseif (Phase == numPhases-1) then (Review)
+    :Convert chains to ChainInfo[];
+    :Trigger game data save;
+  endif
+endif
+
+:Determine nextPhaseType;
+:Create TransitionAlert;
+:Update gameData.phase;
+
+:Dispatch personalized alerts;
+
+stop
+@enduml
