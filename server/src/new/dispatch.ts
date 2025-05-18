@@ -79,24 +79,21 @@ function progressState(gameCode: GameCode): ProgressStateResult {
     //----- Gather player data -----//
     coord.broadcast(gameData.players, SUBMISSION_ALERT, "submission");
 
-    //----- Progress phase -----//
-    gameData.phase += 1;
-    const timeStarted = Date.now();
+    setTimeout(() => {
+        //----- Progress phase -----//
+        gameData.phase += 1;
+        const timeStarted = Date.now();
 
-    //----- Transition -----//
-    // Alert all players of state transition
-    for(let pIdx = 0; pIdx < gameData.players.length; pIdx++) {
-        const alert = transition(pIdx, gameData, timeStarted);
+        //----- Transition -----//
+        // Alert all players of state transition
+        for(let pIdx = 0; pIdx < gameData.players.length; pIdx++) {
+            const alert = transition(pIdx, gameData, timeStarted);
 
-        coord.dispatch(pIdx, alert, "transition");
-        alertPlayer(pIdx, alert);
-    }
+            coord.dispatch(pIdx, alert, "transition");
+        }
+    }, 1000);
 
     return "success";
-}
-
-// Send an alert to a player
-function alertPlayer(playerId: PlayerId, alert: Alert) {
 }
 
 type SubmissionResult = "success" | "invalidGame" | "invalidPlayer";
@@ -161,6 +158,8 @@ function handleFailableReturn(reason: "success" | string, res: Response) {
         ? res.status(201).json({ status: "success" })
         : res.status(500).json({ status: "failed", reason: reason })
 }
+
+
 
 // Connect to the SSE coordinator
 gameRouter.post('/connect', checker(["playerId"], (req: Request, res: Response) => {

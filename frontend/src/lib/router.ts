@@ -62,7 +62,7 @@ export class PageRouter {
     this.isolateContainer = this.isolateContainer.bind(this);
 
     // Create SSE source & bind handlers
-    this.sseSource = createSSESource(`/game/connect`, this.sseHandlers);
+    this.sseSource = createSSESource(`/api/games/connect`, this.sseHandlers);
 
     // Listen to browser navigation
     window.addEventListener("popstate", this.handlePopState);

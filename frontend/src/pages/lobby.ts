@@ -5,7 +5,6 @@ import { apiFetch } from "../lib/fetch";
 import { parseInto, react } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 import { der, sig, type Signal } from "../lib/signal";
-import type { Lobby, WithClient } from "../services/lobbyService";
 
 type PlayerInfo = {
   id: number;
@@ -31,7 +30,7 @@ async function joinLobby(
   playerId: number,
   players: Signal<PlayerInfo[]>
 ) {
-  const res = await apiFetch("post", "/api/lobbies/join", {
+  const res = await apiFetch("post", `/api/games/join/${gameCode}`, {
     playerId,
     playerName: "Joined Player",
     code: gameCode,
@@ -43,23 +42,8 @@ async function joinLobby(
   return data;
 }
 
-// Set the current player as ready
-async function setAsReady(
-  lobbyId: string,
-  playerId: number,
-  players: Signal<PlayerInfo[]>
-) {
-  const res = await apiFetch("post", `/api/lobbies/${lobbyId}/ready`, {
-    playerId,
-    isReady: true,
-  });
-  const data = await res.json();
-
-  players(data.players);
-}
-
-async function startGame(gameId: string, playerId: number) {
-  const res = await apiFetch("post", `/api/lobbies/${gameId}/start`, {
+async function startGame(gameCode: string, playerId: number) {
+  const res = await apiFetch("post", `/api/games/${gameCode}/start`, {
     playerId,
   });
 
@@ -126,7 +110,6 @@ export const lobbyPage: PageRenderer = ({ page }, { onUpdate }) => {
 
     // Listen on state refresh
     onUpdate((alert) => {
-      const data: WithClient<Lobby> = JSON.parse(e.data);
       if (gameCode != "") {
         refreshLobbyState(gameCode, players);
       }

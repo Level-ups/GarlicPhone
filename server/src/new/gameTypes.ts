@@ -5,7 +5,7 @@ export type GameCode = string; // Lobby code used by players
 
 export type GameData = {
     gameId: GameId;         // Only used internally for DB transactions
-    createdAt: number;
+    createdAt: Timestamp;
     players: PlayerId[];    // First player in the list is the host; If host leaves, 2nd to join is promoted
     chains: ChainData[];
     phase: PhaseIndex;      // [0, numPhases)
