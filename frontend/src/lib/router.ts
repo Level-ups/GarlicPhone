@@ -159,14 +159,14 @@ export class PageRouter {
 
     if (token && !this.socket) {
       const res = await apiFetch("get", "/api/games/me", undefined);
-      const { playerId } = await res?.json();
+      const { playerId, playerName } = await res?.json();
       // sessionStorage.setItem("clientId", `${playerId}`);
 
       console.log("AUTHENTICATED -> INITIALIZING SOCKET CONNECTION");
       console.log("CLIENT ID:", playerId);
       this.socket = io("/", {
         auth: { token },
-        query: { clientId: playerId },
+        query: { clientId: playerId, playerName: playerName },
         transports: ["websocket"],
       });
 

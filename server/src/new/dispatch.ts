@@ -50,20 +50,22 @@ function createNewGame(host: PlayerId): GameCode {
         createdAt,
         chains: [],
         phase: 0,
-        players: [host]
+        players: [host],
+        playerNames: { },
     };
 
     return gameCode;
 }
 
 type AddPlayerResult = "success" | "invalidGame" | "gameAlreadyStarted" | "gameFull";
-function addPlayerToGame(gameCode: GameCode, playerId: PlayerId): AddPlayerResult {
+function addPlayerToGame(gameCode: GameCode, playerId: PlayerId, playerName?: string): AddPlayerResult {
     if (!(gameCode in currentGames)) return "invalidGame";
     const gameData = currentGames[gameCode];
     if (gameData.phase > 0) return "gameAlreadyStarted";
     if (gameData.players.length >= 10) return "gameFull";
 
     gameData.players.push(playerId);
+    if (playerName) gameData.playerNames[playerId] = playerName;
 
     return "success";
 }
@@ -80,6 +82,7 @@ async function startGame(gameCode: GameCode, requestor: PlayerId): Promise<Start
     gameData.chains = gameData.players.map((playerId: number) => ({
         startingPlayer: playerId,
         chainId: playerId,
+        startingPlayerName: gameData.playerNames[playerId] ?? `Player ${playerId}`,
         links: [],
     }));
 
@@ -233,9 +236,10 @@ gameRouter.post('/create', checker(["playerId"], (req, res) => {
 
 gameRouter.post('/join/:gameCode', checker(["playerId"], (req, res) => {
     const playerId = req.user!.id;
+    const playerName = req.user!.name ?? `Player ${playerId}`;
     const { gameCode } = req.params;
 
-    const addRes = addPlayerToGame(gameCode, playerId);
+    const addRes = addPlayerToGame(gameCode, playerId, playerName);
     return handleFailableReturn(addRes, res);
 }));
 
@@ -249,8 +253,9 @@ gameRouter.post('/start/:gameCode', checker(["playerId"], (req, res) => {
 
 gameRouter.get('/me', checker(["playerId"], (req, res) => {
     const playerId = req.user!.id;
+    const playerName = req.user!.name;
 
-    return res.status(201).json({ playerId });
+    return res.status(201).json({ playerId, playerName });
 }));
 
 
