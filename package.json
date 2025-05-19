@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "npm run dev --workspaces",
+
     "build": "npm run build --workspace server && npm run build --workspace frontend",
+    "buildWin": "npm run buildWin --workspace server && npm run build --workspace frontend",
+
     "start": "node server/dist/index.js"
   },
   "devDependencies": {
