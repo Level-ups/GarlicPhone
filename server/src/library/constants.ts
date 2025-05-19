@@ -5,7 +5,7 @@ export const constants = {
   AWS_REGION: process.env.AWS_REGION!,
   AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID!,
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY!,
-  AWS_S3_BUCKET_NAME: process.env.AWS_S3_BUCKET_NAME!,
+  AWS_S3_BUCKET_NAME: process.env.AWS_S3_BUCKET_NAME ?? "garlic-phone-bucket",
   EC2_HOST: process.env.EC2_HOST!,
   EC2_USER: process.env.EC2_USER!,
   PG_DATABASE: process.env.PG_DATABASE!,

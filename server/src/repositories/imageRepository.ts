@@ -115,7 +115,7 @@ async function insertImage(image: InsertImageDto, client?: PoolClient): Promise<
 
 async function uploadImageToS3(image: Buffer, filename: string): Promise<Either<ManagedUpload.SendData, ErrorDetails>> {
   const params = {
-    Bucket: process.env.AWS_S3_BUCKET_NAME!,
+    Bucket: process.env.AWS_S3_BUCKET_NAME ?? "garlic-phone-bucket",
     Key: filename,
     Body: image,
     ContentType: 'image/png',
