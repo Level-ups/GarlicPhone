@@ -119,9 +119,7 @@ function progressState(gameCode: GameCode): ProgressStateResult {
         const playerId = gameData.players[pIdx];
         const alert = transition(pIdx, gameData, timeStarted);
         isReviewState ||= alert.phaseType == "review";
-        console.log('before dispatch', playerId, alert)
         coord.dispatch(playerId, alert, "transition");
-        console.log('after dispatch', playerId, alert)
     }
     if (isReviewState) {
         saveGameDataToDb(gameData); // Async save game data to db
@@ -135,7 +133,7 @@ function progressState(gameCode: GameCode): ProgressStateResult {
 }
 
 type SubmissionResult = "success" | "invalidGame" | "invalidPlayer";
-function submitChainLink(gameCode: GameCode, playerId: PlayerId, link: ChainLink): SubmissionResult {
+export function submitChainLink(gameCode: GameCode, playerId: PlayerId, link: ChainLink): SubmissionResult {
     if (!(gameCode in currentGames)) return "invalidGame";
     const gameData = currentGames[gameCode];
     const playerIdx = gameData.players.indexOf(playerId);
@@ -170,8 +168,9 @@ const REQ_CHECKERS: { [key in ReqCheckType]: (req: Request) => ReqCheckResult } 
 
 type EndpointResponse = Response<any, Record<string, any>>;
 type EndpointHandler = (req: Request, res: Response) => EndpointResponse;
+type EndpointHandlerAsync = (req: Request, res: Response) => Promise<EndpointResponse>;
 // Wrap an endpoint handler to check for specific common values & handle all other exceptions with a generic error
-function checker(checks: ReqCheckType[], f: EndpointHandler): EndpointHandler {
+export function checker(checks: ReqCheckType[], f: EndpointHandler): EndpointHandler {
 
     return (req, res) => {
         try {
@@ -191,7 +190,27 @@ function checker(checks: ReqCheckType[], f: EndpointHandler): EndpointHandler {
 
 }
 
-function handleFailableReturn(reason: "success" | string, res: Response) {
+export function checkerAsync(checks: ReqCheckType[], f: EndpointHandlerAsync): EndpointHandlerAsync {
+
+    return async (req, res) => {
+        try {
+            for (let c of checks) { // Run checks
+                const checkRes = REQ_CHECKERS[c](req)
+                if (checkRes != null) {
+                    return res.status(checkRes.status).json(new ErrorDetails(checkRes.message, checkRes.details));
+                }
+            }
+
+            return await f(req, res); // Attempt handling
+
+        } catch(err: any) { // Generic catch-all
+            return res.status(500).json(new ErrorDetails("An unexpected error occurred", [err.message], err.stack));
+        }
+    };
+
+}
+
+export function handleFailableReturn(reason: "success" | string, res: Response) {
     return reason == "success"
         ? res.status(201).json({ status: "success" })
         : res.status(500).json({ status: "failed", reason: reason })
