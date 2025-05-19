@@ -235,7 +235,7 @@ function cleanup() {
 
 
 export const drawPage: PageRenderer = ({ app }, { onSubmit, params, globalState }) => {
-  console.log("DRAW PARAMS:", params);
+  debugLog("DRAW PARAMS:", params);
   const prompt = sig<string>(params.alert.prompt);
   const gameCode = globalState.gameCode;
 
@@ -243,7 +243,7 @@ export const drawPage: PageRenderer = ({ app }, { onSubmit, params, globalState 
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     if (canvas) {
       const uploadedUrl = await uploadCanvasImage(canvas, gameCode);
-      console.log(uploadedUrl);
+      debugLog(uploadedUrl);
     }
     else throw new Error("Canvas not found");
   });

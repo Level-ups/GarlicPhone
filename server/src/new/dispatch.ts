@@ -1,7 +1,7 @@
 // WebSocket dispatching
 
 import { ErrorDetails } from "../library/error-types";
-import type { GameId, GameData, GameCode, PlayerId, Alert, ChainLink } from "./gameTypes";
+import type { GameId, GameData, GameCode, PlayerId, Alert, ChainLink, PlayerData } from "./gameTypes";
 import { SUBMISSION_ALERT } from "./gameTypes";
 import { Router, Request, Response } from 'express';
 // import { SSECoordinator } from "./sseCoordinator";
@@ -23,9 +23,8 @@ export function initializeCoordinator(io: IOServer) {
 
 const currentGames: { [key: GameCode]: GameData } = {}
 
-const _1hr = 60_000;
+const _1hr = 60 * 60_000;
 setInterval(clearStaleGames, _1hr);
-
 
 const sleep = (ms: number) => {
     let start = new Date().getTime(), expire = start + ms;
@@ -51,10 +50,28 @@ function createNewGame(host: PlayerId): GameCode {
         chains: [],
         phase: 0,
         players: [host],
-        playerNames: { },
+        playerNames: {},
     };
 
     return gameCode;
+}
+
+function constructPlayerData(gameData: GameData): PlayerData[] {
+    console.log("GAMEDATA AT UPDATE LOBBY:", gameData);
+    return gameData.players.map((p, i) => ({
+        playerId: p,
+        name: gameData.playerNames[p] ?? `Player ${p}`,
+        avatarURL: "",
+        isHost: i == 0
+    }));
+}
+
+function broadcastLobbyUpdate(gameData: GameData) {
+    // Broadcast update event
+    coord.broadcast(gameData.players, {
+        phaseType: "lobby",
+        update: { players: constructPlayerData(gameData) }
+    }, "update");
 }
 
 type AddPlayerResult = "success" | "invalidGame" | "gameAlreadyStarted" | "gameFull";
@@ -66,6 +83,8 @@ function addPlayerToGame(gameCode: GameCode, playerId: PlayerId, playerName?: st
 
     gameData.players.push(playerId);
     if (playerName) gameData.playerNames[playerId] = playerName;
+
+    setTimeout(() => broadcastLobbyUpdate(gameData), 1500);
 
     return "success";
 }
@@ -223,14 +242,15 @@ export function checkerAsync(checks: ReqCheckType[], f: EndpointHandlerAsync): E
 export function handleFailableReturn(reason: "success" | string, res: Response) {
     return reason == "success"
         ? res.status(201).json({ status: "success" })
-        : res.status(500).json({ status: "failed", reason: reason })
+        : res.status(500).json({ status: "failed", reason })
 }
 
 // Existing HTTP gameRouter endpoints remain unchanged:
 gameRouter.post('/create', checker(["playerId"], (req, res) => {
     const playerId = req.user!.id;
     const gameCode = createNewGame(playerId);
-    
+    setTimeout(() => broadcastLobbyUpdate(currentGames[gameCode]), 1500);
+
     return res.status(201).json({ gameCode });
 }));
 

@@ -69,7 +69,7 @@ export class PageRouter {
     const ivl = setInterval(() => {
       if (this.socketInitialized()) { clearInterval(ivl); }
       else {
-        console.log("> Attempting socket init");
+        debugLog("> Attempting socket init");
         this.initializeSocketIfAuthenticated();
       }
     }, 1000);
@@ -107,7 +107,7 @@ export class PageRouter {
 
   public visit(page: string, params: Params = {}): void {
     if (!this.pages[page]) {
-      console.warn(`Page "${page}" not found, staying on current page.`);
+      debugWarn(`Page "${page}" not found, staying on current page.`);
       return;
     }
     history.pushState({}, "", `/${page}`);
@@ -162,37 +162,37 @@ export class PageRouter {
       const { playerId, playerName } = await res?.json();
       // sessionStorage.setItem("clientId", `${playerId}`);
 
-      console.log("AUTHENTICATED -> INITIALIZING SOCKET CONNECTION");
-      console.log("CLIENT ID:", playerId);
+      debugLog("AUTHENTICATED -> INITIALIZING SOCKET CONNECTION");
+      debugLog("CLIENT ID:", playerId);
       this.socket = io("/", {
         auth: { token },
         query: { clientId: playerId, playerName: playerName },
         transports: ["websocket"],
       });
       this.socket.on("error", (e) => {
-        console.error("SOCKET ERROR", e)
+        debugErr("SOCKET ERROR", e)
       });
 
       this.socket.on("connect", () => {
-        console.log("> SOCKET CONNECTED");
+        debugLog("> SOCKET CONNECTED");
       });
 
       this.socket.on("disconnect", (reason) => {
-        console.log("> SOCKET DISCONNECTED", reason);
+        debugLog("> SOCKET DISCONNECTED", reason);
       });
 
       this.socket.on("update", (alert) => {
-        console.log("UPDATE ALERT:", alert);
+        debugLog("UPDATE ALERT:", alert);
         this.onUpdateSubs.forEach(fn => fn(alert));
       });
 
       this.socket.on("submission", (alert) => {
-        console.log("SUBMISSION ALERT:", alert);
+        debugLog("SUBMISSION ALERT:", alert);
         this.onSubmitSubs.forEach(fn => fn(alert));
       });
 
       this.socket.on("transition", (alert) => {
-        console.log("TRANSITION ALERT:", alert);
+        debugLog("TRANSITION ALERT:", alert);
         this.visit(alert.phaseType, { alert });
       });
     }
@@ -202,7 +202,7 @@ export class PageRouter {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
-      console.log("> SOCKET CONNECTION CLOSED");
+      debugLog("> SOCKET CONNECTION CLOSED");
     }
   }
 }

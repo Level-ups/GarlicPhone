@@ -6,7 +6,7 @@ import { sig } from "../lib/util/signal";
 import { createGuessPage } from "./guess";
   
 async function submitPrompt(gameCode: string, prompt: string) {
-    console.log("Submitting prompt:", prompt, gameCode);
+    debugLog("Submitting prompt:", prompt, gameCode);
     const res = await apiFetch("post", `/api/games/submit/${gameCode}`, {
         link: { type: "prompt", prompt }
     } as { link: ChainLink });

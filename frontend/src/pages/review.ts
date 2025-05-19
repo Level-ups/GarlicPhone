@@ -9,7 +9,7 @@ import { der, sig } from "../lib/util/signal";
 let chainsSignal: ReturnType<typeof sig<ChainInfo[]>>;
 
 export const reviewPage: PageRenderer = ({ page }, { params }) => {
-    console.log("REVIEW PARAMS:", params);
+    debugLog("REVIEW PARAMS:", params);
     const selectedChain = sig<number>(0);
     const chains = sig<ChainInfo[]>(params.alert.chains);
 
