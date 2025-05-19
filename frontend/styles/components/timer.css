@@ -1,5 +1,5 @@
 .timer {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   background-color: var(--white);
   width: 12rem;
   text-align: center;
@@ -10,7 +10,7 @@
   color: var(--black_black);
   border-radius: 1rem;
   border: 3px solid var(--black_black);
-  box-shadow: 0.4rem 0.5rem var(--black_black);
+  box-shadow: 0.3rem 0.4rem var(--black_black);
 
   padding: 1rem 2rem;
 }

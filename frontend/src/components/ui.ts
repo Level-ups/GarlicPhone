@@ -67,7 +67,7 @@ export function createInput(
     '|input.gradient-input.base-input': {
       '@': { placeholder },
       '%input': (e: Event) => { val((e.target as HTMLInputElement).value); },
-      $: { color: "var(--black)", fontSize: "1.25rem" }
+      $: { color: "var(--black)" }
     }
   };
 }
