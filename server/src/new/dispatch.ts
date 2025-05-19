@@ -97,7 +97,7 @@ function progressGame(gameCode: GameCode) {
     const progress = () => {
         const ps = progressState(gameCode);
         if (ps !== "complete") {
-            setTimeout(progress, 10_000); // Check every 1 second (adjust as needed)
+            setTimeout(progress, 30_000); // Check every 1 second (adjust as needed)
         } else {
             console.log(`Game ${gameCode} completed!`);
         }
@@ -126,7 +126,7 @@ function progressState(gameCode: GameCode): ProgressStateResult {
         const playerId = gameData.players[pIdx];
         const alert = transition(pIdx, gameData, timeStarted);
         isReviewState ||= alert.phaseType == "review";
-        setTimeout(() => { coord.dispatch(playerId, alert, "transition"); }, 6_000);
+        setTimeout(async () => { coord.dispatch(playerId, alert, "transition"); }, 6_000);
     }
     if (isReviewState) {
         saveGameDataToDb(gameData); // Async save game data to db

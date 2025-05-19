@@ -2,7 +2,7 @@ import { Server as IOServer, Socket } from "socket.io";
 
 type ClientId = string | number;
 
-export type AddClientResult = "success" | "alreadyAdded";
+export type AddClientResult = "success" | "replacedPrevious";
 export type DispatchAlertResult = "success" | "invalidClientId";
 
 // Manage WebSocket client connections & dispatch events using Socket.IO
@@ -15,37 +15,43 @@ export class SockCoordinator<EventType = string> {
 
     // Register connection listener
     this.io.on("connection", (socket: Socket) => {
-      console.log("CONNECTION:", socket.handshake.query.clientId)
+      console.log("> CONNECTION:", socket.handshake.query.clientId);
       const clientId = socket.handshake.query.clientId as ClientId;
       // socket.handshake.query.clientId
-      if (!clientId) {
+      if (clientId == null) {
+        console.log("> MISSING CLIENT ID ON CONNECTION");
         socket.disconnect(true);
         return;
       }
 
       const addResult = this.addClient(clientId, socket);
       if (addResult !== "success") {
-        socket.emit("error", `Client ${clientId} already connected`);
-        socket.disconnect(true);
+        // TODO: Replace existing connection instead of kicking out the new one
+        // socket.emit("error", `Client ${clientId} already connected`);
+        // socket.disconnect(true);
       }
     });
   }
 
   public addClient(clientId: ClientId, socket: Socket): AddClientResult {
     console.log("ADDING CLIENT:", clientId);
-    if (clientId in this.clients) return "alreadyAdded";
+    let res: AddClientResult = "success";
 
+    // Replace old connection
+    if (clientId in this.clients) {
+      this.clients[clientId].disconnect(true);
+      delete this.clients[clientId];
+      res = "replacedPrevious";
+    }
+
+    // Connect & notify
     this.clients[clientId] = socket;
-
-    // Emit initial event to confirm connection
     socket.emit("connected", clientId);
 
     // Cleanup on disconnect
-    socket.on("disconnect", () => {
-      this.removeClient(clientId);
-    });
+    socket.on("disconnect", () => { this.removeClient(clientId); });
 
-    return "success";
+    return res;
   }
 
   public removeClient(clientId: ClientId): void {
