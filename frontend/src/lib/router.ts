@@ -50,7 +50,7 @@ export class PageRouter {
   private sseHandlers: SSEHandlers = {
     "update": (alert) =>     { console.log("update alert:", alert); this.onUpdateSubs.forEach(fn => fn(alert)); },
     "submission": (alert) => { console.log("submission alert:", alert); this.onSubmitSubs.forEach(fn => fn(alert)); },
-    "transition": (alert) => { console.log("transition alert:", alert); visit(alert.phaseType, { alert }); }
+    "transition": (alert) => { console.log("transition alert:", alert); this.visit(alert.phaseType, { alert }); }
   };
 
 
@@ -125,8 +125,8 @@ export class PageRouter {
   // Clear page content & render new page
   private render(page: string, params: Params = {}): void {
     // Remove subscribers from previous page
-    this.onUpdateSubs = [];
-    this.onSubmitSubs = [];
+    // this.onUpdateSubs = [];
+    // this.onSubmitSubs = [];
 
     const renderer = this.pages[page];
     Object.entries(this.containers).forEach(([_, v]) => {
@@ -163,7 +163,6 @@ export class PageRouter {
    * This should be called after successful login
    */
   public initializeSSEIfAuthenticated(): void {
-    console.log('hpwit')
     const token = sessionStorage.getItem('google-id-token');
     
     if (token && !this.sseSource) {

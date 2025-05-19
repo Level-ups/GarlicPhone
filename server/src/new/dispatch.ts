@@ -20,8 +20,11 @@ const _1hr = 60_000;
 setInterval(clearStaleGames, _1hr);
 
 
-const sleep: ((ms: number) => void) = (ms) => new Promise(res => setTimeout(res, ms));
-
+const sleep = (ms: number) => {
+    let start = new Date().getTime(), expire = start + ms;
+    while (new Date().getTime() < expire) { }
+    return;
+} 
 //---------- Game manipulation ----------//
 
 const GAME_CODE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -59,7 +62,7 @@ function addPlayerToGame(gameCode: GameCode, playerId: PlayerId): AddPlayerResul
 }
 
 type StartGameResult = "success" | "invalidGame" | "noPlayers" | "playerIsNotHost";
-function startGame(gameCode: GameCode, requestor: PlayerId): StartGameResult {
+async function startGame(gameCode: GameCode, requestor: PlayerId): Promise<StartGameResult> {
     if (!(gameCode in currentGames)) return "invalidGame";
     const gameData = currentGames[gameCode];
     if (gameData.players.length == 0) return "noPlayers";
@@ -73,12 +76,27 @@ function startGame(gameCode: GameCode, requestor: PlayerId): StartGameResult {
         links: [],
     }));
 
-    // Apply first transition
-    while (progressState(gameCode) == "in-progress") {
-        sleep(10_000);
-    };
+    // Start the game progression asynchronously
+    progressGame(gameCode);
 
     return "success";
+}
+
+// Function to progress the game state asynchronously
+function progressGame(gameCode: GameCode) {
+    const gameData = currentGames[gameCode];
+    if (!gameData) return; // Game might have been deleted
+
+    const progress = () => {
+        const ps = progressState(gameCode);
+        if (ps !== "complete") {
+            setTimeout(progress, 10_000); // Check every 1 second (adjust as needed)
+        } else {
+            console.log(`Game ${gameCode} completed!`);
+        }
+    };
+
+    progress(); // Start the initial progression
 }
 
 // Alert all players in the specified game of the state to which they must transition
@@ -88,10 +106,10 @@ function progressState(gameCode: GameCode): ProgressStateResult {
     const gameData = currentGames[gameCode];
 
     //----- Gather player data -----//
-    coord.broadcast(gameData.players, SUBMISSION_ALERT, "submission");
-    sleep(2000); // Wait for players to submit their data
-
-    
+    if (gameData.phase > 0) {
+        coord.broadcast(gameData.players, SUBMISSION_ALERT, "submission");
+        sleep(2000); // Wait for players to submit their data
+    }
     const timeStarted = Date.now();
 
     //----- Transition -----//
@@ -105,13 +123,13 @@ function progressState(gameCode: GameCode): ProgressStateResult {
         coord.dispatch(playerId, alert, "transition");
         console.log('after dispatch', playerId, alert)
     }
-
     if (isReviewState) {
         saveGameDataToDb(gameData); // Async save game data to db
     }
     
     //----- Progress phase -----//
     gameData.phase += 1;
+    console.log('gameData.phase [end of progress state]', gameData.phase);
     if (isReviewState) return "complete";
     else return "in-progress";
 }
@@ -219,7 +237,7 @@ gameRouter.post('/start/:gameCode', checker(["playerId"], (req: Request, res: Re
     console.log(playerId);
 
     const startRes = startGame(gameCode, playerId);
-    return handleFailableReturn(startRes, res);
+    return handleFailableReturn("success", res);
 }));
 
 
@@ -228,6 +246,8 @@ gameRouter.post('/submit/:gameCode', checker(["playerId"], (req: Request, res: R
     const playerId = req.user!.id;
     const { gameCode } = req.params;
     const { link } = req.body as { link: ChainLink };
+
+    console.log('/submit/:gamecode',link);
 
     const submitRes = submitChainLink(gameCode, playerId, link);
     return handleFailableReturn(submitRes, res);

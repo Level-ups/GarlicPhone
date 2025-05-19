@@ -6,6 +6,7 @@ import { createGuessPage } from "./guess";
 import type { ChainLink } from "../components/ui";
   
 async function submitPrompt(gameCode: string, prompt: string) {
+    console.log("Submitting prompt:", prompt, gameCode);
     const res = await apiFetch("post", `/api/games/submit/${gameCode}`, {
         link: { type: "prompt", prompt }
     } as { link: ChainLink });

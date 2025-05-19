@@ -41,12 +41,12 @@ export function transition(playerIdx: PlayerIndex, gameData: GameData, timeStart
 
     // Add additional phase-specific data
     let alertData = {};
-    if (toPhaseType in ["prompt", "draw", "guess"]) { alertData = { ...alertData, timeStarted }}
+    if (["prompt", "draw", "guess"].includes(toPhaseType)) { alertData = { ...alertData, timeStarted }}
     if (toPhaseType == "draw") {
-        alertData = { ...alertData, prompt: (gameData.chains[toChainIdx].links.at(-1) as ChainPrompt).prompt }
+        alertData = { ...alertData, prompt: (gameData.chains[toChainIdx].links.at(-1) as ChainPrompt)?.prompt }
     }
     else if (toPhaseType == "guess") {
-        alertData = { ...alertData, imgSrc: (gameData.chains[toChainIdx].links.at(-1) as ChainImage).url }
+        alertData = { ...alertData, imgSrc: (gameData.chains[toChainIdx].links.at(-1) as ChainImage)?.url }
     }
     else if (toPhaseType == "review") {
         alertData = { ...alertData, chains: gameData.chains.map(chainDataToChainInfo) }

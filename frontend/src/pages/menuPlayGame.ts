@@ -101,7 +101,7 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
             (async () => {
                 const gameCode = await createGame();
                 globalState.playerName = playerName;
-                globalState.lobbyCode = gameCode.gameCode;
+                globalState.gameCode = gameCode.gameCode;
                 // Redirect to lobby page
                 visit('lobby');
             })();
@@ -122,7 +122,7 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
         try {
             (async () => {
                 await joinGame(gameCodeInp());
-                globalState.lobbyCode = gameCodeInp();
+                globalState.gameCode = gameCodeInp();
                 // Redirect to lobby page
                 try {
                     (window as any).router.visit('lobby');

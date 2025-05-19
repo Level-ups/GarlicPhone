@@ -36,7 +36,7 @@ export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => 
   const token = params.get("token");
 
   const players = sig<PlayerInfo[]>([]);
-  const gameCode = sig<string>(globalState.lobbyCode);
+  const gameCode = sig<string>(globalState.gameCode);
 
   const playerId = Number(sessionStorage.getItem("playerId"));
   sessionStorage.setItem("playerId", `${playerId}`);
@@ -63,7 +63,7 @@ export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => 
   }
 
   function handleStartGame() {
-    startGame(globalState.lobbyCode);
+    startGame(globalState.gameCode);
   }
 
   return parseInto(page, {
