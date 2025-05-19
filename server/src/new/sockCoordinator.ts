@@ -25,10 +25,8 @@ export class SockCoordinator<EventType = string> {
       }
 
       const addResult = this.addClient(clientId, socket);
-      if (addResult !== "success") {
-        // TODO: Replace existing connection instead of kicking out the new one
-        // socket.emit("error", `Client ${clientId} already connected`);
-        // socket.disconnect(true);
+      if (addResult == "replacedPrevious") {
+        console.log("> REPLACE EXISTING CONNECTION:", clientId);
       }
     });
   }
