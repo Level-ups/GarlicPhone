@@ -12,10 +12,11 @@ import { imageRouter } from './routes/imageRoutes';
 import { lobbyRouter } from './routes/lobbyRoutes';
 import { promptRouter } from './routes/promptRoutes';
 import { userRouter } from './routes/userRoutes';
-import { checkerAsync, gameRouter, gameSSERouter, handleFailableReturn, submitChainLink } from './new/dispatch';
+import { checkerAsync, gameRouter, handleFailableReturn, initializeCoordinator, submitChainLink } from './new/dispatch';
 import imageService from './services/imageService';
 import * as lobbyService from './services/lobbyService';
 import { cleanupExpiredLobbies } from './services/lobbyService';
+import { Server as IOServer } from "socket.io";
 
 //---------- SETUP ----------//import { createServerSentEventHandler } from './library/serverSentEvents';
 import { authenticateRequest, authenticateRequestFromQuery, requireRole } from './library/authMiddleware';
@@ -24,6 +25,7 @@ import { validateLobbyUrlId } from './models/Lobby';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import imageRepository from './repositories/imageRepository';
+import { createServer } from 'http';
 
 // “__dirname” and “__filename” aren’t built-in under ESM,
 // so we derive them from import.meta.url:
@@ -39,6 +41,12 @@ dotenv.config();
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 const EC2_HOST =  process.env.EC2_HOST
+
+// Init Socket.IO connection
+const httpServer = createServer(app);
+const io = new IOServer(httpServer, { cors: { origin: "*" } })
+
+initializeCoordinator(io);
 
 // Middleware
 app.use(cors());
@@ -159,7 +167,7 @@ app.get('/api/lobbies/:lobbyId/events', createServerSentEventHandler(sendEvent =
   }
 }));
 app.use('/api/games', authenticateRequest, gameRouter); // TODO: authenticateRequest
-app.use('/api/sse/games', authenticateRequestFromQuery, gameSSERouter);
+// app.use('/api/sse/games', authenticateRequestFromQuery, gameSSERouter);
 app.use('/api/users', authenticateRequest, userRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/lobbies', authenticateRequest, lobbyRouter);
@@ -212,7 +220,7 @@ setInterval(() => {
 }, 15 * MINUTE_IN_MS);
 
 // Start server
-app.listen(PORT, '127.0.0.1', () => {
+httpServer.listen(PORT, '127.0.0.1', () => {
   console.log(`Server running on http://${EC2_HOST}:${PORT}`);
 });
 

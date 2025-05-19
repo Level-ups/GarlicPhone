@@ -17,7 +17,7 @@ async function startGame(gameCode: string) {
   const res = await apiFetch("post", `/api/games/start/${gameCode}`, {});
 
   const data = await res.json();
-  console.log("start gane", data);
+  console.log("start game", data);
   return data;
 }
 
@@ -60,6 +60,7 @@ export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => 
   isolateContainer("page");
 
   function handleLeaveLobby() {
+    visit("gallery");
   }
 
   function handleStartGame() {

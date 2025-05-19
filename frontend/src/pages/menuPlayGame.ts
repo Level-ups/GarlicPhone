@@ -41,39 +41,34 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
         console.log('Token received');
         sessionStorage.setItem("google-id-token", token);
         
-        // Only attempt to initialize SSE if we haven't already done so in this session
-        // and we're not currently in the process of initializing
-        const sseInitializing = sessionStorage.getItem("sse-initializing");
+        // // Only attempt to initialize socket if we haven't already done so in this session
+        // // and we're not currently in the process of initializing
+        // const sseInitializing = sessionStorage.getItem("socket-init");
         
-        if (!sseInitializing) {
-            // Mark as initializing to prevent concurrent initialization attempts
-            sessionStorage.setItem("sse-initializing", "true");
+        // if (sseInitializing) {
+        //     // Mark as initializing to prevent concurrent initialization attempts
+        //     sessionStorage.setItem("socket-init", "true");
             
-            // Use setTimeout to ensure router is initialized before accessing it
-            setTimeout(() => {
-                try {
-                    if ((window as any).router) {
-                        // Check if SSE is already connected before initializing
-                        if (!(window as any).router.sseSource) {
-                            console.log('Initializing SSE connection');
-                            (window as any).router.initializeSSEIfAuthenticated();
-                            console.log('SSE initialization complete');
-                        } else {
-                            console.log('SSE connection already exists, skipping initialization');
-                        }
-                    } else {
-                        console.error('Router not available for SSE initialization');
-                    }
-                } catch (err) {
-                    console.error('Error during SSE initialization:', err);
-                } finally {
-                    // Clear the initializing flag regardless of success/failure
-                    sessionStorage.removeItem("sse-initializing");
-                }
-            }, 1000);
-        } else {
-            console.log('SSE initialization already in progress, skipping');
-        }
+        //     // Use setTimeout to ensure router is initialized before accessing it
+        //     setTimeout(() => {
+        //         try
+        //         {
+        //             if (router == null)             { console.error('> ROUTER UNAVAILABLE'); return; }
+        //             if (router.socketInitialized()) { console.log('> SOCKET ALREADY INITIALIZED, SKIPPING'); return; }
+
+        //             console.log('> ATTEMPTING SOCKET INITIALIZATION');
+        //             router.initializeSocketIfAuthenticated();
+        //             console.log('> INITIALIZATION COMPLETE');
+
+        //         } catch (err) {
+        //             console.error('> ERR DURING SOCKET INITIALIZATION', err);
+        //         } finally {
+        //             // Clear init flag regardless of success/failure
+        //             sessionStorage.removeItem("socket-init");
+        //         }
+        //     }, 1000);
+
+        // } else { console.log('> SOCKET INITIALIZATION ALREADY IN PROGRESS, SKIPPING'); }
     }
 
     //----- Page state signals -----//
@@ -125,7 +120,7 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
                 globalState.gameCode = gameCodeInp();
                 // Redirect to lobby page
                 try {
-                    (window as any).router.visit('lobby');
+                    router.visit('lobby');
                 } catch (error) {
                     console.error('Error navigating to lobby:', error);
                 }

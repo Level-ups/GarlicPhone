@@ -1,19 +1,26 @@
-// SSE dispatching
+// WebSocket dispatching
 
 import { ErrorDetails } from "../library/error-types";
 import type { GameId, GameData, GameCode, PlayerId, Alert, ChainLink } from "./gameTypes";
 import { SUBMISSION_ALERT } from "./gameTypes";
 import { Router, Request, Response } from 'express';
-import { SSECoordinator } from "./sseCoordinator";
+// import { SSECoordinator } from "./sseCoordinator";
+import { SockCoordinator } from "./sockCoordinator";
 import { getChainIdxForPlayer, transition } from "./transition";
 import { saveGameDataToDb } from "./saveGame";
+import { Server as IOServer, Socket } from "socket.io";
 
 //---------- Setup ----------//
 
 export const gameRouter = Router();
-export const gameSSERouter = Router();
+// export const gameSSERouter = Router();
 
-const coord = new SSECoordinator<Alert["alert"]>();
+// const coord = new WSCoordinator<Alert["alert"]>();        // ← instantiate WSCoordinator
+let coord: SockCoordinator<Alert["alert"]>;
+export function initializeCoordinator(io: IOServer) {
+    coord = new SockCoordinator(io);
+}
+
 const currentGames: { [key: GameCode]: GameData } = {}
 
 const _1hr = 60_000;
@@ -216,31 +223,15 @@ export function handleFailableReturn(reason: "success" | string, res: Response) 
         : res.status(500).json({ status: "failed", reason: reason })
 }
 
-
-
-// Connect to the SSE coordinator
-gameSSERouter.get('/connect', (req: Request, res: Response) => {
-    const playerId = req.user!.id;
-    try {
-        const connectRes = coord.addClient(playerId, res);
-        if (connectRes !== "success") {
-            console.error(`Failed to add SSE client: ${connectRes}`);
-        }
-    } catch (err) {
-        console.error('Error establishing SSE connection:', err);
-    }
-});
-
-// Create a new game
-gameRouter.post('/create', checker(["playerId"], (req: Request, res: Response) => {
+// Existing HTTP gameRouter endpoints remain unchanged:
+gameRouter.post('/create', checker(["playerId"], (req, res) => {
     const playerId = req.user!.id;
     const gameCode = createNewGame(playerId);
     
     return res.status(201).json({ gameCode });
 }));
 
-// Add new player
-gameRouter.post('/join/:gameCode', checker(["playerId"], (req: Request, res: Response) => {
+gameRouter.post('/join/:gameCode', checker(["playerId"], (req, res) => {
     const playerId = req.user!.id;
     const { gameCode } = req.params;
 
@@ -248,20 +239,22 @@ gameRouter.post('/join/:gameCode', checker(["playerId"], (req: Request, res: Res
     return handleFailableReturn(addRes, res);
 }));
 
-// Start game
-gameRouter.post('/start/:gameCode', checker(["playerId"], (req: Request, res: Response) => {
+gameRouter.post('/start/:gameCode', checker(["playerId"], (req, res) => {
     const playerId = req.user!.id;
     const { gameCode } = req.params;
-
-    console.log(playerId);
 
     const startRes = startGame(gameCode, playerId);
     return handleFailableReturn("success", res);
 }));
 
+gameRouter.get('/me', checker(["playerId"], (req, res) => {
+    const playerId = req.user!.id;
 
-// Submit another link to the chain
-gameRouter.post('/submit/:gameCode', checker(["playerId"], (req: Request, res: Response) => {
+    return res.status(201).json({ playerId });
+}));
+
+
+gameRouter.post('/submit/:gameCode', checker(["playerId"], (req, res) => {
     const playerId = req.user!.id;
     const { gameCode } = req.params;
     const { link } = req.body as { link: ChainLink };

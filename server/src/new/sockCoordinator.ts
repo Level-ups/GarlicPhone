@@ -1,0 +1,80 @@
+import { Server as IOServer, Socket } from "socket.io";
+
+type ClientId = string | number;
+
+export type AddClientResult = "success" | "alreadyAdded";
+export type DispatchAlertResult = "success" | "invalidClientId";
+
+// Manage WebSocket client connections & dispatch events using Socket.IO
+export class SockCoordinator<EventType = string> {
+  private clients: { [key: ClientId]: Socket } = {};
+  private io: IOServer;
+
+  constructor(io: IOServer) {
+    this.io = io;
+
+    // Register connection listener
+    this.io.on("connection", (socket: Socket) => {
+      console.log("CONNECTION:", socket.handshake.auth.clientId)
+      const clientId = socket.handshake.auth.clientId as ClientId;
+      if (!clientId) {
+        socket.disconnect(true);
+        return;
+      }
+
+      const addResult = this.addClient(clientId, socket);
+      if (addResult !== "success") {
+        socket.emit("error", `Client ${clientId} already connected`);
+        socket.disconnect(true);
+      }
+    });
+  }
+
+  public addClient(clientId: ClientId, socket: Socket): AddClientResult {
+    console.log("ADDING CLIENT:", clientId);
+    if (clientId in this.clients) return "alreadyAdded";
+
+    this.clients[clientId] = socket;
+
+    // Emit initial event to confirm connection
+    socket.emit("connected", clientId);
+
+    // Cleanup on disconnect
+    socket.on("disconnect", () => {
+      this.removeClient(clientId);
+    });
+
+    return "success";
+  }
+
+  public removeClient(clientId: ClientId): void {
+    console.log("REMOVING CLIENT:", clientId);
+    const socket = this.clients[clientId];
+    if (socket) {
+      socket.disconnect(true);
+      delete this.clients[clientId];
+    }
+  }
+
+  // Dispatch event to specific client
+  public dispatch(clientId: ClientId, data: any, event: EventType): DispatchAlertResult {
+    console.log(`DISPATCH [${event}]:`, clientId)
+    const socket = this.clients[clientId];
+    if (!socket) {
+      console.log("INVALID CLIENT ID:", clientId);
+      return "invalidClientId";
+    }
+    socket.emit(event as string, data);
+    return "success";
+  }
+
+  // Broadcast to all listed clients
+  public broadcast(clients: ClientId[], data: any, event: EventType): void {
+    console.log(`--- BROADCAST [${event}] ---`);
+    clients.forEach((c) => {
+      if (c in this.clients) {
+        this.dispatch(c, data, event);
+      }
+    });
+  }
+}

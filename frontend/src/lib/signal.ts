@@ -42,7 +42,6 @@ export function just<T>(v: MaybeReactive<T>): T {
 //---------- Signal creation utils ----------//
 // Create stateful signal via closure
 export function sig<T>(init: T): Signal<T> {
-  console.log("test");
   let val = init;
   const subs = new Set<(v: T) => void>();
 

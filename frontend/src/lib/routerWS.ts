@@ -1,53 +1,26 @@
-import { io, Socket } from "socket.io-client";
 import { randHex } from "./parse";
-import { apiFetch } from "./fetch";
+import type { ContainerMap, GlobalState, PageRenderer, Params, RedirectFn, RouterOptions } from "./router";
 
-export type AlertCallback = (alert: any) => void; // TODO: Add types
-export type AlertSubHelper = (listener: AlertCallback) => void;
-export type GlobalState = { [key: string]: any };
-export type PageRenderer = (
-  containers: ContainerMap,
-  other: {
-    params: Params,
-    globalState: GlobalState,
-    onUpdate: AlertSubHelper,
-    onSubmit: AlertSubHelper
-  }
-) => void;
 
-export type RedirectFn = (path: string) => string | null;
-export type ContainerMap = { [key: string]: HTMLElement } & {
-  app: HTMLElement;
-  page: HTMLElement;
-};
-
-export type Params = { [key: string]: any };
-
-declare global {
-  const router: PageRouter;
-  function visit(page: string, params?: Params): void;
-  function isolateContainer(container: string): void;
-}
-
-export interface RouterOptions {
-  pages: Record<string, PageRenderer>;
-  containers: ContainerMap;
-  redirects?: RedirectFn[];
-  state?: Record<string, any>;
-}
-
-export class PageRouter {
+export class PageRouterWS {
   private pages: Record<string, PageRenderer>;
   private containers: ContainerMap;
   private redirects: RedirectFn[];
   private clientId: string;
-  private socket: Socket | null = null;
+  public socket: WebSocket | null = null;
 
   private globalState: GlobalState = {};
 
   // onUpdate subscribers
   private onUpdateSubs: Array<(alert: any) => void> = [];
   private onSubmitSubs: Array<(alert: any) => void> = [];
+
+  private wsHandlers: Record<string, (alert: any) => void> = {
+    "update": (alert) =>     { console.log("update alert:", alert); this.onUpdateSubs.forEach(fn => fn(alert)); },
+    "submission": (alert) => { console.log("submission alert:", alert); this.onSubmitSubs.forEach(fn => fn(alert)); },
+    "transition": (alert) => { console.log("transition alert:", alert); this.visit(alert.phaseType, { alert }); }
+  };
+
 
   constructor(options: RouterOptions) {
     this.pages = options.pages;
@@ -56,7 +29,7 @@ export class PageRouter {
     this.globalState = {};
 
     // Obtain/Generate client id
-    this.clientId = sessionStorage.getItem("clientId") ?? "";
+    this.clientId = sessionStorage.getItem("clientId") ?? randHex(20);
     sessionStorage.setItem("clientId", `${this.clientId}`);
 
     // Bind methods to this instance
@@ -66,14 +39,6 @@ export class PageRouter {
 
     // Listen to browser navigation
     window.addEventListener("popstate", this.handlePopState);
-
-    const ivl = setInterval(() => {
-      if (this.socketInitialized()) { clearInterval(ivl); }
-      else {
-        console.log("> Attempting socket init");
-        this.initializeSocketIfAuthenticated();
-      }
-    }, 1000);
 
     // Global exposures
     (window as any).visit = this.visit;
@@ -97,6 +62,7 @@ export class PageRouter {
     return path;
   }
 
+  // Handle browser URL change
   private handlePopState(): void {
     const fullPath = window.location.pathname;
     const path = fullPath;
@@ -104,8 +70,7 @@ export class PageRouter {
     this.render(pageName);
   }
 
-  public socketInitialized(): boolean { return this.socket != null; }
-
+  // Redirect to specific page in `pages`
   public visit(page: string, params: Params = {}): void {
     if (!this.pages[page]) {
       console.warn(`Page "${page}" not found, staying on current page.`);
@@ -124,6 +89,7 @@ export class PageRouter {
     }
   }
 
+  // Clear page content & render new page
   private render(page: string, params: Params = {}): void {
     const renderer = this.pages[page];
     Object.entries(this.containers).forEach(([_, v]) => {
@@ -136,6 +102,7 @@ export class PageRouter {
       return;
     }
 
+    // Construct subscription functions
     const onUpdate = (listener: (alert: any) => void) => { this.onUpdateSubs.push(listener); };
     const onSubmit = (listener: (alert: any) => void) => { this.onSubmitSubs.push(listener); };
     const globalState = this.globalState;
@@ -154,53 +121,53 @@ export class PageRouter {
     return this.globalState;
   }
 
-  // Initializes the WebSocket connection if the user is authenticated
-  public async initializeSocketIfAuthenticated() {
+  // Initializes the WebSocket connection if the user is authenticated (has a JWT token)
+  // This should be called after successful login
+  public initializeWSIfAuthenticated(): void {
     const token = sessionStorage.getItem('google-id-token');
 
     if (token && !this.socket) {
-      const res = await apiFetch("get", "/api/games/me", undefined);
-      const { playerId } = await res?.json();
-      // sessionStorage.setItem("clientId", `${playerId}`);
+      // Build ws:// URL from current origin
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host;
+      const query = new URLSearchParams({
+        id: this.clientId,
+        authorization: token
+      }).toString();
 
-      console.log("AUTHENTICATED -> INITIALIZING SOCKET CONNECTION");
-      console.log("CLIENT ID:", playerId);
-      this.socket = io("/api/socket/games", {
-        auth: { token },
-        query: { clientId: playerId },
-        transports: ["websocket"],
-      });
+      this.socket = new WebSocket(`${wsProtocol}//${host}/api/ws/games/connect?${query}`);
+      console.log('WebSocket connection establishing');
 
-      this.socket.on("connect", () => {
-        console.log("> SOCKET CONNECTED");
-      });
+      this.socket.onopen = () => {
+        console.log('WebSocket connection established');
+      };
 
-      this.socket.on("disconnect", (reason) => {
-        console.log("> SOCKET DISCONNECTED", reason);
-      });
+      this.socket.onmessage = ({ data }) => {
+        try {
+          const { event, data: payload } = JSON.parse(data);
+          const handler = this.wsHandlers[event];
+          if (handler) handler(payload);
+        } catch (err) {
+          console.error('Failed to parse WS message', err);
+        }
+      };
 
-      this.socket.on("update", (alert) => {
-        console.log("UPDATE ALERT:", alert);
-        this.onUpdateSubs.forEach(fn => fn(alert));
-      });
+      this.socket.onclose = () => {
+        console.log('WebSocket connection closed');
+        this.socket = null;
+      };
 
-      this.socket.on("submission", (alert) => {
-        console.log("SUBMISSION ALERT:", alert);
-        this.onSubmitSubs.forEach(fn => fn(alert));
-      });
-
-      this.socket.on("transition", (alert) => {
-        console.log("TRANSITION ALERT:", alert);
-        this.visit(alert.phaseType, { alert });
-      });
+      this.socket.onerror = (err) => {
+        console.error('WebSocket error', err);
+      };
     }
   }
 
-  public closeSocketConnection(): void {
+  public closeWSConnection(): void {
     if (this.socket) {
-      this.socket.disconnect();
+      this.socket.close();
       this.socket = null;
-      console.log("> SOCKET CONNECTION CLOSED");
+      console.log('WebSocket connection closed by client');
     }
   }
 }
