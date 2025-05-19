@@ -13,11 +13,13 @@ type PlayerInfo = {
   isReady?: boolean;
 };
 
-async function startGame(gameCode: string) {
+async function startGame(gameCode: string, playerClickedStartGame: Signal<boolean>) {
   const res = await apiFetch("post", `/api/games/start/${gameCode}`, {});
 
   const data = await res.json();
   console.log("start game", data);
+
+  playerClickedStartGame(false);
   return data;
 }
 
@@ -37,6 +39,7 @@ export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => 
 
   const players = sig<PlayerInfo[]>([]);
   const gameCode = sig<string>(globalState.gameCode);
+  const playerClickedStartGame = sig<boolean>(false);
 
   const playerId = Number(sessionStorage.getItem("playerId"));
   sessionStorage.setItem("playerId", `${playerId}`);
@@ -64,7 +67,9 @@ export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => 
   }
 
   function handleStartGame() {
-    startGame(globalState.gameCode);
+    playerClickedStartGame(true);
+    startGame(globalState.gameCode, playerClickedStartGame);
+  
   }
 
   return parseInto(page, {
