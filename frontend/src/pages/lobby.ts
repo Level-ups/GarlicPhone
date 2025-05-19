@@ -1,5 +1,5 @@
 import { menuNav } from "../components/menuNav";
-import { createButton } from "../components/ui";
+import { createButton, getAvatar } from "../components/ui";
 import { apiFetch } from "../lib/fetch";
 import { forEl, parseInto, react } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
@@ -58,10 +58,15 @@ export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => 
   const gameCode = sig<string>(globalState.gameCode);
   const playerClickedStartGame = sig<boolean>(false);
 
-  const playerId = Number(sessionStorage.getItem("playerId"));
-  sessionStorage.setItem("playerId", `${playerId}`);
+  const playerId = sig<number>(-1);
+  const playerName = sig<string>("");
+  const isHost = der<boolean>(() => players().length > 0 && players()[0].id == playerId());
 
-  const isHost = der<boolean>(() => players().length > 0 && players()[0].id == playerId);
+  // Get current player details
+  apiFetch("get", "/api/games/me", undefined).then(async (res) => {
+    const { playerId: id, playerName: name } = await res?.json();
+    playerId(id); playerName(name);
+  });
 
   const urlGameCode: string = window.location.pathname
     .split("/")
@@ -77,7 +82,7 @@ export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => 
       players(alert.update.players.map((a: any) => ({
         id: a.playerId,
         name: a.name,
-        avatarUrl: a.avatarURL,
+        avatarUrl: a.avatarURL || getAvatar(a.name),
         isHost: a.isHost
       })));
 
@@ -87,7 +92,9 @@ export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => 
 
   isolateContainer("page");
 
-  function handleLeaveLobby() {
+  async function handleLeaveLobby() {
+    debugLog(`Leaving game ${gameCode()}:`, playerId);
+    await apiFetch("post", `/api/games/leave/${gameCode}`, undefined);
     visit("gallery");
   }
 
@@ -122,7 +129,11 @@ export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => 
                   $: { display: p.avatarUrl === "" ? "none" : "block" },
                   "@": { src: p.avatarUrl ?? "", alt: "Player Avatar" }
                 },
-                "|p.lobby-player-name": { _: p.name }
+                "|p.lobby-player-name": { _: p.name + (p.isHost ? " (Host)" : "") },
+                $: {
+                  borderColor: der(() => p.id === playerId() ? "var(--green)" : ""),
+                  color:       der(() => p.id === playerId() ? "var(--green)" : "")
+                }
             }
           })))
         },

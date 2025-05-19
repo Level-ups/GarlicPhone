@@ -161,6 +161,7 @@ export function createImage(url: Reactive<string>, alt: string = "image"): ElemT
         $: {
           display: der(() => [url(), isLoaded()][1] ? "block" : "none"),
           maxWidth: "100%",
+          imageRendering: "pixelated"
         },
         "%load": () => isLoaded(true)
       }
@@ -247,4 +248,26 @@ export function createChainDisplay(links: ChainLink[]): ElemTree {
       }
     }
   };
+}
+
+function simpleHash(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    let char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0; // convert to 32-bit integer
+  }
+  return hash;
+}
+
+const AVATARS = [
+  "animal-avatar-bear-svgrepo-com.svg",   "avatar-dead-monster-svgrepo-com.svg",
+  "anime-away-face-svgrepo-com.svg",      "avatar-lazybones-sloth-svgrepo-com.svg",
+  "avatar-avocado-food-svgrepo-com.svg",  "avatar-male-president-svgrepo-com.svg",
+  "avatar-batman-comics-svgrepo-com.svg", "builder-helmet-worker-svgrepo-com.svg",
+  "avatar-bug-insect-svgrepo-com.svg",    "friday-halloween-jason-svgrepo-com.svg"
+];
+
+export function getAvatar(playerName: string): string {
+  return `/assets/avatars/${AVATARS[simpleHash(playerName) % AVATARS.length]}`;
 }

@@ -89,6 +89,21 @@ function addPlayerToGame(gameCode: GameCode, playerId: PlayerId, playerName?: st
     return "success";
 }
 
+type RemovePlayerResult = "success" | "invalidGame" | "invalidPlayer" | "gameAlreadyStarted";
+function removePlayerFromGame(gameCode: GameCode, playerId: PlayerId): RemovePlayerResult {
+    if (!(gameCode in currentGames)) return "invalidGame";
+    const gameData = currentGames[gameCode];
+    if (!gameData.players.includes(playerId)) return "invalidPlayer";
+    if (gameData.phase > 0) return "gameAlreadyStarted";
+
+    gameData.players.filter(p => p != playerId);
+    delete gameData.playerNames[playerId];
+
+    setTimeout(() => broadcastLobbyUpdate(gameData), 1500);
+
+    return "success";
+}
+
 type StartGameResult = "success" | "invalidGame" | "noPlayers" | "playerIsNotHost";
 async function startGame(gameCode: GameCode, requestor: PlayerId): Promise<StartGameResult> {
     if (!(gameCode in currentGames)) return "invalidGame";
@@ -276,6 +291,14 @@ gameRouter.post('/join/:gameCode', checker(["playerId"], (req, res) => {
     const { gameCode } = req.params;
 
     const addRes = addPlayerToGame(gameCode, playerId, playerName);
+    return handleFailableReturn(addRes, res);
+}));
+
+gameRouter.post('/leave/:gameCode', checker(["playerId"], (req, res) => {
+    const playerId = req.user!.id;
+    const { gameCode } = req.params;
+
+    const addRes = removePlayerFromGame(gameCode, playerId);
     return handleFailableReturn(addRes, res);
 }));
 

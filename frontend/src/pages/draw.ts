@@ -225,7 +225,7 @@ function cleanup() {
 
 export const drawPage: PageRenderer = ({ page }, { onSubmit, params, globalState }) => {
   debugLog("DRAW PARAMS:", params);
-  const prompt = sig<string>(params.alert.prompt);
+  const prompt = sig<string>(params?.alert?.prompt ?? "Unknown prompt");
   const gameCode = globalState.gameCode;
 
   onSubmit(async () => {

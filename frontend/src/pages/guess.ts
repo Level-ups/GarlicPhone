@@ -58,7 +58,7 @@ export function createGuessPage(
 
 export const guessPage: PageRenderer = ({ page }, { onSubmit, params, globalState }) => {
     const promptInput = sig<string>("asdf");
-    const imgSrc = sig<string>(params.alert.imgSrc);
+    const imgSrc = sig<string>(params?.alert?.imgSrc ?? "");
 
     onSubmit((data) => {
         console.log("SUBMISSION EVENT", data); 
