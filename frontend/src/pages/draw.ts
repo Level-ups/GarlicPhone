@@ -1,12 +1,12 @@
 
 import { titleNavWithTimer } from "../components/menuNav";
 import { apiFetch, apiFetchRawBody } from "../lib/fetch";
+import { PALETTES, type ColourButtonConfig } from "../lib/palettes";
 import { forEl, parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
-import { sig } from "../lib/signal";
-import { timer } from "../lib/timer";
+import { timerTill } from "../lib/timer";
 import { drawLine, floodFill, paint } from "../lib/util/canvasUtils";
-import type { Lobby, WithClient } from "../services/lobbyService";
+import { sig } from "../lib/util/signal";
 import eraserToolIcon from "/assets/canvas/eraser-tool.svg";
 import fillToolIcon from "/assets/canvas/fill-tool.svg";
 import pecilToolIcon from "/assets/canvas/pencil-tool.svg";
@@ -37,7 +37,6 @@ type ToolButtonConfig = {
   initiallyActive?: boolean;
   clickFunc: Function;
 };
-type ColourButtonConfig = { colour: string; initiallyActive?: boolean };
 
 const canvasConfig: CanvasConfig = {
   pencilContext: {
@@ -214,17 +213,8 @@ function getCanvasContext() {
   return canvasConfig.canvasContext;
 }
 
-// Flag to track if event listeners have been attached
-let drawPageListenersAttached = false;
-
 // Function to clean up event listeners when page is unloaded
-function cleanupDrawPageListeners() {
-  if (drawPageListenersAttached && sseHandler) {
-    sseHandler.removeEventListener("before_lobby_update", beforeLobbyUpdateHandler);
-    sseHandler.removeEventListener("after_lobby_update", afterLobbyUpdateHandler);
-    drawPageListenersAttached = false;
-  }
-  
+function cleanup() {
   // Reset drawing state
   isDrawing = false;
   canvasConfig.canvasContext = undefined;
@@ -232,55 +222,25 @@ function cleanupDrawPageListeners() {
   activeToolButton = null;
 }
 
-// Event handler functions
-async function beforeLobbyUpdateHandler(e: Event) {
-  const lobby: WithClient<Lobby> = JSON.parse((e as any).data);
-  const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-  
-  // Find the assignment for the current player
-  const playerAssignment = lobby.phasePlayerAssignments.find(
-    assignment => assignment.player.id === Number(lobby.players[lobby.clientIndex].id)
-  );
-  
-  if (playerAssignment) {
-    const uploadedImage = await uploadCanvasImage(canvas, playerAssignment.chain.id, lobby.players[lobby.clientIndex].id);
-  }
-}
 
-async function afterLobbyUpdateHandler(e: Event) {
-  const lobby: WithClient<Lobby> = JSON.parse((e as any).data);
-  
-  // Find the assignment for the current player
-  const playerAssignment = lobby.phasePlayerAssignments.find(
-    assignment => assignment.player.id === Number(lobby.players[lobby.clientIndex].id)
-  );
-  
-  if (playerAssignment) {
-    const promptForPlayer = await getPromptForPLayer(playerAssignment.chain.id);
-    promptSignal(promptForPlayer.text);
-  }
-}
+export const drawPage: PageRenderer = ({ app }, { onSubmit, params, globalState }) => {
+  console.log("DRAW PARAMS:", params);
+  const prompt = sig<string>(params.alert.prompt);
+  const gameCode = globalState.gameCode;
 
-// Store prompt signal in a variable that can be accessed by the handlers
-let promptSignal: ReturnType<typeof sig<string>>;
-
-export const drawPage: PageRenderer = ({ page }) => {
-  promptSignal = sig<string>("Loading...");
-  const prompt = promptSignal;
+  onSubmit(async () => {
+    const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    if (canvas) {
+      const uploadedUrl = await uploadCanvasImage(canvas, gameCode);
+      console.log(uploadedUrl);
+    }
+    else throw new Error("Canvas not found");
+  });
   
   // Initialize canvas when the page is loaded
   initializeCanvas();
 
-  const colourButtons: ColourButtonConfig[] = [
-    { colour: "rgb(255, 0, 0)" },
-    { colour: "rgb(0, 0, 255)" },
-    { colour: "rgb(0, 128, 0)" },
-    { colour: "rgb(255, 255, 0)" },
-    { colour: "rgb(255, 166, 0)" },
-    { colour: "rgb(128, 0, 128)" },
-    { colour: "rgb(255, 192, 203)" },
-    { colour: "rgb(0, 0, 0)", initiallyActive: true },
-  ];
+  const colourButtons = PALETTES["candy_cloud"];
 
   const toolButtons: ToolButtonConfig[] = [
     {
@@ -339,31 +299,21 @@ export const drawPage: PageRenderer = ({ page }) => {
   ];
 
   // Clean up any existing listeners first
-  cleanupDrawPageListeners();
-  
-  // Attach event listeners
-  // if (sseHandler) {
-  //   sseHandler.addEventListener("before_lobby_update", beforeLobbyUpdateHandler);
-  //   sseHandler.addEventListener("after_lobby_update", afterLobbyUpdateHandler);
-  //   drawPageListenersAttached = true;
-    
-  //   // Add cleanup when page is unloaded or navigated away from
-  //   window.addEventListener("beforeunload", cleanupDrawPageListeners);
-    
-  //   // Also clean up when navigating to a different page
-  //   const originalVisit = window.visit;
-  //   window.visit = function(page: string) {
-  //     if (page !== "draw") {
-  //       cleanupDrawPageListeners();
-  //     }
-  //     originalVisit(page);
-  //   };
-  // }
+  cleanup();
 
   isolateContainer("page");
   return parseInto(page, {
     ...titleNavWithTimer(30, "draw-page-nav"),
     "|section.draw-page": {
+      "|div.draw-page-header-ctn": {
+        "|div.draw-page-title-timer-ctn": {
+          "|h2.large-heading.draw-page-title": { _: "Garlic Phone", },
+          ...timerTill(params?.alert?.timeStarted ?? Date.now() + 30_000)
+        },
+        "|img.draw-page-logo": {
+          "@": { src: garlicPhoneLogo, alt: "Garlic Phone Logo" },
+        },
+      },
       "|div.draw-page-prompt-ctn": {
         "|p": { _: "Draw:" },
         "|h3.medium-heading": { _: prompt },
@@ -435,12 +385,6 @@ export const drawPage: PageRenderer = ({ page }) => {
   });
 };
 
-async function getPromptForPLayer(chainId: number) {
-  const latestPromptForChain = await apiFetch("GET", `/api/prompts/chain/${chainId}/latest`, undefined);
-  const data = await latestPromptForChain.json();
-  return data;
-}
-
 function dataURLtoBlob(dataURL: any) {
   const byteString = atob(dataURL.split(',')[1]);
   const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
@@ -452,7 +396,7 @@ function dataURLtoBlob(dataURL: any) {
   return new Blob([ab], { type: mimeString });
 }
 
-async function uploadCanvasImage(canvas: HTMLCanvasElement, chainId: number, userId: string) {
+async function uploadCanvasImage(canvas: HTMLCanvasElement, gameCode: string) {
 
   const imageData = canvas.toDataURL('image/png');
   const blob = dataURLtoBlob(imageData);
@@ -463,7 +407,7 @@ async function uploadCanvasImage(canvas: HTMLCanvasElement, chainId: number, use
 
   const response = await apiFetchRawBody(
     "post",
-    `/api/chain/${chainId}/latest-image?userId=${userId}`,
+    `/api/games/submit-image/${gameCode}`,
     blob,
     { "Content-Type": "image/png" }
   );
@@ -473,11 +417,8 @@ async function uploadCanvasImage(canvas: HTMLCanvasElement, chainId: number, use
     throw new Error(`Upload failed: ${JSON.stringify(errorDetails)}`);
   }
 
-  const result = await response.json();
-  return result; // image object returned from your API
+  return response.json(); // image object returned from your API
 }
-
-// Commented code removed for clarity
 
 // Initialize canvas and controls when the page is loaded
 function initializeCanvas() {

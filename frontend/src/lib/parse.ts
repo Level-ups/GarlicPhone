@@ -1,4 +1,4 @@
-import { bind, der, eff, maybeBind, maybeSub, multiSub, sig, type MaybeReactive, type Reactive } from "./signal";
+import { bind, der, eff, maybeBind, maybeSub, multiSub, sig, type MaybeReactive, type Reactive } from "./util/signal";
 
 export type Generator<T, Args extends any[] = []> = T | ((...args: Args) => T);
 
@@ -37,46 +37,6 @@ export type StyleDict = { [key in keyof CSSStyleDeclaration]?: MaybeReactive<str
 export type AttrDict = { [key: string]: MaybeReactive<string> };
 export type EventHandler = (e: Event) => void;
 export type EventHandlerDict = { [eventName: string]: EventHandler; }
-
-
-
-//-------------------- Trinkets --------------------//
-class Signal<T> { val: T;
-    deps: any[];
-
-    constructor(val: T, deps: any[] = []) {
-        this.val = val;
-        this.deps = deps;
-    }
-
-    set(setter: T | ((v: T) => T)) {
-        this.val = typeof setter === "function" ? (setter as Function)(this.val) : setter;
-        this.notify();
-    }
-
-    notify() { this.deps.forEach(x => x()); }
-    addDep(dep: (v: T) => void){ this.deps.push(dep); }
-}
-
-let x = new Signal(10);
-x.set(20);
-
-let silentRegisterCaller = (_: any) => {};
-
-function init() {
-    const $state = new Proxy({}, {
-        get(target: { [key: string]: Signal<any> }, prop: string) {
-            if (typeof prop === "symbol") return;
-
-            // Silently add dependency when getting signal element
-            const signal = target[prop];
-            if (typeof silentRegisterCaller === "function") {
-                signal.addDep(silentRegisterCaller);
-            }
-            return signal;
-        }
-    })
-}
 
 
 //-------------------- Parser --------------------//

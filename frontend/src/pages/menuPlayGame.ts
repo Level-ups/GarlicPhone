@@ -1,10 +1,10 @@
+import { menuNav } from "../components/menuNav";
+import { createButton, createInput } from "../components/ui";
+import { apiFetch } from "../lib/fetch";
 import { parseInto } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
-import { menuNav } from "../components/menuNav";
-import { sig, type Signal } from "../lib/signal";
-import { apiFetch } from "../lib/fetch";
+import { der, sig } from "../lib/util/signal";
 import wavingGarlic from "/assets/waving-garlic.png";
-
 type PlayerInfo = {
     id: number;
     name: string;
@@ -13,136 +13,126 @@ type PlayerInfo = {
     isReady?: boolean
 };
 
-async function createLobby(playerId: string | number) {
-    const playerIdNum = typeof playerId === 'string' ? parseInt(playerId, 10) : playerId;
-    const res = await apiFetch("post", "/api/lobbies", {
-        hostId: playerIdNum,
-        hostName: "Host Player"
-    });
+async function createGame() {
+    const res = await apiFetch("post", "/api/games/create", {});
 
     const data = await res.json();
-    log("CREATE LOBBY:", data);
 
-    return data;
+    return data as { gameCode: string };
 }
 
-async function joinLobby(gameCode: string, playerId: string | number, players: Signal<PlayerInfo[]>) {
-    const playerIdNum = typeof playerId === 'string' ? parseInt(playerId, 10) : playerId;
-    const res = await apiFetch("post", "/api/lobbies/join", {
-        playerId: playerIdNum,
-        playerName: "Joined Player",
-        code: gameCode
-    });
+async function joinGame(gameCode: string) {
+    const res = await apiFetch("post", `/api/games/join/${gameCode}`, {});
 
     const data = await res.json();
     log("JOIN LOBBY:", data);
-    players(data.players);
 
     return data;
 }
 
-export const menuPlayGamePage: PageRenderer = ({ page }) => {
-    // Generate a random player ID
+
+
+export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate }) => {
+    //----- Initialization ----//
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
-    if (token) localStorage.setItem("google-id-token", token);
-    const generatePlayerId = (): string => {
-        return Math.random().toString(36).substring(2, 15);
-    };
-    
-    // Store player info in session storage
-    const storePlayerInfo = (name: string, id: string): void => {
-        sessionStorage.setItem('playerName', name);
-        sessionStorage.setItem('playerId', id);
-    };
-    
+    const urlCode = params.get('code');
+    if (token) {
+        console.log('Token received');
+        sessionStorage.setItem("google-id-token", token);
+        
+        // // Only attempt to initialize socket if we haven't already done so in this session
+        // // and we're not currently in the process of initializing
+        // const sseInitializing = sessionStorage.getItem("socket-init");
+        
+        // if (sseInitializing) {
+        //     // Mark as initializing to prevent concurrent initialization attempts
+        //     sessionStorage.setItem("socket-init", "true");
+            
+        //     // Use setTimeout to ensure router is initialized before accessing it
+        //     setTimeout(() => {
+        //         try
+        //         {
+        //             if (router == null)             { console.error('> ROUTER UNAVAILABLE'); return; }
+        //             if (router.socketInitialized()) { console.log('> SOCKET ALREADY INITIALIZED, SKIPPING'); return; }
+
+        //             console.log('> ATTEMPTING SOCKET INITIALIZATION');
+        //             router.initializeSocketIfAuthenticated();
+        //             console.log('> INITIALIZATION COMPLETE');
+
+        //         } catch (err) {
+        //             console.error('> ERR DURING SOCKET INITIALIZATION', err);
+        //         } finally {
+        //             // Clear init flag regardless of success/failure
+        //             sessionStorage.removeItem("socket-init");
+        //         }
+        //     }, 1000);
+
+        // } else { console.log('> SOCKET INITIALIZATION ALREADY IN PROGRESS, SKIPPING'); }
+    }
+
+    //----- Page state signals -----//
+    let playerNameInp = sig<string>("");
+    let playerName = der<string>(() => playerNameInp().trim());
+    let gameCodeInp = sig<string>(urlCode ?? "");
+    let gameCode = der<string>(() => gameCodeInp().trim());
+
+    let joiningGame = sig<boolean>(false);
+    let joinGameLabel = der<string>(() => joiningGame() ? "Joining..." : "Join Game");
+
+    let creatingGame = sig<boolean>(false);
+    let createGameLabel = der<string>(() => creatingGame() ? "Creating..." : "Create Game");
+
+
+    //----- Button handlers -----//
     // Create a new lobby and redirect to lobby page
-    const handleCreateLobby = async (): Promise<void> => {
-        const playerNameInput = document.getElementById('player-name') as HTMLInputElement;
-        const createLobbyBtn = document.getElementById('create-lobby-btn') as HTMLButtonElement;
-        const playerName = playerNameInput.value.trim();
+    function handleCreateGame() {
+        if (!playerName()) { alert('Please enter your name'); return; }
         
-        if (!playerName) {
-            alert('Please enter your name');
-            return;
-        }
-        
-        const playerId = generatePlayerId();
-        
+        creatingGame(true);
+
         try {
-            createLobbyBtn.disabled = true;
-            createLobbyBtn.textContent = 'Creating...';
-            
             // Use local createLobby function instead of lobbyService.createLobby
-            const lobby = await createLobby(playerId);
-            
-            // Store player info and lobby code in session storage
-            storePlayerInfo(playerName, playerId);
-            sessionStorage.setItem('lobbyCode', lobby.code);
-            sessionStorage.setItem('lobbyId', lobby.id);
-            sessionStorage.setItem('isHost', 'true');
-            
-            // Redirect to lobby page
-            visit('lobby');
-            
+            (async () => {
+                const gameCode = await createGame();
+                globalState.playerName = playerName;
+                globalState.gameCode = gameCode.gameCode;
+                // Redirect to lobby page
+                visit('lobby');
+            })();
         } catch (error) {
             alert(`Error creating lobby: ${error instanceof Error ? error.message : 'Unknown error'}`);
-            createLobbyBtn.disabled = false;
-            createLobbyBtn.textContent = 'Create Game';
+            creatingGame(false);
         }
     };
-    
+
+
     // Join an existing lobby and redirect to lobby page
-    const handleJoinLobby = async (): Promise<void> => {
-        const playerNameInput = document.getElementById('player-name') as HTMLInputElement;
-        const lobbyCodeInput = document.getElementById('lobby-code') as HTMLInputElement;
-        const joinLobbyBtn = document.getElementById('join-lobby-btn') as HTMLButtonElement;
-        const playerName = playerNameInput.value.trim();
-        const code = lobbyCodeInput.value.trim();
+    async function handleJoinGame() {
+        if (playerName() == "") { alert('Please enter your name'); return; }
+        if (gameCode() == "") { alert('Please enter a lobby code'); return; }
         
-        if (!playerName) {
-            alert('Please enter your name');
-            return;
-        }
-        
-        if (!code) {
-            alert('Please enter a lobby code');
-            return;
-        }
-        
-        const playerId = generatePlayerId();
+        joiningGame(true);
         
         try {
-            joinLobbyBtn.disabled = true;
-            joinLobbyBtn.textContent = 'Joining...';
-            
-            // Create a signal for players
-            const playersSignal = sig<PlayerInfo[]>([]);
-            
-            // Use local joinLobby function instead of lobbyService.joinLobbyByCode
-            const lobby = await joinLobby(code, playerId, playersSignal);
-            
-            // Store player info and lobby code in session storage
-            storePlayerInfo(playerName, playerId);
-            sessionStorage.setItem('lobbyCode', lobby.code);
-            sessionStorage.setItem('lobbyId', lobby.id);
-            sessionStorage.setItem('isHost', 'false');
-            
-            // Redirect to lobby page
-            visit('lobby');
-            
+            (async () => {
+                await joinGame(gameCodeInp());
+                globalState.gameCode = gameCodeInp();
+                // Redirect to lobby page
+                try {
+                    router.visit('lobby');
+                } catch (error) {
+                    console.error('Error navigating to lobby:', error);
+                }
+            })();
         } catch (error) {
+            joiningGame(false);
             alert(`Error joining lobby: ${error instanceof Error ? error.message : 'Unknown error'}`);
-            joinLobbyBtn.disabled = false;
-            joinLobbyBtn.textContent = 'Join Game';
         }
     };
 
-    // Check for lobby code in URL param (for shared links)
-    const urlParams = new URLSearchParams(window.location.search);
-    const codeFromUrl = urlParams.get('code');
 
-    // Render page
+    //----- Render page ----//
     return parseInto(page, {
         ...menuNav(),
         "|section.game-entry": {
@@ -164,24 +154,7 @@ export const menuPlayGamePage: PageRenderer = ({ page }) => {
                             _: "Your Name:",
                             "@": { for: "player-name" }
                         },
-                        "|input#player-name.base-input": {
-                            "@": { 
-                                type: "text", 
-                                placeholder: "Enter your name", 
-                                required: "true",
-                                value: ""
-                            },
-                            "%keypress": (e: Event) => {
-                                const keyEvent = e as KeyboardEvent;
-                                if (keyEvent.key === 'Enter') {
-                                    e.preventDefault();
-                                    const lobbyCodeInput = document.getElementById('lobby-code');
-                                    if (lobbyCodeInput) {
-                                        lobbyCodeInput.focus();
-                                    }
-                                }
-                            }
-                        }
+                        ...createInput("Enter your name", playerNameInp)
                     }
                 },
                 $: {
@@ -200,11 +173,7 @@ export const menuPlayGamePage: PageRenderer = ({ page }) => {
                 },
                 "|article.create-game.card": {
                     "|h3": { _: "Create a New Game" },
-                    "|button#create-lobby-btn .base-button .base-button--accent": {
-                        "|span": { _: "Create Game" },
-                        "@": { type: "button" },
-                        "%click": handleCreateLobby
-                    },
+                    ...createButton(createGameLabel, handleCreateGame, ["base-button--accent"], creatingGame),
                     $: {
                         textAlign: "center",
                         padding: "2rem",
@@ -213,28 +182,10 @@ export const menuPlayGamePage: PageRenderer = ({ page }) => {
                     }
                 },
                 "|article.join-game.card": {
-                    "|h3": { _: "Join a Lobby" },
+                    "|h3": { _: "Join a Game" },
                     "|form#join-form": {
-                        "|input#lobby-code.base-input": {
-                            "@": { 
-                                type: "text", 
-                                placeholder: "Enter lobby code", 
-                                maxlength: "6",
-                                value: codeFromUrl || ""
-                            },
-                            "%keypress": (e: Event) => {
-                                const keyEvent = e as KeyboardEvent;
-                                if (keyEvent.key === 'Enter') {
-                                    e.preventDefault();
-                                    handleJoinLobby();
-                                }
-                            }
-                        },
-                        "|button#join-lobby-btn .base-button .base-button--accent": {
-                            "|span": { _: "Join Game" },
-                            "@": { type: "button" },
-                            "%click": handleJoinLobby
-                        }
+                        ...createInput("Enter game code", gameCodeInp),
+                        ...createButton(joinGameLabel, handleJoinGame, ["base-button--accent"], joiningGame),
                     },
                     $: {
                         textAlign: "center",
@@ -246,4 +197,4 @@ export const menuPlayGamePage: PageRenderer = ({ page }) => {
             }
         }
     });
-}; 
+};

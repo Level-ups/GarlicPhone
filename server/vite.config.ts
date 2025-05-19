@@ -11,9 +11,7 @@ export default defineConfig({
     rollupOptions: {
       input: resolve(__dirname, 'src/index.ts'),
       external: [
-        // built-ins & deps you don’t want bundled:
         'crypto', 'fs', 'path', 'cors', 'express', 'dotenv', 'jose',
-        // …add any other node_modules you want to stay external
       ],
       output: {
         format: 'esm',               // ESM output

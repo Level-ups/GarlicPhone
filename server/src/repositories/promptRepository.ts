@@ -1,3 +1,4 @@
+import { PoolClient } from 'pg';
 import pool from '../library/db';
 import { promptMapper } from '../library/mappers';
 import { Prompt, PromptDto } from '../models/Prompt';
@@ -63,7 +64,7 @@ async function getPromptsByChainId(chainId: number): Promise<Prompt[]> {
   return result.rows.map(row => promptMapper.toDomain(row));
 }
 
-async function insertPrompt(prompt: PromptDto): Promise<Prompt | null> {
+async function insertPrompt(prompt: PromptDto, client?: PoolClient): Promise<Prompt | null> {
   const query = `
     WITH inserted_prompt AS (
       INSERT INTO prompts (chain_id, index, text, user_id)
@@ -93,7 +94,7 @@ async function insertPrompt(prompt: PromptDto): Promise<Prompt | null> {
     INNER JOIN games g ON c.game_id = g.id
   `;
 
-  const result = await pool.query(
+  const result = await (client ?? pool).query(
     query,
     [prompt.chainId, prompt.index, prompt.text, prompt.userId]
   );

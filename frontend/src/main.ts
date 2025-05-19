@@ -1,17 +1,15 @@
 
-import { PageRouter, type ContainerMap, type PageRenderer, type RedirectFn } from './lib/router'
+import { PageRouter, type ContainerMap, type PageRenderer, type RedirectFn } from './lib/router';
+import { demoPage } from './pages/demo';
+import { drawPage } from './pages/draw';
+import { guessPage } from './pages/guess';
+import { homePage } from './pages/home';
+import { lobbyPage } from './pages/lobby';
 import { loginPage } from './pages/login';
 import { menuGalleryPage } from './pages/menuGallery';
-import { drawPage } from './pages/draw';
-import { menuPlayPage } from './pages/menuPlay';
-import { lobbyPage } from './pages/lobby';
-import { promptPage } from './pages/prompt';
-import { guessPage } from './pages/guess';
-import { reviewPage } from './pages/review';
-import { homePage } from './pages/home';
-import { updateSSEHandler } from './lib/sse';
 import { menuPlayGamePage } from './pages/menuPlayGame';
-import { demoPage } from './pages/demo';
+import { promptPage } from './pages/prompt';
+import { reviewPage } from './pages/review';
 
 //---------- Setup ----------//
 const containers: ContainerMap = {
@@ -31,39 +29,38 @@ declare global {
 
 //---------- Page routing ----------//
 const pages: { [key: string]: PageRenderer } = {
-  "home": c => homePage(c),
-  "login": c => loginPage(c),
-  "menuGallery": c => menuGalleryPage(c),
-  "menuPlay": c => menuPlayPage(c),
-  "menuPlayGame": c => menuPlayGamePage(c),
-  "lobby": c => lobbyPage(c),
-  "prompt": c => promptPage(c),
-  "draw": c => drawPage(c),
-  "guess": c => guessPage(c),
-  "review": c => reviewPage(c),
-  "demo": c => demoPage(c)
+  // "home":         homePage,
+  "login":        loginPage,
+  "menuGallery":  menuGalleryPage,
+  "menuPlay":     menuPlayGamePage,
+  "lobby":        lobbyPage,
+  "prompt":       promptPage,
+  "draw":         drawPage,
+  "guess":        guessPage,
+  "review":       reviewPage,
+  "demo":         demoPage
 };
  
 const redirects: RedirectFn[] = [
-  path => path === '/'        ? 'home' : null,
-  path => path === '/login'   ? 'login' : null,
-  // path => path === '/play'    ? 'menuPlay' : null,
-  path => path === '/play' ? 'menuPlayGame' : null,
+  path => path === '/'        ? 'login' : null,
+  // path => path === '/login'   ? 'login' : null,
+  path => path === '/play'    ? 'menuPlay' : null,
   path => path === '/gallery' ? 'menuGallery' : null,
 
-  path => path === '/game'    ? 'menuPlay' : null,
-
   path => path.startsWith('/lobby')   ? 'lobby' : null,
-  path => path === '/prompt'  ? 'prompt' : null,
-  path => path === '/guess'   ? 'guess' : null,
-  path => path === '/draw'    ? 'draw' : null,
+  path => path === '/prompt'          ? 'prompt' : null,
+  path => path === '/guess'           ? 'guess' : null,
+  path => path === '/draw'            ? 'draw' : null,
 
-  path => path === '/review'  ? 'review' : null,
+  path => path === '/review'          ? 'review' : null,
 
-  path => path === '/demo'  ? 'demo' : null
+  path => path === '/demo'            ? 'demo' : null
 ];
 
 const router = new PageRouter({ pages, redirects, containers });
+
+// Make router accessible globally for token-based SSE initialization
+(window as any).router = router;
 
 // Trigger navigation via buttons:
 document.getElementById('toAbout')?.addEventListener('click', () => visit('about'));

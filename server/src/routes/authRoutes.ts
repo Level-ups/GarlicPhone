@@ -8,8 +8,8 @@ import userService from '../services/userService';
 const router = Router();
 
 router.get('/start', (req, res) => {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const redirectUri = process.env.APP_URL + '/api/auth/callback';
+  const clientId = constants.GOOGLE_CLIENT_ID;
+  const redirectUri = constants.APP_URL + '/api/auth/callback';
   const scope = constants.GOOGLE_CLIENT_SCOPES;
   const authUrl = new URL(constants.GOOGLE_CLIENT_AUTH_URL);
 
@@ -29,9 +29,9 @@ router.get('/callback', async (req, res) => {
     return res.status(400).json(new ValidationErrorDetails('Missing code parameter'));
   }
 
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const redirectUri = process.env.APP_URL + '/api/auth/callback';  
+  const clientId = constants.GOOGLE_CLIENT_ID;
+  const clientSecret = constants.GOOGLE_CLIENT_SECRET;
+  const redirectUri = constants.APP_URL + '/api/auth/callback';  
 
   try {
     // Exchange code for tokens
@@ -83,7 +83,7 @@ router.get('/callback', async (req, res) => {
       audience: clientId,
     });
  
-    if(payload.sub){
+    if(payload.sub) {
       const [user, error] = await userService.getUserByGoogleId(payload.sub);
       if (!user) {
         const newUser = await userService.createUser({
@@ -98,7 +98,7 @@ router.get('/callback', async (req, res) => {
       }
     }
 
-    res.redirect(`/playgame?token=${idToken}`);
+    res.redirect(`/play?token=${idToken}`);
   } catch (error) {
     console.error('Error during OAuth callback handling:', error);
     return res.status(500).send('Internal Server Error');

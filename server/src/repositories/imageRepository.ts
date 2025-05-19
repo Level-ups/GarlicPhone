@@ -5,6 +5,7 @@ import { ErrorDetails } from '../library/error-types';
 import { imageMapper } from '../library/mappers';
 import s3 from '../library/s3';
 import { Image, InsertImageDto } from '../models/Image';
+import { PoolClient } from 'pg';
 
 async function getImageById(id: number): Promise<Image | null> {
   const query = `
@@ -72,7 +73,7 @@ async function getImagesByPromptId(promptId: number): Promise<Image[]> {
   return result.rows.map(row => imageMapper.toDomain(row));
 }
 
-async function insertImage(image: InsertImageDto): Promise<Image | null> {
+async function insertImage(image: InsertImageDto, client?: PoolClient): Promise<Image | null> {
   const query = `
     WITH inserted_image AS (
       INSERT INTO images (s3_url, prompt_id, user_id)
@@ -105,7 +106,7 @@ async function insertImage(image: InsertImageDto): Promise<Image | null> {
     INNER JOIN games g ON g.id = c.game_id
   `;
 
-  const result = await pool.query(
+  const result = await (client ?? pool).query(
     query,
     [image.s3Url, image.chainId, image.userId]
   );

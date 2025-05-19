@@ -24,7 +24,7 @@
     color: var(--black);
     overflow: hidden;
     cursor: pointer;
-    transition: all 0.4s ease;
+    transition: all 0.1s ease;
     backface-visibility: hidden;  
 }
 
@@ -35,7 +35,7 @@
 
 .base-button:hover{
     transform: translateY(-0.2rem);
-        box-shadow: .2rem .3rem var(--black);
+    box-shadow: .2rem .3rem var(--black);
 }
 
 

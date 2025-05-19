@@ -1,57 +1,33 @@
-import { sig } from "../lib/signal";
+import type { ChainLink } from "../components/ui";
 import { apiFetch } from "../lib/fetch";
 import { parseInto } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
-import type { Lobby, WithClient } from "../services/lobbyService";
+import { sig } from "../lib/util/signal";
 import { createGuessPage } from "./guess";
   
-async function uploadPrompt(chainId: number, index: number, text: string, userId: number) {
-    
-    const res = await apiFetch("post", "/api/prompts", {
-        chainId,
-        index,
-        text,
-        userId
-    });
+async function submitPrompt(gameCode: string, prompt: string) {
+    console.log("Submitting prompt:", prompt, gameCode);
+    const res = await apiFetch("post", `/api/games/submit/${gameCode}`, {
+        link: { type: "prompt", prompt }
+    } as { link: ChainLink });
 
-    const data = await res.json()  
+    const data = await res.json();
     return data;
 }
 
-// Store prompt signal in a variable that can be accessed by the handler
-let promptInputSignal: ReturnType<typeof sig<string>>;
+export const promptPage: PageRenderer = ({ page }, { globalState, params, onSubmit }) => {
+    const promptInp = sig<string>("");
+    
+    onSubmit(() => { submitPrompt(globalState.gameCode, promptInp()); });
 
-// Event handler function
-async function beforeLobbyUpdateHandler(e: Event) {
-    const lobby: WithClient<Lobby> = JSON.parse((e as any).data);
-    
-    // Find the assignment for the current player
-    const playerAssignment = lobby.phasePlayerAssignments.find(
-        assignment => assignment.player.id === Number(lobby.players[lobby.clientIndex].id)
-    );
-    
-    if (playerAssignment) {
-        const uploadedPrompt = await uploadPrompt(
-            playerAssignment.chain.id, 
-            lobby.phases.index, 
-            promptInputSignal(), 
-            Number(lobby.players[lobby.clientIndex].id)
-        );
-    }
-}
-
-export const promptPage: PageRenderer = ({ page }) => {
-    promptInputSignal = sig<string>("");
-    const promptInput = promptInputSignal;
-    
     isolateContainer("page");
 
     // Render page
     return parseInto(page, createGuessPage(
         "Think quick - write a prompt!",
-        promptInput,
-        () => { /* visit("draw") */ },
-        undefined,
-        30
+        "prompt",
+        promptInp,
+        (params?.alert?.timeStarted ?? params?.timeStarted ?? Date.now()) + 30_000,
+        () => {}
     ))
 };

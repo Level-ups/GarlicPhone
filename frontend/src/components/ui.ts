@@ -1,5 +1,5 @@
-import { bind, der, sig, type Reactive } from "../lib/signal";
-import { forEl, parse, type ElemTree } from "../lib/parse";
+import { forEl, parse, tryCall, type ElemTree } from "../lib/parse";
+import { der, sig, type Reactive } from "../lib/util/signal";
 
 export function defineCustomElem (
   elemName: `${string}-${string}`,
@@ -38,13 +38,23 @@ defineCustomElem("ui-button", {
 });
 
 export function createButton(
-  label: string,
-  onClick: (e: Event) => void = () => {}
+  label: Reactive<string> | string,
+  onClick: (e: Event) => void = () => {},
+  addClasses: string[] = [],
+  disabled?: Reactive<boolean>
 ): ElemTree {
   return {
-    '|button.base-button': {
-      "|span": { _: label },
-      '%click': onClick
+    [`|button.base-button ${addClasses.map(c => "." + c).join(" ")}`]: {
+      "|span": {
+        _: tryCall(label),
+        '%click': (e: Event) => onClick(e),
+      },
+      $: {
+        opacity: disabled != null ? der(() => disabled() ? "50%" : "100%") : "100%"
+      },
+      "@": {
+        disabled: disabled != null ? der(() => `${disabled()}`) : "false"
+      }
     }
   };
 }
@@ -56,7 +66,8 @@ export function createInput(
   return {
     '|input.gradient-input.base-input': {
       '@': { placeholder },
-      '%input': (e: Event) => { val((e.target as HTMLInputElement).value); }
+      '%input': (e: Event) => { val((e.target as HTMLInputElement).value); },
+      $: { color: "var(--black)", fontSize: "1.25rem" }
     }
   };
 }

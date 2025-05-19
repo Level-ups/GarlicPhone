@@ -1,0 +1,12 @@
+@startuml
+Client -> SSECoordinator: POST /connect
+SSECoordinator -> Client: HTTP/1.1 200 OK\nContent-Type: text/event-stream\nCache-Control: no-cache
+SSECoordinator -> Client: event: connected\ndata: {clientId}
+
+loop Game Session
+SSECoordinator -> Client: event: transition\ndata: {phaseType: "draw", timeStarted: 1718900000, prompt: "..."}
+end
+
+Client -> SSECoordinator: TCP Close
+SSECoordinator -> Client: End stream
+@enduml

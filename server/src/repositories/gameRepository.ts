@@ -1,3 +1,4 @@
+import { PoolClient } from "pg";
 import pool from "../library/db";
 import { gameMapper } from "../library/mappers";
 import { Game, GameDto } from "../models/Game";
@@ -39,8 +40,19 @@ async function getGameById(id: number): Promise<Game | null> {
   return result.rows.length ? gameMapper.toDomain(result.rows[0]) : null;
 }
 
+export async function insertGameWithStartedAt(startedAt: Date, client?: PoolClient): Promise<Game | null> {
+  const query = `
+      INSERT INTO games (url_id, started_at)
+      VALUES (gen_random_uuid(), $1)
+      RETURNING id AS game_id, url_id, started_at
+  `
+  const result = await (client ?? pool).query(query, [startedAt]);
+  return result.rows.length ? gameMapper.toDomain(result.rows[0]) : null;
+}
+
 export default {
   getGames,
   insertGame,
-  getGameById
+  getGameById,
+  insertGameWithStartedAt
 };

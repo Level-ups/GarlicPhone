@@ -7,21 +7,25 @@ import { cleanupInactiveClients, registerClient, removeClient } from './library/
 import { createServerSentEventHandler } from './library/serverSentEvents';
 import { validateImageUploadDto } from './models/Image';
 import { authRouter } from './routes/authRoutes';
-import { fullChainDetailsRouter } from './routes/fullChainDetailsRoutes';
+import { ChainImage, fullChainDetailsRouter } from './routes/fullChainDetailsRoutes';
 import { imageRouter } from './routes/imageRoutes';
 import { lobbyRouter } from './routes/lobbyRoutes';
 import { promptRouter } from './routes/promptRoutes';
 import { userRouter } from './routes/userRoutes';
+import { checkerAsync, gameRouter, handleFailableReturn, initializeCoordinator, submitChainLink } from './new/dispatch';
 import imageService from './services/imageService';
 import * as lobbyService from './services/lobbyService';
 import { cleanupExpiredLobbies } from './services/lobbyService';
+import { Server as IOServer } from "socket.io";
 
 //---------- SETUP ----------//import { createServerSentEventHandler } from './library/serverSentEvents';
-import { authenticateRequest, requireRole } from './library/authMiddleware';
+import { authenticateRequest, authenticateRequestFromQuery, requireRole } from './library/authMiddleware';
 import { validateLobbyUrlId } from './models/Lobby';
 
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import imageRepository from './repositories/imageRepository';
+import { createServer } from 'http';
 
 // “__dirname” and “__filename” aren’t built-in under ESM,
 // so we derive them from import.meta.url:
@@ -37,6 +41,12 @@ dotenv.config();
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 const EC2_HOST =  process.env.EC2_HOST
+
+// Init Socket.IO connection
+const httpServer = createServer(app);
+const io = new IOServer(httpServer, { cors: { origin: "*" } })
+
+initializeCoordinator(io);
 
 // Middleware
 app.use(cors());
@@ -82,6 +92,32 @@ app.post('/api/chain/:chainId/latest-image', authenticateRequest, express.raw({ 
     return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
 });
+
+app.post('/api/games/submit-image/:gameCode', authenticateRequest, express.raw({ type: 'image/png', limit: '10mb' }), checkerAsync(["playerId"], async (req, res) => {
+  try {
+    const { gameCode } = req.params;
+    const playerId = req.user?.id;
+
+    if (!playerId) {
+      return res.status(401).json(new ErrorDetails("Unauthorized"));
+    }
+
+    const imageName = `${gameCode}/${Math.floor(Math.random()*1_000_000)}.png`;
+    
+    const [s3Result, error] = await imageRepository.uploadImageToS3(req.body, imageName);
+  
+    if (error) {
+      return res.status(500).json(new ErrorDetails("Error uploading image", error.details));
+    } else {
+      const link: ChainImage = { url: s3Result.Location, type: 'image' };
+      const submitRes = submitChainLink(gameCode, playerId, link);
+
+      return handleFailableReturn(submitRes, res);
+    }
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
+  }
+}));
 
 app.use(express.json());
 
@@ -130,6 +166,8 @@ app.get('/api/lobbies/:lobbyId/events', createServerSentEventHandler(sendEvent =
     sendEvent('error', new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
   }
 }));
+app.use('/api/games', authenticateRequest, gameRouter); // TODO: authenticateRequest
+// app.use('/api/sse/games', authenticateRequestFromQuery, gameSSERouter);
 app.use('/api/users', authenticateRequest, userRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/lobbies', authenticateRequest, lobbyRouter);
@@ -182,7 +220,7 @@ setInterval(() => {
 }, 15 * MINUTE_IN_MS);
 
 // Start server
-app.listen(PORT, '127.0.0.1', () => {
+httpServer.listen(PORT, '127.0.0.1', () => {
   console.log(`Server running on http://${EC2_HOST}:${PORT}`);
 });
 

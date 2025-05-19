@@ -1,9 +1,9 @@
+import { menuNav } from "../components/menuNav";
 import { wrapAsCard } from "../lib/card";
 import { GALLERY_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
-import { parseInto, forEl, type StyleDict } from "../lib/parse";
-import { sig } from "../lib/signal";
+import { forEl, parseInto, type StyleDict } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
-import { menuNav } from "../components/menuNav";
+import { sig } from "../lib/util/signal";
 
 type GalleryItem = { title: string, imgUrl: string };
 
