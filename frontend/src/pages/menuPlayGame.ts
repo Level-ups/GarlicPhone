@@ -1,9 +1,9 @@
+import { menuNav } from "../components/menuNav";
+import { createButton, createInput } from "../components/ui";
+import { apiFetch } from "../lib/fetch";
 import { parseInto } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
-import { menuNav } from "../components/menuNav";
-import { der, sig, type Signal } from "../lib/signal";
-import { apiFetch } from "../lib/fetch";
-import { createButton, createInput } from "../components/ui";
+import { der, sig } from "../lib/signal";
 
 type PlayerInfo = {
     id: number;
@@ -38,27 +38,60 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
     const token = params.get('token');
     const urlCode = params.get('code');
     if (token) {
+        console.log('Token received');
         sessionStorage.setItem("google-id-token", token);
-        (window as any).router?.initializeSSEIfAuthenticated();
+        
+        // Only attempt to initialize SSE if we haven't already done so in this session
+        // and we're not currently in the process of initializing
+        const sseInitializing = sessionStorage.getItem("sse-initializing");
+        
+        if (!sseInitializing) {
+            // Mark as initializing to prevent concurrent initialization attempts
+            sessionStorage.setItem("sse-initializing", "true");
+            
+            // Use setTimeout to ensure router is initialized before accessing it
+            setTimeout(() => {
+                try {
+                    if ((window as any).router) {
+                        // Check if SSE is already connected before initializing
+                        if (!(window as any).router.sseSource) {
+                            console.log('Initializing SSE connection');
+                            (window as any).router.initializeSSEIfAuthenticated();
+                            console.log('SSE initialization complete');
+                        } else {
+                            console.log('SSE connection already exists, skipping initialization');
+                        }
+                    } else {
+                        console.error('Router not available for SSE initialization');
+                    }
+                } catch (err) {
+                    console.error('Error during SSE initialization:', err);
+                } finally {
+                    // Clear the initializing flag regardless of success/failure
+                    sessionStorage.removeItem("sse-initializing");
+                }
+            }, 1000);
+        } else {
+            console.log('SSE initialization already in progress, skipping');
+        }
     }
 
     //----- Page state signals -----//
-    const playerNameInp = sig<string>("");
-    const playerName = der<string>(() => playerNameInp().trim());
-    const gameCodeInp = sig<string>(urlCode ?? "");
-    const gameCode = der<string>(() => gameCodeInp().trim());
+    let playerNameInp = sig<string>("");
+    let playerName = der<string>(() => playerNameInp().trim());
+    let gameCodeInp = sig<string>(urlCode ?? "");
+    let gameCode = der<string>(() => gameCodeInp().trim());
 
-    const joiningGame = sig<boolean>(false);
-    const joinGameLabel = der<string>(() => joiningGame() ? "Joining..." : "Join Game");
+    let joiningGame = sig<boolean>(false);
+    let joinGameLabel = der<string>(() => joiningGame() ? "Joining..." : "Join Game");
 
-    const creatingGame = sig<boolean>(false);
-    const createGameLabel = der<string>(() => creatingGame() ? "Creating..." : "Create Game");
+    let creatingGame = sig<boolean>(false);
+    let createGameLabel = der<string>(() => creatingGame() ? "Creating..." : "Create Game");
 
 
     //----- Button handlers -----//
     // Create a new lobby and redirect to lobby page
     function handleCreateGame() {
-        console.log("Creating game...");
         if (!playerName()) { alert('Please enter your name'); return; }
         
         creatingGame(true);
@@ -80,17 +113,23 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
 
 
     // Join an existing lobby and redirect to lobby page
-    async function handleJoinGame() {
+    function handleJoinGame() {
         if (!playerName()) { alert('Please enter your name'); return; }
         if (!gameCode()) { alert('Please enter a lobby code'); return; }
         
         joiningGame(true);
         
         try {
-            await joinGame(gameCodeInp());
-
-            // Redirect to lobby page
-            visit('lobby');
+            (async () => {
+                await joinGame(gameCodeInp());
+                globalState.lobbyCode = gameCodeInp();
+                // Redirect to lobby page
+                try {
+                    (window as any).router.visit('lobby');
+                } catch (error) {
+                    console.error('Error navigating to lobby:', error);
+                }
+            })();
         } catch (error) {
             joiningGame(false);
             alert(`Error joining lobby: ${error instanceof Error ? error.message : 'Unknown error'}`);

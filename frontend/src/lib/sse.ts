@@ -8,6 +8,7 @@ export function createSSESource(url: string, handlers: SSEHandlers) {
   const source = new EventSource(`${window.location.origin}${url}`);
 
   for (const [event, handler] of Object.entries(handlers)) {
+    console.log(`Registering SSE handler for event '${event}'`);
     source.addEventListener(event, (e: MessageEvent) => {
       try {
         handler(JSON.parse(e.data));

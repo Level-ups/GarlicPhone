@@ -1,13 +1,9 @@
 import { menuNav } from "../components/menuNav";
+import { createButton } from "../components/ui";
 import { apiFetch } from "../lib/fetch";
 import { forEl, parseInto, react } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
-import { createButton } from "../components/ui";
 import { der, sig, type Signal } from "../lib/signal";
-import avocadoAvatar from "/assets/avatars/avatar-avocado-food-svgrepo-com.svg";
-import batAvatar from "/assets/avatars/avatar-batman-comics-svgrepo-com.svg";
-import zombieAvatar from "/assets/avatars/avatar-dead-monster-svgrepo-com.svg";
-import presidentAvatar from "/assets/avatars/avatar-male-president-svgrepo-com.svg";
 
 type PlayerInfo = {
   id: number;
@@ -17,12 +13,12 @@ type PlayerInfo = {
   isReady?: boolean;
 };
 
-async function startGame(gameCode: string, playerId: number) {
-  const res = await apiFetch("post", `/api/games/${gameCode}/start`, {
-    playerId,
-  });
+async function startGame(gameCode: string) {
+  const res = await apiFetch("post", `/api/games/start/${gameCode}`, {});
 
   const data = await res.json();
+  console.log("start gane", data);
+  return data;
 }
 
 async function refreshLobbyState(
@@ -38,12 +34,6 @@ async function refreshLobbyState(
 export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => {
   const params = new URLSearchParams(window.location.search);
   const token = params.get("token");
-  if (token) {
-    sessionStorage.setItem("google-id-token", token);
-    // Initialize SSE connection after token is set
-    (window as any).router?.initializeSSEIfAuthenticated();
-    globalState.authToken = token;
-  }
 
   const players = sig<PlayerInfo[]>([]);
   const gameCode = sig<string>(globalState.lobbyCode);
@@ -70,6 +60,10 @@ export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => 
   isolateContainer("page");
 
   function handleLeaveLobby() {
+  }
+
+  function handleStartGame() {
+    startGame(globalState.lobbyCode);
   }
 
   return parseInto(page, {
@@ -106,6 +100,7 @@ export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => 
       "|article.card.lobby-start": {
         "|button.base-button.base-button--accent.start-game-btn": {
             "|span": { _: "Start Game" },
+            "%click": handleStartGame,
         },
       },
     },

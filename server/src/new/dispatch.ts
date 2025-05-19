@@ -11,6 +11,7 @@ import { saveGameDataToDb } from "./saveGame";
 //---------- Setup ----------//
 
 export const gameRouter = Router();
+export const gameSSERouter = Router();
 
 const coord = new SSECoordinator<Alert["alert"]>();
 const currentGames: { [key: GameCode]: GameData } = {}
@@ -64,17 +65,24 @@ function startGame(gameCode: GameCode, requestor: PlayerId): StartGameResult {
     if (gameData.players.length == 0) return "noPlayers";
     if (gameData.players[0] != requestor) return "playerIsNotHost";
 
+    // { startingPlayer: PlayerId, chainId: ChainId, links: ChainLink[] };
     // Initialize chains
-    gameData.chains = [...Array(gameData.players.length)];
+    gameData.chains = gameData.players.map((playerId: number) => ({
+        startingPlayer: playerId,
+        chainId: playerId,
+        links: [],
+    }));
 
     // Apply first transition
-    progressState(gameCode);
+    while (progressState(gameCode) == "in-progress") {
+        sleep(10_000);
+    };
 
     return "success";
 }
 
 // Alert all players in the specified game of the state to which they must transition
-type ProgressStateResult = "success" | "invalidGame";
+type ProgressStateResult = "complete" | "in-progress" | "invalidGame";
 function progressState(gameCode: GameCode): ProgressStateResult {
     if (!(gameCode in currentGames)) return "invalidGame";
     const gameData = currentGames[gameCode];
@@ -83,24 +91,29 @@ function progressState(gameCode: GameCode): ProgressStateResult {
     coord.broadcast(gameData.players, SUBMISSION_ALERT, "submission");
     sleep(2000); // Wait for players to submit their data
 
-    //----- Progress phase -----//
-    gameData.phase += 1;
+    
     const timeStarted = Date.now();
 
     //----- Transition -----//
     // Alert all players of state transition
     let isReviewState = false;
     for(let pIdx = 0; pIdx < gameData.players.length; pIdx++) {
+        const playerId = gameData.players[pIdx];
         const alert = transition(pIdx, gameData, timeStarted);
         isReviewState ||= alert.phaseType == "review";
-        coord.dispatch(pIdx, alert, "transition");
+        console.log('before dispatch', playerId, alert)
+        coord.dispatch(playerId, alert, "transition");
+        console.log('after dispatch', playerId, alert)
     }
 
     if (isReviewState) {
         saveGameDataToDb(gameData); // Async save game data to db
     }
-
-    return "success";
+    
+    //----- Progress phase -----//
+    gameData.phase += 1;
+    if (isReviewState) return "complete";
+    else return "in-progress";
 }
 
 type SubmissionResult = "success" | "invalidGame" | "invalidPlayer";
@@ -169,12 +182,17 @@ function handleFailableReturn(reason: "success" | string, res: Response) {
 
 
 // Connect to the SSE coordinator
-gameRouter.post('/connect', checker(["playerId"], (req: Request, res: Response) => {
+gameSSERouter.get('/connect', (req: Request, res: Response) => {
     const playerId = req.user!.id;
-
-    const connectRes = coord.addClient(playerId, res);
-    return handleFailableReturn(connectRes, res);
-}));
+    try {
+        const connectRes = coord.addClient(playerId, res);
+        if (connectRes !== "success") {
+            console.error(`Failed to add SSE client: ${connectRes}`);
+        }
+    } catch (err) {
+        console.error('Error establishing SSE connection:', err);
+    }
+});
 
 // Create a new game
 gameRouter.post('/create', checker(["playerId"], (req: Request, res: Response) => {
@@ -197,6 +215,8 @@ gameRouter.post('/join/:gameCode', checker(["playerId"], (req: Request, res: Res
 gameRouter.post('/start/:gameCode', checker(["playerId"], (req: Request, res: Response) => {
     const playerId = req.user!.id;
     const { gameCode } = req.params;
+
+    console.log(playerId);
 
     const startRes = startGame(gameCode, playerId);
     return handleFailableReturn(startRes, res);

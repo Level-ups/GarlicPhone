@@ -39,7 +39,7 @@ export class PageRouter {
   private containers: ContainerMap;
   private redirects: RedirectFn[];
   private clientId: string;
-  private sseSource: EventSource | null = null;
+  public sseSource: EventSource | null = null;
 
   private globalState: GlobalState = {};
 
@@ -48,9 +48,9 @@ export class PageRouter {
   private onSubmitSubs: Array<(alert: any) => void> = [];
 
   private sseHandlers: SSEHandlers = {
-    "update": (alert) =>     { this.onUpdateSubs.forEach(fn => fn(alert)); },
-    "submission": (alert) => { this.onSubmitSubs.forEach(fn => fn(alert)); },
-    "transition": (alert) => { visit(alert.phaseType, { alert }); }
+    "update": (alert) =>     { console.log("update alert:", alert); this.onUpdateSubs.forEach(fn => fn(alert)); },
+    "submission": (alert) => { console.log("submission alert:", alert); this.onSubmitSubs.forEach(fn => fn(alert)); },
+    "transition": (alert) => { console.log("transition alert:", alert); visit(alert.phaseType, { alert }); }
   };
 
 
@@ -75,9 +75,6 @@ export class PageRouter {
     // Global exposures
     (window as any).visit = this.visit;
     (window as any).isolateContainer = this.isolateContainer;
-    
-    // Check if user is already authenticated and initialize SSE if so
-    this.initializeSSEIfAuthenticated();
 
     // Initial route handling
     this.handlePopState();
@@ -166,11 +163,14 @@ export class PageRouter {
    * This should be called after successful login
    */
   public initializeSSEIfAuthenticated(): void {
+    console.log('hpwit')
     const token = sessionStorage.getItem('google-id-token');
     
-    if (token) {
-      this.closeSSEConnection();
-      this.sseSource = createSSESource(`/api/games/connect`, this.sseHandlers);
+    if (token && !this.sseSource) {
+      const queryParams = new URLSearchParams({
+        authorization: token
+      });
+      this.sseSource = createSSESource(`/api/sse/games/connect?${queryParams.toString()}`, this.sseHandlers);
       console.log('SSE connection established after authentication');
     }
   }

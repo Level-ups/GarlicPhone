@@ -12,13 +12,13 @@ import { imageRouter } from './routes/imageRoutes';
 import { lobbyRouter } from './routes/lobbyRoutes';
 import { promptRouter } from './routes/promptRoutes';
 import { userRouter } from './routes/userRoutes';
-import { gameRouter } from './new/dispatch';
+import { gameRouter, gameSSERouter } from './new/dispatch';
 import imageService from './services/imageService';
 import * as lobbyService from './services/lobbyService';
 import { cleanupExpiredLobbies } from './services/lobbyService';
 
 //---------- SETUP ----------//import { createServerSentEventHandler } from './library/serverSentEvents';
-import { authenticateRequest, requireRole } from './library/authMiddleware';
+import { authenticateRequest, authenticateRequestFromQuery, requireRole } from './library/authMiddleware';
 import { validateLobbyUrlId } from './models/Lobby';
 
 import { fileURLToPath } from 'url';
@@ -132,6 +132,7 @@ app.get('/api/lobbies/:lobbyId/events', createServerSentEventHandler(sendEvent =
   }
 }));
 app.use('/api/games', authenticateRequest, gameRouter); // TODO: authenticateRequest
+app.use('/api/sse/games', authenticateRequestFromQuery, gameSSERouter);
 app.use('/api/users', authenticateRequest, userRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/lobbies', authenticateRequest, lobbyRouter);
