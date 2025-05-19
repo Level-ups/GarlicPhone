@@ -5,8 +5,8 @@ import { apiFetch } from "../lib/fetch";
 import { LIST_FLEX_CONFIG, ROW_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
-import { timer } from "../lib/timer";
 import { sig, type Reactive } from "../lib/util/signal";
+import { timer, timerTill } from "../lib/timer";
 
 export type Image = {
   id: number;
@@ -23,9 +23,9 @@ export function createGuessPage(
     prompt: string,
     type: "guess" | "prompt",
     promptInput: Reactive<string>,
+    timeEnding: number,
     callback: () => void,
     imgSrc?: Reactive<string>,
-    timeInSeconds?: number
 ): ElemTree {
     return {
         ...titleNav(),
@@ -35,11 +35,6 @@ export function createGuessPage(
                     ...wrapAsCard({
                         "|p.guess-text": { "_": prompt, }
                     }, 'PromptCard', ['flex-main-item-size', 'card-with-overflow']),
-                    ...(timeInSeconds? {
-                        ...wrapAsCard({
-                            ...timer(timeInSeconds)
-                        }, 'TimerCard', ['flex-equal-size-item', 'card-with-overflow'])
-                    }: {}),
                 }, ROW_FLEX_CONFIG),
             },
             ...(imgSrc ? {
@@ -50,10 +45,11 @@ export function createGuessPage(
             ...wrapAsCard({
                 ...wrapAsFlex({
                     ...createInput(`Enter a ${type}`, promptInput),
-                   "|button.base-button.base-button--accent": {
-                          "|span": { _: "Submit" },
-                       "%click": callback
-                   }
+                    ...timerTill(timeEnding)
+                //    "|button.base-button.base-button--accent": {
+                //           "|span": { _: "Submit" },
+                //        "%click": callback
+                //    }
                 }, ROW_FLEX_CONFIG)
             }, 'GuessImagePromptCard')
         }, LIST_FLEX_CONFIG)
@@ -69,7 +65,7 @@ async function uploadPrompt() {
     return data;
 }
 
-export const guessPage: PageRenderer = ({ page }, { onSubmit }) => {
+export const guessPage: PageRenderer = ({ page }, { onSubmit, params }) => {
     const promptInput = sig<string>("asdf");
     const imgSrc = sig<string>("https://picsum.photos/200");
 
@@ -81,8 +77,8 @@ export const guessPage: PageRenderer = ({ page }, { onSubmit }) => {
         "Time to guess - take a swing!",
         "guess",
         promptInput,
-        () => { /* visit("draw") */ },
-        imgSrc,
-        30
+        (params.timeStarted ?? Date.now()) + 30_000,
+        () => {},
+        imgSrc
     ));
 }

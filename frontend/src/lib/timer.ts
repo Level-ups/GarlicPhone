@@ -1,9 +1,8 @@
 import type { ElemTree } from "./parse";
 import { der, eff, sig } from "./util/signal";
 
-export function timer(seconds: number, callback: () => void = () => {}): ElemTree {
-  const timeToEnd = Date.now() + seconds * 1000;
-  const timeLeft = sig<number>(seconds * 1000);
+export function timerTill(timeToEnd: number, callback: () => void = () => {}): ElemTree {
+  const timeLeft = sig<number>(timeToEnd - Date.now());
   const time = der(() => {
     const min = Math.max(0, Math.floor(timeLeft() / (1000 * 60)));
     const sec = Math.max(0, Math.floor((timeLeft() / 1000) % 60));
@@ -22,4 +21,9 @@ export function timer(seconds: number, callback: () => void = () => {}): ElemTre
 });
 
   return { "|p.timer": { _: time } };
+}
+
+export function timer(seconds: number, callback: () => void = () => {}): ElemTree {
+  const timeToEnd = Date.now() + seconds * 1000;
+  return timerTill(timeToEnd, callback);
 }

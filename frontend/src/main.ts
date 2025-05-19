@@ -29,7 +29,7 @@ declare global {
 
 //---------- Page routing ----------//
 const pages: { [key: string]: PageRenderer } = {
-  "home":         homePage,
+  // "home":         homePage,
   "login":        loginPage,
   "menuGallery":  menuGalleryPage,
   "menuPlay":     menuPlayGamePage,
@@ -42,8 +42,8 @@ const pages: { [key: string]: PageRenderer } = {
 };
  
 const redirects: RedirectFn[] = [
-  path => path === '/'        ? 'home' : null,
-  path => path === '/login'   ? 'login' : null,
+  path => path === '/'        ? 'login' : null,
+  // path => path === '/login'   ? 'login' : null,
   path => path === '/play'    ? 'menuPlay' : null,
   path => path === '/gallery' ? 'menuGallery' : null,
 

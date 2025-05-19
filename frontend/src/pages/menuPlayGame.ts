@@ -113,9 +113,9 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
 
 
     // Join an existing lobby and redirect to lobby page
-    function handleJoinGame() {
-        if (!playerName()) { alert('Please enter your name'); return; }
-        if (!gameCode()) { alert('Please enter a lobby code'); return; }
+    async function handleJoinGame() {
+        if (playerName() == "") { alert('Please enter your name'); return; }
+        if (gameCode() == "") { alert('Please enter a lobby code'); return; }
         
         joiningGame(true);
         

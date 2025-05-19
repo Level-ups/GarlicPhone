@@ -4,6 +4,7 @@ import { PALETTES, type ColourButtonConfig } from "../lib/palettes";
 import { forEl, parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 import { timer } from "../lib/timer";
+import { timerTill } from "../lib/timer";
 import { drawLine, floodFill, paint } from "../lib/util/canvasUtils";
 import { sig } from "../lib/util/signal";
 import eraserToolIcon from "/assets/canvas/eraser-tool.svg";
@@ -242,7 +243,7 @@ export const drawPage: PageRenderer = ({ app }, { onSubmit, params, globalState 
   const prompt = promptSignal;
   const gameCode = globalState.gameCode;
 
-  onSubmit(async (data) => {
+  onSubmit(async () => {
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     if (canvas) {
       const uploadedUrl = await uploadCanvasImage(canvas, gameCode);
@@ -321,7 +322,7 @@ export const drawPage: PageRenderer = ({ app }, { onSubmit, params, globalState 
       "|div.draw-page-header-ctn": {
         "|div.draw-page-title-timer-ctn": {
           "|h2.large-heading.draw-page-title": { _: "Garlic Phone", },
-          ...timer(30)
+          ...timerTill((params.timeStarted ?? Date.now()) + 30_000)
         },
         "|img.draw-page-logo": {
           "@": { src: garlicPhoneLogo, alt: "Garlic Phone Logo" },
