@@ -72,8 +72,6 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
     }
 
     //----- Page state signals -----//
-    let playerNameInp = sig<string>("");
-    let playerName = der<string>(() => playerNameInp().trim());
     let gameCodeInp = sig<string>(urlCode ?? "");
     let gameCode = der<string>(() => gameCodeInp().trim());
 
@@ -86,16 +84,13 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
 
     //----- Button handlers -----//
     // Create a new lobby and redirect to lobby page
-    function handleCreateGame() {
-        if (!playerName()) { alert('Please enter your name'); return; }
-        
+    function handleCreateGame() {        
         creatingGame(true);
 
         try {
             // Use local createLobby function instead of lobbyService.createLobby
             (async () => {
                 const gameCode = await createGame();
-                globalState.playerName = playerName;
                 globalState.gameCode = gameCode.gameCode;
                 // Redirect to lobby page
                 visit('lobby');
@@ -109,7 +104,6 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
 
     // Join an existing lobby and redirect to lobby page
     async function handleJoinGame() {
-        if (playerName() == "") { alert('Please enter your name'); return; }
         if (gameCode() == "") { alert('Please enter a lobby code'); return; }
         
         joiningGame(true);
@@ -142,15 +136,6 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
             },
             "|article.card": {
                 "|h2.welcome-heading": { _: "Welcome to Garlic Phone" },
-                "|form#player-form": {
-                    "|fieldset.name-fieldset": {
-                        "|label": { 
-                            _: "Your Name:",
-                            "@": { for: "player-name" }
-                        },
-                        ...createInput("Enter your name", playerNameInp)
-                    }
-                },
                 $: {
                     textAlign: "center",
                     marginBottom: "2rem"

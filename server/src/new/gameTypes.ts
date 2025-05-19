@@ -9,6 +9,9 @@ export type GameData = {
     players: PlayerId[];    // First player in the list is the host; If host leaves, 2nd to join is promoted
     chains: ChainData[];
     phase: PhaseIndex;      // [0, numPhases)
+    playerNames: {
+        [playerId: PlayerId]: string;
+    };
 };
 
 export type PlayerId = number;
@@ -38,7 +41,7 @@ export type ChainPrompt = { type: "prompt", prompt: string };
 export type ChainImage = { type: "image", url: string };
 export type ChainLink = ChainPrompt | ChainImage;
 export type ChainInfo = { name: string, links: ChainLink[] }; // Sent to frontend
-export type ChainData = { startingPlayer: PlayerId, chainId: ChainId, links: ChainLink[] }; // For backend use only
+export type ChainData = { startingPlayer: PlayerId, startingPlayerName: string, chainId: ChainId, links: ChainLink[] }; // For backend use only
 
 export type Alert = UpdateAlert | SubmissionAlert | TransitionAlert;
 

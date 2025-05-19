@@ -21,7 +21,7 @@ export function getChainIdxForPlayer(playerIdx: PlayerIndex, phase: PhaseIndex, 
 
 function chainDataToChainInfo(chainData: ChainData): ChainInfo {
     return {
-        name: `Player ${chainData.startingPlayer}`, // TODO: Lookup player name
+        name: chainData.startingPlayerName, // TODO: Lookup player name
         links: chainData.links
     };
 }
