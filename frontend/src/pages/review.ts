@@ -1,9 +1,9 @@
-import { der, sig } from "../lib/signal";
 import { menuNav, titleCard } from "../components/menuNav";
 import { createChainDisplay, createItemList, type ChainInfo } from "../components/ui";
 import { wrapAsRowCards } from "../lib/card";
 import { parseInto, react } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
+import { der, sig } from "../lib/util/signal";
 
 // Store signals in variables that can be accessed by the handlers
 let chainsSignal: ReturnType<typeof sig<ChainInfo[]>>;

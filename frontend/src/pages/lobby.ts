@@ -3,7 +3,7 @@ import { createButton } from "../components/ui";
 import { apiFetch } from "../lib/fetch";
 import { forEl, parseInto, react } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
-import { der, sig, type Signal } from "../lib/signal";
+import { der, sig, type Signal } from "../lib/util/signal";
 
 type PlayerInfo = {
   id: number;

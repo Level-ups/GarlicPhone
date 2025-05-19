@@ -1,4 +1,3 @@
-import { sig, type Reactive } from "../lib/signal";
 import { titleNav } from "../components/menuNav";
 import { createImage, createInput, type ChainLink } from "../components/ui";
 import { wrapAsCard } from "../lib/card";
@@ -6,6 +5,7 @@ import { apiFetch } from "../lib/fetch";
 import { LIST_FLEX_CONFIG, ROW_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
+import { sig, type Reactive } from "../lib/util/signal";
 import { timer, timerTill } from "../lib/timer";
 
 export type Image = {

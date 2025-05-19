@@ -1,5 +1,5 @@
-import { der, eff, sig } from "./signal";
 import type { ElemTree } from "./parse";
+import { der, eff, sig } from "./util/signal";
 
 export function timerTill(timeToEnd: number, callback: () => void = () => {}): ElemTree {
   const timeLeft = sig<number>(timeToEnd - Date.now());
