@@ -305,15 +305,6 @@ export const drawPage: PageRenderer = ({ page }, { onSubmit, params, globalState
   return parseInto(page, {
     ...titleNavWithTimer(30, "draw-page-nav"),
     "|section.draw-page": {
-      "|div.draw-page-header-ctn": {
-        "|div.draw-page-title-timer-ctn": {
-          "|h2.large-heading.draw-page-title": { _: "Garlic Phone", },
-          ...timerTill(params?.alert?.timeStarted ?? Date.now() + 30_000)
-        },
-        "|img.draw-page-logo": {
-          "@": { src: garlicPhoneLogo, alt: "Garlic Phone Logo" },
-        },
-      },
       "|div.draw-page-prompt-ctn": {
         "|p": { _: "Draw:" },
         "|h3.medium-heading": { _: prompt },
