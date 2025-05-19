@@ -1,4 +1,4 @@
-import { bind, der, eff, maybeBind, maybeSub, multiSub, sig, type MaybeReactive, type Reactive } from "./signal";
+import { bind, der, eff, maybeBind, maybeSub, multiSub, sig, type MaybeReactive, type Reactive } from "./util/signal";
 
 export type Generator<T, Args extends any[] = []> = T | ((...args: Args) => T);
 

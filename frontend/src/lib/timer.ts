@@ -1,5 +1,5 @@
-import { der, eff, sig } from "./signal";
 import type { ElemTree } from "./parse";
+import { der, eff, sig } from "./util/signal";
 
 export function timer(seconds: number, callback: () => void = () => {}): ElemTree {
   const timeToEnd = Date.now() + seconds * 1000;

@@ -1,9 +1,9 @@
-import { sig } from "../lib/signal";
+import type { ChainLink } from "../components/ui";
 import { apiFetch } from "../lib/fetch";
 import { parseInto } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
+import { sig } from "../lib/util/signal";
 import { createGuessPage } from "./guess";
-import type { ChainLink } from "../components/ui";
   
 async function submitPrompt(gameCode: string, prompt: string) {
     console.log("Submitting prompt:", prompt, gameCode);

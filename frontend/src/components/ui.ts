@@ -1,5 +1,5 @@
-import { bind, der, sig, type Reactive } from "../lib/signal";
 import { forEl, parse, tryCall, type ElemTree } from "../lib/parse";
+import { der, sig, type Reactive } from "../lib/util/signal";
 
 export function defineCustomElem (
   elemName: `${string}-${string}`,
