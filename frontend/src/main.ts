@@ -3,7 +3,6 @@ import { PageRouter, type ContainerMap, type PageRenderer, type RedirectFn } fro
 import { demoPage } from './pages/demo';
 import { drawPage } from './pages/draw';
 import { guessPage } from './pages/guess';
-import { homePage } from './pages/home';
 import { lobbyPage } from './pages/lobby';
 import { loginPage } from './pages/login';
 import { menuGalleryPage } from './pages/menuGallery';
@@ -18,13 +17,15 @@ const containers: ContainerMap = {
 };
 
 (window as any).DEBUG = true;
-(window as any).log = function(...params: any[])   { if (DEBUG) console.log(...params) };
-(window as any).error = function(...params: any[]) { if (DEBUG) console.error(...params) };
+(window as any).debugLog = function(...params: any[])   { if (DEBUG) console.log(...params) };
+(window as any).debugErr = function(...params: any[]) { if (DEBUG) console.error(...params) };
+(window as any).debugWarn = function(...params: any[]) { if (DEBUG) console.warn(...params) };
 
 declare global {
   const DEBUG: boolean;
-  function log(...data: any[]): void;
-  function error(...data: any[]): void;
+  function debugLog(...data: any[]): void;
+  function debugErr(...data: any[]): void;
+  function debugWarn(...data: any[]): void;
 };
 
 //---------- Page routing ----------//

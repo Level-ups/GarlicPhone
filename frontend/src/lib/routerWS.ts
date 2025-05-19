@@ -16,9 +16,9 @@ export class PageRouterWS {
   private onSubmitSubs: Array<(alert: any) => void> = [];
 
   private wsHandlers: Record<string, (alert: any) => void> = {
-    "update": (alert) =>     { console.log("update alert:", alert); this.onUpdateSubs.forEach(fn => fn(alert)); },
-    "submission": (alert) => { console.log("submission alert:", alert); this.onSubmitSubs.forEach(fn => fn(alert)); },
-    "transition": (alert) => { console.log("transition alert:", alert); this.visit(alert.phaseType, { alert }); }
+    "update": (alert) =>     { debugLog("update alert:", alert); this.onUpdateSubs.forEach(fn => fn(alert)); },
+    "submission": (alert) => { debugLog("submission alert:", alert); this.onSubmitSubs.forEach(fn => fn(alert)); },
+    "transition": (alert) => { debugLog("transition alert:", alert); this.visit(alert.phaseType, { alert }); }
   };
 
 
@@ -73,7 +73,7 @@ export class PageRouterWS {
   // Redirect to specific page in `pages`
   public visit(page: string, params: Params = {}): void {
     if (!this.pages[page]) {
-      console.warn(`Page "${page}" not found, staying on current page.`);
+      debugWarn(`Page "${page}" not found, staying on current page.`);
       return;
     }
     history.pushState({}, "", `/${page}`);
@@ -136,10 +136,10 @@ export class PageRouterWS {
       }).toString();
 
       this.socket = new WebSocket(`${wsProtocol}//${host}/api/ws/games/connect?${query}`);
-      console.log('WebSocket connection establishing');
+      debugLog('WebSocket connection establishing');
 
       this.socket.onopen = () => {
-        console.log('WebSocket connection established');
+        debugLog('WebSocket connection established');
       };
 
       this.socket.onmessage = ({ data }) => {
@@ -148,17 +148,17 @@ export class PageRouterWS {
           const handler = this.wsHandlers[event];
           if (handler) handler(payload);
         } catch (err) {
-          console.error('Failed to parse WS message', err);
+          debugErr('Failed to parse WS message', err);
         }
       };
 
       this.socket.onclose = () => {
-        console.log('WebSocket connection closed');
+        debugLog('WebSocket connection closed');
         this.socket = null;
       };
 
       this.socket.onerror = (err) => {
-        console.error('WebSocket error', err);
+        debugErr('WebSocket error', err);
       };
     }
   }
@@ -167,7 +167,7 @@ export class PageRouterWS {
     if (this.socket) {
       this.socket.close();
       this.socket = null;
-      console.log('WebSocket connection closed by client');
+      debugLog('WebSocket connection closed by client');
     }
   }
 }

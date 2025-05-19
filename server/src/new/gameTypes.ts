@@ -32,7 +32,8 @@ export type PlayerState = {
 export type PlayerData = {
     playerId: PlayerId,
     name: string,
-    avatarURL: string
+    avatarURL: string,
+    isHost: boolean
 }
 
 export type Timestamp = number; // Time since Unix epoch in millis
@@ -48,7 +49,7 @@ export type Alert = UpdateAlert | SubmissionAlert | TransitionAlert;
 // Alerts player to synchronize their current state with the server
 // `phaseType` marks which page the update is intended for
 export type UpdateAlert = { alert: "update", phaseType: PhaseType; } & (
-    { phaseType: "lobby", update: { players: PlayerData[] } }
+    { phaseType: "lobby", players: PlayerData[] }
 );
 
 // Alerts player to submit the current data they have for their phase

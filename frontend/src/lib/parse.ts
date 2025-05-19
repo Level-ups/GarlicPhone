@@ -75,7 +75,7 @@ export function parse(tree: ElemTree, par: ElemData = createEmptyElemData()): HT
                 const childData = createEmptyElemData();
                 const tokData = parseElemToken(tok);
                 if (typeof tokData === "string") {
-                    error(`Invalid element token:\n${tok}\n${tokData}`);
+                    debugErr(`Invalid element token:\n${tok}\n${tokData}`);
                     break;
                 }
                 [childData.tag, childData.id, childData.classList] = tokData;
@@ -245,7 +245,7 @@ const elemTreeSpec: ElemTree = {
     },
 
     // %<event> allows calling functions on HTML element events
-    "%click": (_: Event) => { log("Do something here"); },
+    "%click": (_: Event) => { debugLog("Do something here"); },
 
     // @ allows arbitrary attribute overrides
     // Setting the `style`, `class`, and `id` attributes here is forbidden
@@ -276,7 +276,7 @@ function signalSpec(): ElemTree {
     count(x => x * 2)       // New value is 10
 
     // Create reactive effect which runs when either `count` or `prog` changes
-    eff(() => log("COUNT EFFECT:", count(), prog()));
+    eff(() => debugLog("COUNT EFFECT:", count(), prog()));
 
     return {
         "|input": { _: "asdf" }, // TODO: two-way input binding

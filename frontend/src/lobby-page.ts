@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
         onLobbyState: (lobby) => updateUI(lobby),
         onLobbyUpdate: (lobby) => updateUI(lobby),
         onError: (event) => {
-          console.error('Lobby event error:', event);
+          debugErr('Lobby event error:', event);
           
           // If connection closed, check if lobby was deleted
           if (eventSource && eventSource.readyState === EventSource.CLOSED) {
@@ -199,13 +199,13 @@ document.addEventListener('DOMContentLoaded', () => {
         title: 'Join my Garlic Phone game!',
         text: `Join my game with code: ${lobbyCode}`,
         url: url
-      }).catch(console.error);
+      }).catch(debugErr);
     } else {
       // Fallback to copying to clipboard
       navigator.clipboard.writeText(url)
         .then(() => alert('Lobby link copied to clipboard!'))
         .catch((err) => {
-          console.error('Could not copy link: ', err);
+          debugErr('Could not copy link: ', err);
           prompt('Copy this link to share with friends:', url);
         });
     }
@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (codeFromUrl) {
       // In a real implementation, you would pre-fill the lobby code input
-      console.log('Lobby code from URL:', codeFromUrl);
+      debugLog('Lobby code from URL:', codeFromUrl);
     }
   });
   

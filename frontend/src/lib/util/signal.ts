@@ -35,7 +35,7 @@ export function isReactive<T>(v: any): v is Reactive<T> {
 
 // Unpack a MaybeReactive<T> and just return it's current value
 export function just<T>(v: MaybeReactive<T>): T {
-  log(`JUST [${isReactive<T>(v) ? 1 : 0}]:`, v);
+  debugLog(`JUST [${isReactive<T>(v) ? 1 : 0}]:`, v);
   return isReactive<T>(v) ? v.get() : v;
 }
 

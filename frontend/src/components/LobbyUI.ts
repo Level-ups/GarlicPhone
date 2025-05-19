@@ -168,7 +168,7 @@ export class LobbyUI {
       copyCodeBtn.addEventListener('click', () => {
         navigator.clipboard.writeText(this.currentLobby!.code)
           .then(() => alert('Lobby code copied to clipboard!'))
-          .catch(err => console.error('Failed to copy code', err));
+          .catch(err => debugErr('Failed to copy code', err));
       });
     }
 
@@ -245,7 +245,7 @@ export class LobbyUI {
         this.renderLobbyScreen();
       },
       onError: (err) => {
-        error('Lobby event error:', err);
+        debugErr('Lobby event error:', err);
         // If we get a 404, it means the lobby was deleted
         if (err.status === 404) {
           alert('The lobby no longer exists.');

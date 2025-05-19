@@ -25,7 +25,7 @@ async function joinGame(gameCode: string) {
     const res = await apiFetch("post", `/api/games/join/${gameCode}`, {});
 
     const data = await res.json();
-    log("JOIN LOBBY:", data);
+    debugLog("JOIN LOBBY:", data);
 
     return data;
 }
@@ -38,7 +38,7 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
     const token = params.get('token');
     const urlCode = params.get('code');
     if (token) {
-        console.log('Token received');
+        debugLog('Token received');
         sessionStorage.setItem("google-id-token", token);
         
         // // Only attempt to initialize socket if we haven't already done so in this session
@@ -53,22 +53,22 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
         //     setTimeout(() => {
         //         try
         //         {
-        //             if (router == null)             { console.error('> ROUTER UNAVAILABLE'); return; }
-        //             if (router.socketInitialized()) { console.log('> SOCKET ALREADY INITIALIZED, SKIPPING'); return; }
+        //             if (router == null)             { debugErr('> ROUTER UNAVAILABLE'); return; }
+        //             if (router.socketInitialized()) { debugLog('> SOCKET ALREADY INITIALIZED, SKIPPING'); return; }
 
-        //             console.log('> ATTEMPTING SOCKET INITIALIZATION');
+        //             debugLog('> ATTEMPTING SOCKET INITIALIZATION');
         //             router.initializeSocketIfAuthenticated();
-        //             console.log('> INITIALIZATION COMPLETE');
+        //             debugLog('> INITIALIZATION COMPLETE');
 
         //         } catch (err) {
-        //             console.error('> ERR DURING SOCKET INITIALIZATION', err);
+        //             debugErr('> ERR DURING SOCKET INITIALIZATION', err);
         //         } finally {
         //             // Clear init flag regardless of success/failure
         //             sessionStorage.removeItem("socket-init");
         //         }
         //     }, 1000);
 
-        // } else { console.log('> SOCKET INITIALIZATION ALREADY IN PROGRESS, SKIPPING'); }
+        // } else { debugLog('> SOCKET INITIALIZATION ALREADY IN PROGRESS, SKIPPING'); }
     }
 
     //----- Page state signals -----//
@@ -90,12 +90,22 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
         try {
             // Use local createLobby function instead of lobbyService.createLobby
             (async () => {
-                const gameCode = await createGame();
-                globalState.gameCode = gameCode.gameCode;
-                // Redirect to lobby page
-                visit('lobby');
+                const response = await createGame();
+                debugLog("Create game response:", response);
+                
+                if (response && response.gameCode) {
+                    // Store game code in globalState and sessionStorage
+                    globalState.gameCode = response.gameCode;
+                    debugLog("Game created with code:", response.gameCode);
+                    
+                    // Redirect to lobby page
+                    visit('lobby');
+                } else {
+                    throw new Error("Invalid response from server");
+                }
             })();
         } catch (error) {
+            debugErr("Error creating game:", error);
             alert(`Error creating lobby: ${error instanceof Error ? error.message : 'Unknown error'}`);
             creatingGame(false);
         }
@@ -110,16 +120,20 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
         
         try {
             (async () => {
-                await joinGame(gameCodeInp());
+                debugLog("Joining game with code:", gameCodeInp());
+                
+                const response = await joinGame(gameCodeInp());
+                debugLog("Join game response:", response);
+                
+                // Store game code in globalState
                 globalState.gameCode = gameCodeInp();
+                debugLog("Game code stored in globalState:", globalState.gameCode);
+                
                 // Redirect to lobby page
-                try {
-                    router.visit('lobby');
-                } catch (error) {
-                    console.error('Error navigating to lobby:', error);
-                }
+                visit('lobby');
             })();
         } catch (error) {
+            debugErr("Error joining game:", error);
             joiningGame(false);
             alert(`Error joining lobby: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }

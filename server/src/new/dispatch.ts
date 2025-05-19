@@ -2,7 +2,7 @@
 
 import { Request, Response, Router } from 'express';
 import { ErrorDetails } from "../library/error-types";
-import type { Alert, ChainLink, GameCode, GameData, GameId, PlayerId } from "./gameTypes";
+import type { Alert, ChainLink, GameCode, GameData, GameId, PlayerData, PlayerId } from "./gameTypes";
 import { SUBMISSION_ALERT } from "./gameTypes";
 // import { SSECoordinator } from "./sseCoordinator";
 import { Server as IOServer } from "socket.io";
@@ -23,7 +23,7 @@ export function initializeCoordinator(io: IOServer) {
 
 const currentGames: { [key: GameCode]: GameData } = {}
 
-const _1hr = 60_000 * 60;
+const _1hr = 60 * 60_000;
 setInterval(clearStaleGames, _1hr);
 
 
@@ -37,7 +37,7 @@ const GAME_CODE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const randAlNum = () => GAME_CODE_CHARS[Math.floor(Math.random() * GAME_CODE_CHARS.length)];
 
 // Generate a random hexadecimal string of length `n`
-const genGameCode = (n: number = 5) => [...Array(n)].map(randAlNum).join('');
+const genGameCode = (n: number = 6) => [...Array(n)].map(randAlNum).join('');
 
 function createNewGame(host: PlayerId): GameCode {
     const createdAt = Date.now()
@@ -50,10 +50,28 @@ function createNewGame(host: PlayerId): GameCode {
         chains: [],
         phase: 0,
         players: [host],
-        playerNames: { },
+        playerNames: {},
     };
 
     return gameCode;
+}
+
+function constructPlayerData(gameData: GameData): PlayerData[] {
+    console.log("GAMEDATA AT UPDATE LOBBY:", gameData);
+    return gameData.players.map((p, i) => ({
+        playerId: p,
+        name: gameData.playerNames[p] ?? `Player ${p}`,
+        avatarURL: "",
+        isHost: i == 0
+    }));
+}
+
+function broadcastLobbyUpdate(gameData: GameData) {
+    // Broadcast update event
+    coord.broadcast(gameData.players, {
+        phaseType: "lobby",
+        update: { players: constructPlayerData(gameData) }
+    }, "update");
 }
 
 type AddPlayerResult = "success" | "invalidGame" | "gameAlreadyStarted" | "gameFull";
@@ -65,6 +83,8 @@ function addPlayerToGame(gameCode: GameCode, playerId: PlayerId, playerName?: st
 
     gameData.players.push(playerId);
     if (playerName) gameData.playerNames[playerId] = playerName;
+
+    setTimeout(() => broadcastLobbyUpdate(gameData), 1500);
 
     return "success";
 }
@@ -238,14 +258,15 @@ export function checkerAsync(checks: ReqCheckType[], f: EndpointHandlerAsync): E
 export function handleFailableReturn(reason: "success" | string, res: Response) {
     return reason == "success"
         ? res.status(201).json({ status: "success" })
-        : res.status(500).json({ status: "failed", reason: reason })
+        : res.status(500).json({ status: "failed", reason })
 }
 
 // Existing HTTP gameRouter endpoints remain unchanged:
 gameRouter.post('/create', checker(["playerId"], (req, res) => {
     const playerId = req.user!.id;
     const gameCode = createNewGame(playerId);
-    
+    setTimeout(() => broadcastLobbyUpdate(currentGames[gameCode]), 1500);
+
     return res.status(201).json({ gameCode });
 }));
 
@@ -283,4 +304,29 @@ gameRouter.post('/submit/:gameCode', checker(["playerId"], (req, res) => {
 
     const submitRes = submitChainLink(gameCode, playerId, link);
     return handleFailableReturn(submitRes, res);
+}));
+
+// Add a new endpoint to get game state without joining
+gameRouter.get('/state/:gameCode', checker(["playerId"], (req, res) => {
+    const { gameCode } = req.params;
+    
+    if (!(gameCode in currentGames)) {
+        return res.status(404).json(new ErrorDetails("Game not found", [`Game with code ${gameCode} does not exist`]));
+    }
+    
+    const gameData = currentGames[gameCode];
+    
+    // Format player information to match expected frontend structure
+    const playerList = gameData.players.map(playerId => ({
+        id: playerId,
+        name: gameData.playerNames[playerId] || `Player ${playerId}`,
+        isHost: playerId === gameData.players[0] // First player is host
+    }));
+    
+    return res.status(200).json({
+        gameCode,
+        phase: gameData.phase,
+        players: playerList,
+        status: "success"
+    });
 }));
