@@ -19,6 +19,7 @@ env:
   PG_PORT: ${{ vars.PG_PORT }}
   CERTBOT_EMAIL: ${{ vars.CERTBOT_EMAIL }}
   APP_URL: ${{ vars.APP_URL }}
+  AWS_S3_BUCKET_NAME: ${{ vars.AWS_S3_BUCKET_NAME }}
 
 jobs:
   deploy:
@@ -55,6 +56,7 @@ jobs:
           echo "export PG_DATABASE=$PG_DATABASE" >> .env
           echo "export PG_PORT=$PG_PORT" >> .env
           echo "export APP_URL=$APP_URL" >> .env
+          echo "export AWS_S3_BUCKET_NAME" >> .env
           scp -v -i key.pem -o StrictHostKeyChecking=no -r ./server ./frontend ./package.json .env $USER@$HOST:/home/$USER/
 
       - name: Setup and reload NGINX
