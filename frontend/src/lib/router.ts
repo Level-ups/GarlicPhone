@@ -165,10 +165,13 @@ export class PageRouter {
 
       console.log("AUTHENTICATED -> INITIALIZING SOCKET CONNECTION");
       console.log("CLIENT ID:", playerId);
-      this.socket = io("/api/socket/games", {
+      this.socket = io("/", {
         auth: { token },
         query: { clientId: playerId },
         transports: ["websocket"],
+      });
+      this.socket.on("error", (e) => {
+        console.error("SOCKET ERROR", e)
       });
 
       this.socket.on("connect", () => {

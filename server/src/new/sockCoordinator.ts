@@ -15,8 +15,9 @@ export class SockCoordinator<EventType = string> {
 
     // Register connection listener
     this.io.on("connection", (socket: Socket) => {
-      console.log("CONNECTION:", socket.handshake.auth.clientId)
-      const clientId = socket.handshake.auth.clientId as ClientId;
+      console.log("CONNECTION:", socket.handshake.query.clientId)
+      const clientId = socket.handshake.query.clientId as ClientId;
+      // socket.handshake.query.clientId
       if (!clientId) {
         socket.disconnect(true);
         return;
@@ -62,6 +63,7 @@ export class SockCoordinator<EventType = string> {
     const socket = this.clients[clientId];
     if (!socket) {
       console.log("INVALID CLIENT ID:", clientId);
+      console.log("CLIENT IDS:", Object.keys(this.clients));
       return "invalidClientId";
     }
     socket.emit(event as string, data);
