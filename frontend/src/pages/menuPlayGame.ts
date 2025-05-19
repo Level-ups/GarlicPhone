@@ -62,7 +62,7 @@ export const menuPlayGamePage: PageRenderer = ({ page }) => {
 
         try {
             // Use local createLobby function instead of lobbyService.createLobby
-            const gameCode = await createGame();
+            // const gameCode = await createGame();
 
             // Redirect to lobby page
             visit('lobby');
@@ -76,13 +76,13 @@ export const menuPlayGamePage: PageRenderer = ({ page }) => {
 
     // Join an existing lobby and redirect to lobby page
     async function handleJoinGame() {
-        if (!playerName()) { alert('Please enter your name'); return; }
-        if (!gameCode()) { alert('Please enter a lobby code'); return; }
+        if (playerName() == "") { alert('Please enter your name'); return; }
+        if (gameCode() == "") { alert('Please enter a lobby code'); return; }
         
         joiningGame(true);
         
         try {
-            await joinGame(gameCodeInp());
+            await joinGame(gameCode());
 
             // Redirect to lobby page
             visit('lobby');

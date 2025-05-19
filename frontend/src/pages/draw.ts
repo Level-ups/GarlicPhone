@@ -4,7 +4,7 @@ import { PALETTES } from "../lib/palettes";
 import { forEl, parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 import { sig } from "../lib/signal";
-import { timer } from "../lib/timer";
+import { timerTill } from "../lib/timer";
 import { drawLine, floodFill, paint } from "../lib/util/canvasUtils";
 import eraserToolIcon from "/assets/canvas/eraser-tool.svg";
 import fillToolIcon from "/assets/canvas/fill-tool.svg";
@@ -237,7 +237,7 @@ function cleanup() {
 // Store prompt signal in a variable that can be accessed by the handlers
 let promptSignal: ReturnType<typeof sig<string>>;
 
-export const drawPage: PageRenderer = ({ app }, { onSubmit }) => {
+export const drawPage: PageRenderer = ({ app }, { onSubmit, params }) => {
   promptSignal = sig<string>("Loading...");
   const prompt = promptSignal;
   
@@ -311,7 +311,7 @@ export const drawPage: PageRenderer = ({ app }, { onSubmit }) => {
       "|div.draw-page-header-ctn": {
         "|div.draw-page-title-timer-ctn": {
           "|h2.large-heading.draw-page-title": { _: "Garlic Phone", },
-          ...timer(30)
+          ...timerTill((params.timeStarted ?? Date.now()) + 30_000)
         },
         "|img.draw-page-logo": {
           "@": { src: garlicPhoneLogo, alt: "Garlic Phone Logo" },

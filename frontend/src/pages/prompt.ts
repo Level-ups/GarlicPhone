@@ -14,10 +14,10 @@ async function submitPrompt(gameCode: string, prompt: string) {
     return data;
 }
 
-export const promptPage: PageRenderer = ({ page }, { globalState, onSubmit }) => {
+export const promptPage: PageRenderer = ({ page }, { globalState, params, onSubmit }) => {
     const promptInp = sig<string>("");
     
-    onSubmit((alert) => { submitPrompt(globalState.gameCode, promptInp()); });
+    onSubmit(() => { submitPrompt(globalState.gameCode, promptInp()); });
 
     isolateContainer("page");
 
@@ -26,6 +26,7 @@ export const promptPage: PageRenderer = ({ page }, { globalState, onSubmit }) =>
         "Think quick - write a prompt!",
         "prompt",
         promptInp,
-        () => { /* visit("draw") */ }
+        (params.timeStarted ?? Date.now()) + 30_000,
+        () => {}
     ))
 };
