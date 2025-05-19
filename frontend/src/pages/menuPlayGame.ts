@@ -3,6 +3,7 @@ import type { PageRenderer } from "../lib/router";
 import { menuNav } from "../components/menuNav";
 import { sig, type Signal } from "../lib/signal";
 import { apiFetch } from "../lib/fetch";
+import wavingGarlic from "/assets/waving-garlic.png";
 
 type PlayerInfo = {
     id: number;
@@ -149,7 +150,13 @@ export const menuPlayGamePage: PageRenderer = ({ page }) => {
                 maxWidth: "900px",
                 width: "100%"
             },
-            "|article.card": {
+            "|article.card.welcome-card": {
+                "|img.waving-garlic": {
+                    "@": { 
+                        src: wavingGarlic, 
+                        alt: "Waving Garlic" 
+                    },
+                },
                 "|h2.welcome-heading": { _: "Welcome to Garlic Phone" },
                 "|form#player-form": {
                     "|fieldset.name-fieldset": {

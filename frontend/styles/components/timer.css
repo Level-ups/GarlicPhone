@@ -7,10 +7,10 @@
   align-items: center;
   justify-content: center;
 
-  color: var(--black);
+  color: var(--black_black);
   border-radius: 1rem;
-  border: 3px solid var(--black);
-  box-shadow: 0.3rem 0.4rem var(--black);
+  border: 3px solid var(--black_black);
+  box-shadow: 0.4rem 0.5rem var(--black_black);
 
   padding: 1rem 2rem;
 }
