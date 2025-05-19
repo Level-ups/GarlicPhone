@@ -104,10 +104,7 @@ export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => 
        
       },
       "|article.card.lobby-start": {
-        "|button.base-button.base-button--accent.start-game-btn": {
-            "|span": { _: "Start Game" },
-            "%click": handleStartGame,
-        },
+        ...createButton("Start Game", handleStartGame, ["base-button--accent", "start-game-btn"], playerClickedStartGame),
       },
     },
   });

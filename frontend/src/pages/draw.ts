@@ -318,7 +318,7 @@ export const drawPage: PageRenderer = ({ app }, { onSubmit, params, globalState 
       "|div.draw-page-header-ctn": {
         "|div.draw-page-title-timer-ctn": {
           "|h2.large-heading.draw-page-title": { _: "Garlic Phone", },
-          ...timerTill(params?.alert?.timeStarted ?? params?.timeStarted ?? Date.now() + 30_000)
+          ...timerTill(params?.alert?.timeStarted ?? Date.now() + 30_000)
         },
         "|img.draw-page-logo": {
           "@": { src: garlicPhoneLogo, alt: "Garlic Phone Logo" },

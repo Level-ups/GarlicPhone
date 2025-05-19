@@ -49,8 +49,11 @@ export function createButton(
         _: tryCall(label),
         '%click': (e: Event) => onClick(e),
       },
+      $: {
+        opacity: disabled != null ? der(() => disabled() ? "50%" : "100%") : "100%"
+      },
       "@": {
-        disabled: `${disabled != null ? disabled() : false}`
+        disabled: disabled != null ? der(() => `${disabled()}`) : "false"
       }
     }
   };

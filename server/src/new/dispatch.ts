@@ -115,7 +115,7 @@ function progressState(gameCode: GameCode): ProgressStateResult {
     //----- Gather player data -----//
     if (gameData.phase > 0) {
         coord.broadcast(gameData.players, SUBMISSION_ALERT, "submission");
-        sleep(2000); // Wait for players to submit their data
+        // sleep(4000); // Wait for players to submit their data
     }
     const timeStarted = Date.now();
 
@@ -126,7 +126,7 @@ function progressState(gameCode: GameCode): ProgressStateResult {
         const playerId = gameData.players[pIdx];
         const alert = transition(pIdx, gameData, timeStarted);
         isReviewState ||= alert.phaseType == "review";
-        coord.dispatch(playerId, alert, "transition");
+        setTimeout(() => { coord.dispatch(playerId, alert, "transition"); }, 6_000);
     }
     if (isReviewState) {
         saveGameDataToDb(gameData); // Async save game data to db
