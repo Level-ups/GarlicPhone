@@ -27,7 +27,7 @@ export const promptPage: PageRenderer = ({ page }, { globalState, params, onSubm
         "Think quick - write a prompt!",
         "prompt",
         promptInp,
-        (params.timeStarted ?? Date.now()) + 30_000,
+        (params?.alert?.timeStarted ?? params?.timeStarted ?? Date.now()) + 30_000,
         () => {}
     ))
 };

@@ -9,8 +9,9 @@ import { der, sig } from "../lib/util/signal";
 let chainsSignal: ReturnType<typeof sig<ChainInfo[]>>;
 
 export const reviewPage: PageRenderer = ({ page }, { params }) => {
+    console.log("REVIEW PARAMS:", params);
     const selectedChain = sig<number>(0);
-    const chains = sig<ChainInfo[]>(params.chains);
+    const chains = sig<ChainInfo[]>(params.alert.chains);
 
     isolateContainer("page");
 
@@ -18,10 +19,13 @@ export const reviewPage: PageRenderer = ({ page }, { params }) => {
     parseInto(page, {
         ...menuNav(),
         ...titleCard("Review", false),
-        ...react([selectedChain, chains], () => 
-            wrapAsRowCards({
-            ...createItemList(chains(), (i, _) => { selectedChain(i); }),
-             ...createChainDisplay(chains()[selectedChain()].links)
-            }, [1, 2], "1em")),
+        ...react([selectedChain, chains], () => {
+            const ch = chains();
+
+            return wrapAsRowCards({
+            ...createItemList(ch, (i, _) => { selectedChain(i); }),
+             ...createChainDisplay(ch[selectedChain()].links)
+            }, [1, 2], "1em")
+        })
     });
 }

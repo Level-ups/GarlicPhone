@@ -1,5 +1,4 @@
 import { io, Socket } from "socket.io-client";
-import { randHex } from "./parse";
 import { apiFetch } from "./fetch";
 
 export type AlertCallback = (alert: any) => void; // TODO: Add types

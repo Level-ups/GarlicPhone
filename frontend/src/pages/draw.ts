@@ -3,7 +3,6 @@ import { apiFetch, apiFetchRawBody } from "../lib/fetch";
 import { PALETTES, type ColourButtonConfig } from "../lib/palettes";
 import { forEl, parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
-import { timer } from "../lib/timer";
 import { timerTill } from "../lib/timer";
 import { drawLine, floodFill, paint } from "../lib/util/canvasUtils";
 import { sig } from "../lib/util/signal";
@@ -235,12 +234,9 @@ function cleanup() {
 }
 
 
-// Store prompt signal in a variable that can be accessed by the handlers
-let promptSignal: ReturnType<typeof sig<string>>;
-
 export const drawPage: PageRenderer = ({ app }, { onSubmit, params, globalState }) => {
-  promptSignal = sig<string>(params.prompt);
-  const prompt = promptSignal;
+  console.log("DRAW PARAMS:", params);
+  const prompt = sig<string>(params.alert.prompt);
   const gameCode = globalState.gameCode;
 
   onSubmit(async () => {
@@ -322,7 +318,7 @@ export const drawPage: PageRenderer = ({ app }, { onSubmit, params, globalState 
       "|div.draw-page-header-ctn": {
         "|div.draw-page-title-timer-ctn": {
           "|h2.large-heading.draw-page-title": { _: "Garlic Phone", },
-          ...timerTill((params.timeStarted ?? Date.now()) + 30_000)
+          ...timerTill(params?.alert?.timeStarted ?? params?.timeStarted ?? Date.now() + 30_000)
         },
         "|img.draw-page-logo": {
           "@": { src: garlicPhoneLogo, alt: "Garlic Phone Logo" },
@@ -398,12 +394,6 @@ export const drawPage: PageRenderer = ({ app }, { onSubmit, params, globalState 
     },
   });
 };
-
-async function getPromptForPLayer(chainId: number) {
-  const latestPromptForChain = await apiFetch("GET", `/api/prompts/chain/${chainId}/latest`, undefined);
-  const data = await latestPromptForChain.json();
-  return data;
-}
 
 function dataURLtoBlob(dataURL: any) {
   const byteString = atob(dataURL.split(',')[1]);

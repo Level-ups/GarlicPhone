@@ -59,7 +59,7 @@ export class SockCoordinator<EventType = string> {
 
   // Dispatch event to specific client
   public dispatch(clientId: ClientId, data: any, event: EventType): DispatchAlertResult {
-    console.log(`DISPATCH [${event}]:`, clientId)
+    console.log(`DISPATCH [${event}]:`, clientId, "\n ->", data)
     const socket = this.clients[clientId];
     if (!socket) {
       console.log("INVALID CLIENT ID:", clientId);
