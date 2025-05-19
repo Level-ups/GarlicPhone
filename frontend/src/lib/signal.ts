@@ -29,7 +29,7 @@ export type Reactive<T> = Signal<T> | DerivedSignal<T>;
 export type MaybeReactive<T> = T | Reactive<T>;
 
 export function isReactive<T>(v: any): v is Reactive<T> {
-  return [v, v.sub, v.get].every(x => typeof x === "function");
+  return [v, v?.sub, v?.get].every(x => typeof x === "function");
 }
 
 // Unpack a MaybeReactive<T> and just return it's current value
