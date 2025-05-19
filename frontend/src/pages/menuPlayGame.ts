@@ -4,7 +4,7 @@ import { apiFetch } from "../lib/fetch";
 import { parseInto } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 import { der, sig } from "../lib/util/signal";
-
+import wavingGarlic from "/assets/waving-garlic.png";
 type PlayerInfo = {
     id: number;
     name: string;
@@ -134,7 +134,13 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
                 maxWidth: "900px",
                 width: "100%"
             },
-            "|article.card": {
+            "|article.card.welcome-card": {
+                "|img.waving-garlic": {
+                    "@": { 
+                        src: wavingGarlic, 
+                        alt: "Waving Garlic" 
+                    },
+                },
                 "|h2.welcome-heading": { _: "Welcome to Garlic Phone" },
                 $: {
                     textAlign: "center",

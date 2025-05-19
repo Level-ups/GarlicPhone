@@ -1,70 +1,89 @@
-.nav{
+.nav {
   background-color: transparent;
   box-shadow: none;
   border: none;
   display: flex;
   align-items: center;
   padding: 1rem;
+  padding-top: 0;
 }
 
-
-.nav-info{
+.nav-info {
   display: flex;
   align-items: center;
 }
 
-.nav-logo{
-    width: 6rem;
+.nav-logo {
+  width: 6rem;
 }
 
-.nav-buttons{
-    display: flex;
-    gap: 2rem;
-    margin-left: auto;
+.nav-buttons {
+  display: flex;
+  gap: 2rem;
+  margin-left: auto;
 }
 
-.nav-title{
-    font-family: "Rock Salt", cursive;
-    margin-right: 1rem;
-    font-weight: 600;
-    /* text-decoration: underline; */
-      font-family: "Playwrite DK Loopet", cursive;
+.nav-title {
+  font-family: "Rock Salt", cursive;
+  margin-right: 1rem;
+  font-weight: 600;
+  /* text-decoration: underline; */
+  font-family: "Playwrite DK Loopet", cursive;
   font-optical-sizing: auto;
   font-weight: 400;
   font-style: normal;
-    font-style: italic;
-    text-shadow: .1rem .1rem black;
+  font-style: italic;
+  text-shadow: 0.1rem 0.1rem black;
 }
 
-.menuButton{
+.nav-with-timer {
+  justify-content: space-between;
+}
+
+.menuButton {
   border-radius: 2rem;
   border: black 2px solid;
   background-color: white;
   color: var(--black);
   padding: 0.5rem 1rem;
-  box-shadow: .1rem .2rem ;
+  box-shadow: 0.1rem 0.2rem;
 }
+
+
 
 @media (max-width: 666px) {
-    .nav-title{
-        font-size: 2rem;
-    }
+  .nav-title {
+    font-size: 2rem;
+  }
 
-    .nav-logo{
-        width: 4rem;
-    }
+  .nav-logo {
+    width: 4rem;
+  }
 }
 
+@container (max-width: 700px) {
+  .solo-nav{
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+}
 @container (max-width: 480px) {
-    .nav{
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
+  .nav {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
 
-    .nav-buttons{
+  .nav-buttons {
     display: flex;
     gap: 2rem;
     margin-left: 0;
-}
+  }
+
+  .nav-with-timer {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    row-gap: 1rem;
+  }
 }

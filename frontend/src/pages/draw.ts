@@ -1,4 +1,5 @@
 
+import { titleNavWithTimer } from "../components/menuNav";
 import { apiFetch, apiFetchRawBody } from "../lib/fetch";
 import { PALETTES, type ColourButtonConfig } from "../lib/palettes";
 import { forEl, parseInto, type ElemTree } from "../lib/parse";
@@ -140,12 +141,6 @@ function mousedownEvent(event: MouseEvent, ctx: CanvasRenderingContext2D) {
   const [x, y, size] = getXYS(event);
 
   if (canvasConfig.modes.fill) {
-    const rect = getCanvasContext().canvas.getBoundingClientRect();
-    const scaleX = getCanvasContext().canvas.width / rect.width;
-    const scaleY = getCanvasContext().canvas.height / rect.height;
-
-    const canvasX = Math.floor((event.clientX - rect.left) * scaleX);
-    const canvasY = Math.floor((event.clientY - rect.top) * scaleY);
 
     floodFill(ctx, x, y, canvasConfig.pencilContext.colour);
   } else if (canvasConfig.modes.erase) {
@@ -175,28 +170,22 @@ function touchstartEvent(event: TouchEvent, ctx: CanvasRenderingContext2D) {
 
   const touch = event.touches[0];
   const rect = ctx.canvas.getBoundingClientRect();
-  const x = Math.floor(
-    (touch.clientX - rect.left) / canvasConfig.pencilContext.pixelSize
-  );
-  const y = Math.floor(
-    (touch.clientY - rect.top) / canvasConfig.pencilContext.pixelSize
-  );
+
+  const scaleX = ctx.canvas.width / rect.width;
+  const scaleY = ctx.canvas.height / rect.height;
+
+  const x = Math.floor((touch.clientX - rect.left) * scaleX);
+  const y = Math.floor((touch.clientY - rect.top) * scaleY);
+
+  const size = canvasConfig.pencilContext.pixelSize;
 
   if (canvasConfig.modes.fill) {
-    const dpr = window.devicePixelRatio || 1;
-    const canvasX = Math.floor((touch.clientX - rect.left) * dpr);
-    const canvasY = Math.floor((touch.clientY - rect.top) * dpr);
-    floodFill(ctx, canvasX, canvasY, canvasConfig.pencilContext.colour);
-  } else if (canvasConfig.modes.erase) {
+    floodFill(ctx, x, y, canvasConfig.pencilContext.colour);
+  } else if (canvasConfig.modes.erase || canvasConfig.modes.draw) {
     isDrawing = true;
     lastX = x;
     lastY = y;
-    paint(x, y, canvasConfig.pencilContext.pixelSize, ctx);
-  } else if (canvasConfig.modes.draw) {
-    isDrawing = true;
-    lastX = x;
-    lastY = y;
-    paint(x, y, canvasConfig.pencilContext.pixelSize, ctx);
+    paint(x, y, size, ctx);
   }
 }
 
@@ -207,14 +196,14 @@ function touchmoveEvent(event: TouchEvent, ctx: CanvasRenderingContext2D) {
 
   const touch = event.touches[0];
   const rect = ctx.canvas.getBoundingClientRect();
-  const x = Math.floor(
-    (touch.clientX - rect.left) / canvasConfig.pencilContext.pixelSize
-  );
-  const y = Math.floor(
-    (touch.clientY - rect.top) / canvasConfig.pencilContext.pixelSize
-  );
+  const scaleX = ctx.canvas.width / rect.width;
+  const scaleY = ctx.canvas.height / rect.height;
 
-  drawLine(lastX, lastY, x, y, ctx, canvasConfig.pencilContext.pixelSize);
+  const x = Math.floor((touch.clientX - rect.left) * scaleX);
+  const y = Math.floor((touch.clientY - rect.top) * scaleY);
+  const size = canvasConfig.pencilContext.pixelSize;
+
+  drawLine(lastX, lastY, x, y, ctx, size);
   lastX = x;
   lastY = y;
 }
@@ -312,8 +301,9 @@ export const drawPage: PageRenderer = ({ app }, { onSubmit, params, globalState 
   // Clean up any existing listeners first
   cleanup();
 
-  isolateContainer("app");
-  return parseInto(app, {
+  isolateContainer("page");
+  return parseInto(page, {
+    ...titleNavWithTimer(30, "draw-page-nav"),
     "|section.draw-page": {
       "|div.draw-page-header-ctn": {
         "|div.draw-page-title-timer-ctn": {

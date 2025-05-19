@@ -52,6 +52,6 @@ export const menuGalleryPage: PageRenderer = ({ page }) => {
     // Render page
     return parseInto(page, {
         ...menuNav(),
-        "|section": wrapAsFlex(forEl(items(), createGalleryCard), GALLERY_FLEX_CONFIG)
+        "|section.game-grid": forEl(items(), createGalleryCard)
     });
 }

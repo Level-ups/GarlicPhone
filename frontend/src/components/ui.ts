@@ -67,7 +67,7 @@ export function createInput(
     '|input.gradient-input.base-input': {
       '@': { placeholder },
       '%input': (e: Event) => { val((e.target as HTMLInputElement).value); },
-      $: { color: "var(--black)", fontSize: "1.25rem" }
+      $: { color: "var(--black)" }
     }
   };
 }
@@ -161,9 +161,6 @@ export function createImage(url: Reactive<string>, alt: string = "image"): ElemT
         $: {
           display: der(() => [url(), isLoaded()][1] ? "block" : "none"),
           maxWidth: "100%",
-          margin: "0 auto",
-          borderRadius: "12px",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)"
         },
         "%load": () => isLoaded(true)
       }
@@ -180,7 +177,7 @@ export function createItemList<T extends { name: string }>(
     return {
       '|li.item-button': {
         '|button.base-button': {
-          _: item.name,
+          '|span': { _: item.name },
           '%click': () => onSelect(index, item),
         }
       }

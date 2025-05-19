@@ -38,9 +38,9 @@ export function createGuessPage(
                 }, ROW_FLEX_CONFIG),
             },
             ...(imgSrc ? {
-                ...wrapAsCard({
-                    ...createImage(imgSrc, ""),
-                }, 'GuessImageCard'),
+               "|section.guess-image": {
+                 ...createImage(imgSrc, ""),
+               },
             }: {}),
             ...wrapAsCard({
                 ...wrapAsFlex({

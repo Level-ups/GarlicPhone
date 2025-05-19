@@ -34,6 +34,7 @@
   --plush_pink: #FD9EE0;
   --plush_purple: #A62DC7;
   --white_white: #ffffff;
+  --black_black: #000000;
   --purple_pink: #DFC5E6; 
   --gold_yellow: #FBBC05;
 
@@ -218,6 +219,7 @@ a {
   margin: 0 auto;
   text-align: center;
   /* border: 1px solid red; */
+    container-type: inline-size;
 }
 
 #page {
