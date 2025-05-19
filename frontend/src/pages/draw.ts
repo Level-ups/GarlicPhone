@@ -1,6 +1,6 @@
 
 import { apiFetch, apiFetchRawBody } from "../lib/fetch";
-import { PALETTES } from "../lib/palettes";
+import { PALETTES, type ColourButtonConfig } from "../lib/palettes";
 import { forEl, parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 import { sig } from "../lib/signal";
@@ -237,9 +237,19 @@ function cleanup() {
 // Store prompt signal in a variable that can be accessed by the handlers
 let promptSignal: ReturnType<typeof sig<string>>;
 
-export const drawPage: PageRenderer = ({ app }, { onSubmit, params }) => {
-  promptSignal = sig<string>("Loading...");
+export const drawPage: PageRenderer = ({ app }, { onSubmit, params, globalState }) => {
+  promptSignal = sig<string>(params.prompt);
   const prompt = promptSignal;
+  const gameCode = globalState.gameCode;
+
+  onSubmit(async () => {
+    const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    if (canvas) {
+      const uploadedUrl = await uploadCanvasImage(canvas, gameCode);
+      console.log(uploadedUrl);
+    }
+    else throw new Error("Canvas not found");
+  });
   
   // Initialize canvas when the page is loaded
   initializeCanvas();
@@ -405,7 +415,7 @@ function dataURLtoBlob(dataURL: any) {
   return new Blob([ab], { type: mimeString });
 }
 
-async function uploadCanvasImage(canvas: HTMLCanvasElement, chainId: number, userId: string) {
+async function uploadCanvasImage(canvas: HTMLCanvasElement, gameCode: string) {
 
   const imageData = canvas.toDataURL('image/png');
   const blob = dataURLtoBlob(imageData);
@@ -416,7 +426,7 @@ async function uploadCanvasImage(canvas: HTMLCanvasElement, chainId: number, use
 
   const response = await apiFetchRawBody(
     "post",
-    `/api/chain/${chainId}/latest-image?userId=${userId}`,
+    `/api/games/submit-image/${gameCode}`,
     blob,
     { "Content-Type": "image/png" }
   );
@@ -426,8 +436,7 @@ async function uploadCanvasImage(canvas: HTMLCanvasElement, chainId: number, use
     throw new Error(`Upload failed: ${JSON.stringify(errorDetails)}`);
   }
 
-  const result = await response.json();
-  return result; // image object returned from your API
+  return response.json(); // image object returned from your API
 }
 
 // Initialize canvas and controls when the page is loaded

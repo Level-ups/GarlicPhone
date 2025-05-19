@@ -1,9 +1,9 @@
+import { menuNav } from "../components/menuNav";
+import { createButton, createInput } from "../components/ui";
+import { apiFetch } from "../lib/fetch";
 import { parseInto } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
-import { menuNav } from "../components/menuNav";
-import { der, sig, type Signal } from "../lib/signal";
-import { apiFetch } from "../lib/fetch";
-import { createButton, createInput } from "../components/ui";
+import { der, sig } from "../lib/signal";
 
 type PlayerInfo = {
     id: number;
@@ -17,13 +17,12 @@ async function createGame() {
     const res = await apiFetch("post", "/api/games/create", {});
 
     const data = await res.json();
-    log("CREATE LOBBY:", data);
 
-    return data;
+    return data as { gameCode: string };
 }
 
 async function joinGame(gameCode: string) {
-    const res = await apiFetch("post", `/api/lobbies/join/${gameCode}`, {});
+    const res = await apiFetch("post", `/api/games/join/${gameCode}`, {});
 
     const data = await res.json();
     log("JOIN LOBBY:", data);
@@ -33,40 +32,79 @@ async function joinGame(gameCode: string) {
 
 
 
-export const menuPlayGamePage: PageRenderer = ({ page }) => {
+export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate }) => {
     //----- Initialization ----//
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
     const urlCode = params.get('code');
-    if (token) localStorage.setItem("google-id-token", token);
+    if (token) {
+        console.log('Token received');
+        sessionStorage.setItem("google-id-token", token);
+        
+        // Only attempt to initialize SSE if we haven't already done so in this session
+        // and we're not currently in the process of initializing
+        const sseInitializing = sessionStorage.getItem("sse-initializing");
+        
+        if (!sseInitializing) {
+            // Mark as initializing to prevent concurrent initialization attempts
+            sessionStorage.setItem("sse-initializing", "true");
+            
+            // Use setTimeout to ensure router is initialized before accessing it
+            setTimeout(() => {
+                try {
+                    if ((window as any).router) {
+                        // Check if SSE is already connected before initializing
+                        if (!(window as any).router.sseSource) {
+                            console.log('Initializing SSE connection');
+                            (window as any).router.initializeSSEIfAuthenticated();
+                            console.log('SSE initialization complete');
+                        } else {
+                            console.log('SSE connection already exists, skipping initialization');
+                        }
+                    } else {
+                        console.error('Router not available for SSE initialization');
+                    }
+                } catch (err) {
+                    console.error('Error during SSE initialization:', err);
+                } finally {
+                    // Clear the initializing flag regardless of success/failure
+                    sessionStorage.removeItem("sse-initializing");
+                }
+            }, 1000);
+        } else {
+            console.log('SSE initialization already in progress, skipping');
+        }
+    }
 
     //----- Page state signals -----//
-    const playerNameInp = sig<string>("");
-    const playerName = der<string>(() => playerNameInp().trim());
-    const gameCodeInp = sig<string>(urlCode ?? "");
-    const gameCode = der<string>(() => gameCodeInp().trim());
+    let playerNameInp = sig<string>("");
+    let playerName = der<string>(() => playerNameInp().trim());
+    let gameCodeInp = sig<string>(urlCode ?? "");
+    let gameCode = der<string>(() => gameCodeInp().trim());
 
-    const joiningGame = sig<boolean>(false);
-    const joinGameLabel = der<string>(() => joiningGame() ? "Joining..." : "Join Game");
+    let joiningGame = sig<boolean>(false);
+    let joinGameLabel = der<string>(() => joiningGame() ? "Joining..." : "Join Game");
 
-    const creatingGame = sig<boolean>(false);
-    const createGameLabel = der<string>(() => creatingGame() ? "Creating..." : "Create Game");
+    let creatingGame = sig<boolean>(false);
+    let createGameLabel = der<string>(() => creatingGame() ? "Creating..." : "Create Game");
 
 
     //----- Button handlers -----//
     // Create a new lobby and redirect to lobby page
-    async function handleCreateGame() {
+    function handleCreateGame() {
         if (!playerName()) { alert('Please enter your name'); return; }
         
         creatingGame(true);
 
         try {
             // Use local createLobby function instead of lobbyService.createLobby
-            // const gameCode = await createGame();
-
-            // Redirect to lobby page
-            visit('lobby');
-            
+            (async () => {
+                const gameCode = await createGame();
+                globalState.playerName = playerName;
+                globalState.gameCode = gameCode.gameCode;
+                // Redirect to lobby page
+                visit('lobby');
+            })();
         } catch (error) {
             alert(`Error creating lobby: ${error instanceof Error ? error.message : 'Unknown error'}`);
             creatingGame(false);
@@ -82,10 +120,16 @@ export const menuPlayGamePage: PageRenderer = ({ page }) => {
         joiningGame(true);
         
         try {
-            await joinGame(gameCode());
-
-            // Redirect to lobby page
-            visit('lobby');
+            (async () => {
+                await joinGame(gameCodeInp());
+                globalState.gameCode = gameCodeInp();
+                // Redirect to lobby page
+                try {
+                    (window as any).router.visit('lobby');
+                } catch (error) {
+                    console.error('Error navigating to lobby:', error);
+                }
+            })();
         } catch (error) {
             joiningGame(false);
             alert(`Error joining lobby: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -152,4 +196,4 @@ export const menuPlayGamePage: PageRenderer = ({ page }) => {
             }
         }
     });
-}; 
+};

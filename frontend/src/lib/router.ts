@@ -39,7 +39,7 @@ export class PageRouter {
   private containers: ContainerMap;
   private redirects: RedirectFn[];
   private clientId: string;
-  private sseSource: EventSource;
+  public sseSource: EventSource | null = null;
 
   private globalState: GlobalState = {};
 
@@ -48,9 +48,9 @@ export class PageRouter {
   private onSubmitSubs: Array<(alert: any) => void> = [];
 
   private sseHandlers: SSEHandlers = {
-    "update": (alert) =>     { this.onUpdateSubs.forEach(fn => fn(alert)); },
-    "submission": (alert) => { this.onSubmitSubs.forEach(fn => fn(alert)); },
-    "transition": (alert) => { visit(alert.phaseType, { alert }); }
+    "update": (alert) =>     { console.log("update alert:", alert); this.onUpdateSubs.forEach(fn => fn(alert)); },
+    "submission": (alert) => { console.log("submission alert:", alert); this.onSubmitSubs.forEach(fn => fn(alert)); },
+    "transition": (alert) => { console.log("transition alert:", alert); this.visit(alert.phaseType, { alert }); }
   };
 
 
@@ -61,17 +61,14 @@ export class PageRouter {
     this.globalState = {};
 
     // Obtain/Generate client id
-    this.clientId = localStorage.getItem("clientId") ?? randHex(20);
-    localStorage.setItem("clientId", `${this.clientId}`);
+    this.clientId = sessionStorage.getItem("clientId") ?? randHex(20);
+    sessionStorage.setItem("clientId", `${this.clientId}`);
 
     // Bind methods to this instance
     this.handlePopState = this.handlePopState.bind(this);
     this.visit = this.visit.bind(this);
     this.isolateContainer = this.isolateContainer.bind(this);
-
-    // Create SSE source & bind handlers
-    this.sseSource = createSSESource(`/api/games/connect`, this.sseHandlers);
-
+    
     // Listen to browser navigation
     window.addEventListener("popstate", this.handlePopState);
 
@@ -88,7 +85,7 @@ export class PageRouter {
       const target = redir(path);
       if (target && this.pages[target]) {
         if (target !== "login") {
-          // return localStorage.getItem("google-id-token") ? target : "login";
+          // return sessionStorage.getItem("google-id-token") ? target : "login";
           return target;
         } else {
           return target;
@@ -128,8 +125,8 @@ export class PageRouter {
   // Clear page content & render new page
   private render(page: string, params: Params = {}): void {
     // Remove subscribers from previous page
-    this.onUpdateSubs = [];
-    this.onSubmitSubs = [];
+    // this.onUpdateSubs = [];
+    // this.onSubmitSubs = [];
 
     const renderer = this.pages[page];
     Object.entries(this.containers).forEach(([_, v]) => {
@@ -159,5 +156,29 @@ export class PageRouter {
 
   public getState() {
     return this.globalState;
+  }
+  
+  /**
+   * Initializes the SSE connection if the user is authenticated (has a JWT token)
+   * This should be called after successful login
+   */
+  public initializeSSEIfAuthenticated(): void {
+    const token = sessionStorage.getItem('google-id-token');
+    
+    if (token && !this.sseSource) {
+      const queryParams = new URLSearchParams({
+        authorization: token
+      });
+      this.sseSource = createSSESource(`/api/sse/games/connect?${queryParams.toString()}`, this.sseHandlers);
+      console.log('SSE connection established after authentication');
+    }
+  }
+
+  public closeSSEConnection(): void {
+    if (this.sseSource) {
+      this.sseSource.close();
+      this.sseSource = null;
+      console.log('SSE connection closed');
+    }
   }
 }

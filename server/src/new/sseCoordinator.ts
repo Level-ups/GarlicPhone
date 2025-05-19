@@ -12,20 +12,25 @@ export class SSECoordinator<EventType = string> {
 
   public addClient(clientId: ClientId, res: Response): AddClientResult {
     if (clientId in this.clients) return "alreadyAdded";
+    
+    res.setHeader('Content-Type', 'text/event-stream')
+    res.setHeader('Cache-Control', 'no-cache')
+    res.setHeader('Connection', 'keep-alive')
+    res.flushHeaders()
 
     // Set SSE headers
-    res.writeHead(200, {
-      'Content-Type':     'text/event-stream',
-      'Cache-Control':    'no-cache',
-      'Connection':       'keep-alive',
-    });
+    // res.writeHead(200, {
+    //   'Content-Type':     'text/event-stream',
+    //   'Cache-Control':    'no-cache',
+    //   'Connection':       'keep-alive',
+    // });
     // Send initial event to confirm connection
     res.write(`event: connected\ndata: ${clientId}\n\n`);
 
     this.clients[clientId] = res;
 
     // Cleanup on client disconnect
-    res.on('close', () => { this.removeClient(clientId); });
+    res.on('close', () => { this.removeClient(clientId); res.end(); });
 
     return "success";
   }

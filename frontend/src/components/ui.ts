@@ -46,9 +46,9 @@ export function createButton(
   return {
     [`|button.base-button ${addClasses.map(c => "." + c).join(" ")}`]: {
       "|span": {
-        _: tryCall(label)
+        _: tryCall(label),
+        '%click': (e: Event) => onClick(e),
       },
-      '%click': onClick,
       "@": {
         disabled: `${disabled != null ? disabled() : false}`
       }

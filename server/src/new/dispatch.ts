@@ -11,6 +11,7 @@ import { saveGameDataToDb } from "./saveGame";
 //---------- Setup ----------//
 
 export const gameRouter = Router();
+export const gameSSERouter = Router();
 
 const coord = new SSECoordinator<Alert["alert"]>();
 const currentGames: { [key: GameCode]: GameData } = {}
@@ -19,8 +20,11 @@ const _1hr = 60_000;
 setInterval(clearStaleGames, _1hr);
 
 
-const sleep: ((ms: number) => void) = (ms) => new Promise(res => setTimeout(res, ms));
-
+const sleep = (ms: number) => {
+    let start = new Date().getTime(), expire = start + ms;
+    while (new Date().getTime() < expire) { }
+    return;
+} 
 //---------- Game manipulation ----------//
 
 const GAME_CODE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -58,53 +62,78 @@ function addPlayerToGame(gameCode: GameCode, playerId: PlayerId): AddPlayerResul
 }
 
 type StartGameResult = "success" | "invalidGame" | "noPlayers" | "playerIsNotHost";
-function startGame(gameCode: GameCode, requestor: PlayerId): StartGameResult {
+async function startGame(gameCode: GameCode, requestor: PlayerId): Promise<StartGameResult> {
     if (!(gameCode in currentGames)) return "invalidGame";
     const gameData = currentGames[gameCode];
     if (gameData.players.length == 0) return "noPlayers";
     if (gameData.players[0] != requestor) return "playerIsNotHost";
 
+    // { startingPlayer: PlayerId, chainId: ChainId, links: ChainLink[] };
     // Initialize chains
-    gameData.chains = [...Array(gameData.players.length)];
+    gameData.chains = gameData.players.map((playerId: number) => ({
+        startingPlayer: playerId,
+        chainId: playerId,
+        links: [],
+    }));
 
-    // Apply first transition
-    progressState(gameCode);
+    // Start the game progression asynchronously
+    progressGame(gameCode);
 
     return "success";
 }
 
+// Function to progress the game state asynchronously
+function progressGame(gameCode: GameCode) {
+    const gameData = currentGames[gameCode];
+    if (!gameData) return; // Game might have been deleted
+
+    const progress = () => {
+        const ps = progressState(gameCode);
+        if (ps !== "complete") {
+            setTimeout(progress, 10_000); // Check every 1 second (adjust as needed)
+        } else {
+            console.log(`Game ${gameCode} completed!`);
+        }
+    };
+
+    progress(); // Start the initial progression
+}
+
 // Alert all players in the specified game of the state to which they must transition
-type ProgressStateResult = "success" | "invalidGame";
+type ProgressStateResult = "complete" | "in-progress" | "invalidGame";
 function progressState(gameCode: GameCode): ProgressStateResult {
     if (!(gameCode in currentGames)) return "invalidGame";
     const gameData = currentGames[gameCode];
 
     //----- Gather player data -----//
-    coord.broadcast(gameData.players, SUBMISSION_ALERT, "submission");
-    sleep(2000); // Wait for players to submit their data
-
-    //----- Progress phase -----//
-    gameData.phase += 1;
+    if (gameData.phase > 0) {
+        coord.broadcast(gameData.players, SUBMISSION_ALERT, "submission");
+        sleep(2000); // Wait for players to submit their data
+    }
     const timeStarted = Date.now();
 
     //----- Transition -----//
     // Alert all players of state transition
     let isReviewState = false;
     for(let pIdx = 0; pIdx < gameData.players.length; pIdx++) {
+        const playerId = gameData.players[pIdx];
         const alert = transition(pIdx, gameData, timeStarted);
         isReviewState ||= alert.phaseType == "review";
-        coord.dispatch(pIdx, alert, "transition");
+        coord.dispatch(playerId, alert, "transition");
     }
-
     if (isReviewState) {
         saveGameDataToDb(gameData); // Async save game data to db
     }
-
-    return "success";
+    
+    //----- Progress phase -----//
+    gameData.phase += 1;
+    console.log('gameData.phase [end of progress state]', gameData.phase);
+    if (isReviewState) return "complete";
+    else return "in-progress";
 }
 
 type SubmissionResult = "success" | "invalidGame" | "invalidPlayer";
-function submitChainLink(gameCode: GameCode, playerId: PlayerId, link: ChainLink): SubmissionResult {
+export function submitChainLink(gameCode: GameCode, playerId: PlayerId, link: ChainLink): SubmissionResult {
     if (!(gameCode in currentGames)) return "invalidGame";
     const gameData = currentGames[gameCode];
     const playerIdx = gameData.players.indexOf(playerId);
@@ -139,8 +168,9 @@ const REQ_CHECKERS: { [key in ReqCheckType]: (req: Request) => ReqCheckResult } 
 
 type EndpointResponse = Response<any, Record<string, any>>;
 type EndpointHandler = (req: Request, res: Response) => EndpointResponse;
+type EndpointHandlerAsync = (req: Request, res: Response) => Promise<EndpointResponse>;
 // Wrap an endpoint handler to check for specific common values & handle all other exceptions with a generic error
-function checker(checks: ReqCheckType[], f: EndpointHandler): EndpointHandler {
+export function checker(checks: ReqCheckType[], f: EndpointHandler): EndpointHandler {
 
     return (req, res) => {
         try {
@@ -160,7 +190,27 @@ function checker(checks: ReqCheckType[], f: EndpointHandler): EndpointHandler {
 
 }
 
-function handleFailableReturn(reason: "success" | string, res: Response) {
+export function checkerAsync(checks: ReqCheckType[], f: EndpointHandlerAsync): EndpointHandlerAsync {
+
+    return async (req, res) => {
+        try {
+            for (let c of checks) { // Run checks
+                const checkRes = REQ_CHECKERS[c](req)
+                if (checkRes != null) {
+                    return res.status(checkRes.status).json(new ErrorDetails(checkRes.message, checkRes.details));
+                }
+            }
+
+            return await f(req, res); // Attempt handling
+
+        } catch(err: any) { // Generic catch-all
+            return res.status(500).json(new ErrorDetails("An unexpected error occurred", [err.message], err.stack));
+        }
+    };
+
+}
+
+export function handleFailableReturn(reason: "success" | string, res: Response) {
     return reason == "success"
         ? res.status(201).json({ status: "success" })
         : res.status(500).json({ status: "failed", reason: reason })
@@ -169,12 +219,17 @@ function handleFailableReturn(reason: "success" | string, res: Response) {
 
 
 // Connect to the SSE coordinator
-gameRouter.post('/connect', checker(["playerId"], (req: Request, res: Response) => {
+gameSSERouter.get('/connect', (req: Request, res: Response) => {
     const playerId = req.user!.id;
-
-    const connectRes = coord.addClient(playerId, res);
-    return handleFailableReturn(connectRes, res);
-}));
+    try {
+        const connectRes = coord.addClient(playerId, res);
+        if (connectRes !== "success") {
+            console.error(`Failed to add SSE client: ${connectRes}`);
+        }
+    } catch (err) {
+        console.error('Error establishing SSE connection:', err);
+    }
+});
 
 // Create a new game
 gameRouter.post('/create', checker(["playerId"], (req: Request, res: Response) => {
@@ -198,8 +253,10 @@ gameRouter.post('/start/:gameCode', checker(["playerId"], (req: Request, res: Re
     const playerId = req.user!.id;
     const { gameCode } = req.params;
 
+    console.log(playerId);
+
     const startRes = startGame(gameCode, playerId);
-    return handleFailableReturn(startRes, res);
+    return handleFailableReturn("success", res);
 }));
 
 
@@ -208,6 +265,8 @@ gameRouter.post('/submit/:gameCode', checker(["playerId"], (req: Request, res: R
     const playerId = req.user!.id;
     const { gameCode } = req.params;
     const { link } = req.body as { link: ChainLink };
+
+    console.log('/submit/:gamecode',link);
 
     const submitRes = submitChainLink(gameCode, playerId, link);
     return handleFailableReturn(submitRes, res);
