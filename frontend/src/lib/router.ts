@@ -124,6 +124,8 @@ export class PageRouter {
   }
 
   private render(page: string, params: Params = {}): void {
+    this.onUpdateSubs = [];
+    this.onSubmitSubs = [];
     const renderer = this.pages[page];
     Object.entries(this.containers).forEach(([_, v]) => {
       v.innerHTML = "";

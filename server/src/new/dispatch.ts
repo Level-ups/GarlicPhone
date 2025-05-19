@@ -1,14 +1,14 @@
 // WebSocket dispatching
 
+import { Request, Response, Router } from 'express';
 import { ErrorDetails } from "../library/error-types";
-import type { GameId, GameData, GameCode, PlayerId, Alert, ChainLink } from "./gameTypes";
+import type { Alert, ChainLink, GameCode, GameData, GameId, PlayerId } from "./gameTypes";
 import { SUBMISSION_ALERT } from "./gameTypes";
-import { Router, Request, Response } from 'express';
 // import { SSECoordinator } from "./sseCoordinator";
+import { Server as IOServer } from "socket.io";
+import { saveGameDataToDb } from "./saveGame";
 import { SockCoordinator } from "./sockCoordinator";
 import { getChainIdxForPlayer, transition } from "./transition";
-import { saveGameDataToDb } from "./saveGame";
-import { Server as IOServer, Socket } from "socket.io";
 
 //---------- Setup ----------//
 
@@ -23,14 +23,13 @@ export function initializeCoordinator(io: IOServer) {
 
 const currentGames: { [key: GameCode]: GameData } = {}
 
-const _1hr = 60_000;
+const _1hr = 60_000 * 60;
 setInterval(clearStaleGames, _1hr);
 
 
-const sleep = (ms: number) => {
-    let start = new Date().getTime(), expire = start + ms;
-    while (new Date().getTime() < expire) { }
-    return;
+// Promise-based sleep function that doesn't block the main thread
+const sleep = (ms: number): Promise<void> => {
+    return new Promise(resolve => setTimeout(resolve, ms));
 } 
 //---------- Game manipulation ----------//
 
@@ -87,38 +86,53 @@ async function startGame(gameCode: GameCode, requestor: PlayerId): Promise<Start
     }));
 
     // Start the game progression asynchronously
-    progressGame(gameCode);
+    await progressGame(gameCode);
 
     return "success";
 }
 
 // Function to progress the game state asynchronously
-function progressGame(gameCode: GameCode) {
+async function progressGame(gameCode: GameCode) {
     const gameData = currentGames[gameCode];
     if (!gameData) return; // Game might have been deleted
 
-    const progress = () => {
-        const ps = progressState(gameCode);
-        if (ps !== "complete") {
-            setTimeout(progress, 10_000); // Check every 1 second (adjust as needed)
-        } else {
+    const progress = async () => {
+        console.log(`Progressing game ${gameCode}, current phase: ${gameData.phase}`);
+        const ps = await progressState(gameCode);
+
+        console.log(`Progressed game ${gameCode} to phase ${gameData.phase}, result: ${ps}`);
+        
+        if (ps === "complete") {
             console.log(`Game ${gameCode} completed!`);
+            return; // Exit the recursive function when game is complete
+        } else if (ps === "in-progress") {
+            // Schedule the next progression after a delay
+            // This ensures we continue to the next phase
+            console.log(`Scheduling next progression for game ${gameCode}`);
+            setTimeout(progress, 30_000); // Check every 30 seconds
+        } else {
+            console.log(`Game ${gameCode} invalid or deleted`);
         }
     };
 
-    progress(); // Start the initial progression
+    await progress(); // Start the initial progression
 }
 
 // Alert all players in the specified game of the state to which they must transition
 type ProgressStateResult = "complete" | "in-progress" | "invalidGame";
-function progressState(gameCode: GameCode): ProgressStateResult {
+async function progressState(gameCode: GameCode): Promise<ProgressStateResult> {
+    console.log('Current games are:', currentGames);
     if (!(gameCode in currentGames)) return "invalidGame";
     const gameData = currentGames[gameCode];
 
     //----- Gather player data -----//
     if (gameData.phase > 0) {
+        // First, notify players to submit their data
         coord.broadcast(gameData.players, SUBMISSION_ALERT, "submission");
-        // sleep(4000); // Wait for players to submit their data
+        
+        // Wait 20 seconds for players to submit their data before transitioning
+        // This gives players time to submit their chain links
+        await sleep(20000);
     }
     const timeStarted = Date.now();
 
@@ -129,7 +143,8 @@ function progressState(gameCode: GameCode): ProgressStateResult {
         const playerId = gameData.players[pIdx];
         const alert = transition(pIdx, gameData, timeStarted);
         isReviewState ||= alert.phaseType == "review";
-        setTimeout(() => { coord.dispatch(playerId, alert, "transition"); }, 6_000);
+        // Send transition immediately instead of with a delay to ensure proper game flow
+        coord.dispatch(playerId, alert, "transition");
     }
     if (isReviewState) {
         saveGameDataToDb(gameData); // Async save game data to db
@@ -243,12 +258,12 @@ gameRouter.post('/join/:gameCode', checker(["playerId"], (req, res) => {
     return handleFailableReturn(addRes, res);
 }));
 
-gameRouter.post('/start/:gameCode', checker(["playerId"], (req, res) => {
+gameRouter.post('/start/:gameCode', checkerAsync(["playerId"], async (req, res) => {
     const playerId = req.user!.id;
     const { gameCode } = req.params;
 
-    const startRes = startGame(gameCode, playerId);
-    return handleFailableReturn("success", res);
+    const startRes = await startGame(gameCode, playerId);
+    return handleFailableReturn(startRes, res);
 }));
 
 gameRouter.get('/me', checker(["playerId"], (req, res) => {

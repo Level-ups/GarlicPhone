@@ -1,10 +1,9 @@
 import pool from "../library/db";
-import { Game } from "../models/Game";
 import chainRepository from "../repositories/chainRepository";
-import gameRepository from "../repositories/gameRepository"
+import gameRepository from "../repositories/gameRepository";
 import imageRepository from "../repositories/imageRepository";
 import promptRepository from "../repositories/promptRepository";
-import { ChainImage, ChainPrompt, GameData } from "./gameTypes"
+import { ChainImage, ChainPrompt, GameData } from "./gameTypes";
 
 function getPlayerIndexFromChainIndex(chainIndex: number, phase: number, numPlayers: number): number {
   return (chainIndex - phase + 1 + numPlayers) % numPlayers;
@@ -43,38 +42,79 @@ export async function saveGameDataToDb (game: GameData): Promise<SaveGameDataToD
     }
 
     //---------- Save links as prompts for each game ----------//
-    game.chains.forEach(async (chain, chainIndex) => {
+    // Use Promise.all to properly await all async operations
+    const chainPromptPromises = [];
+    
+    for (let chainIndex = 0; chainIndex < game.chains.length; chainIndex++) {
+      const chain = game.chains[chainIndex];
       const chainId = createdChains[chainIndex]!.id;
-
-      chain.links.forEach(async (link, phaseIndex) => {
+      
+      // Process each link sequentially within a chain to maintain order
+      for (let phaseIndex = 0; phaseIndex < chain.links.length; phaseIndex++) {
+        const link = chain.links[phaseIndex];
         const prompt = link as ChainPrompt;
         const image = link as ChainImage;
-        const playerId = game.players[getPlayerIndexFromChainIndex(chainIndex, phaseIndex, numberOfPlayers)]; // TODO: Might be an off by one error here.
-
-        if (prompt.prompt) {
-          const insertedPrompt = await promptRepository.insertPrompt({
-            chainId,
-            index: phaseIndex,
-            text: prompt.prompt,
-            userId: playerId
-          }, client);
-          if (!insertedPrompt) {
-            await client.query('ROLLBACK');
-            return "CouldNotCreatePrompts";
+        const playerId = game.players[getPlayerIndexFromChainIndex(chainIndex, phaseIndex, numberOfPlayers)];
+        
+        // Create a promise for this link's processing
+        const linkPromise = (async () => {
+          if (prompt.prompt) {
+            const insertedPrompt = await promptRepository.insertPrompt({
+              chainId,
+              index: phaseIndex,
+              text: prompt.prompt,
+              userId: playerId
+            }, client);
+            
+            if (!insertedPrompt) {
+              throw new Error("CouldNotCreatePrompts");
+            }
+            
+            return insertedPrompt;
+          } else if (image.url) {
+            // First create a prompt to associate with the image
+            const insertedPrompt = await promptRepository.insertPrompt({
+              chainId,
+              index: phaseIndex,
+              text: "", // Empty text for image prompts
+              userId: playerId
+            }, client);
+            
+            if (!insertedPrompt) {
+              throw new Error("CouldNotCreatePrompts");
+            }
+            
+            // Then create the image with the prompt ID
+            const insertedImage = await imageRepository.insertImage({
+              s3Url: image.url,
+              chainId: insertedPrompt.id, // The chainId parameter is actually used as prompt_id in the implementation
+              userId: playerId
+            }, client);
+            
+            if (!insertedImage) {
+              throw new Error("CouldNotCreateImages");
+            }
+            
+            return insertedImage;
           }
-        } else if (image.url) {
-          const insertedImage = await imageRepository.insertImage({
-            chainId,
-            s3Url: image.url,
-            userId: playerId
-          }, client);
-          if (!insertedImage) {
-            await client.query('ROLLBACK');
-            return "CouldNotCreateImages";
-          }
-        }
-      })
-    });
+        })();
+        
+        chainPromptPromises.push(linkPromise);
+      }
+    }
+    
+    try {
+      // Wait for all link operations to complete
+      await Promise.all(chainPromptPromises);
+    } catch (error: any) {
+      await client.query('ROLLBACK');
+      if (error.message === "CouldNotCreatePrompts") {
+        return "CouldNotCreatePrompts";
+      } else if (error.message === "CouldNotCreateImages") {
+        return "CouldNotCreateImages";
+      }
+      throw error;
+    }
 
     //---------- Commit changes ----------//
     await client.query('COMMIT');

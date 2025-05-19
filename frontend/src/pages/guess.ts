@@ -5,8 +5,8 @@ import { apiFetch } from "../lib/fetch";
 import { LIST_FLEX_CONFIG, ROW_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
 import { parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
+import { timerTill } from "../lib/timer";
 import { sig, type Reactive } from "../lib/util/signal";
-import { timer, timerTill } from "../lib/timer";
 
 export type Image = {
   id: number;
@@ -56,20 +56,14 @@ export function createGuessPage(
     };
 }
 
-async function uploadPrompt() {
-    const res = await apiFetch("post", "/api/prompts", {
-        link: { type: "image", url: "" }
-    } as { link: ChainLink });
-
-    const data = await res.json();
-    return data;
-}
-
-export const guessPage: PageRenderer = ({ page }, { onSubmit, params }) => {
+export const guessPage: PageRenderer = ({ page }, { onSubmit, params, globalState }) => {
     const promptInput = sig<string>("asdf");
-    const imgSrc = sig<string>("https://picsum.photos/200");
+    const imgSrc = sig<string>(params.alert.imgSrc);
 
-    onSubmit(() => { uploadPrompt(); });
+    onSubmit((data) => {
+        console.log("SUBMISSION EVENT", data); 
+        submitPrompt(globalState.gameCode, promptInput()); 
+    });
 
     isolateContainer("page");
 
@@ -81,4 +75,13 @@ export const guessPage: PageRenderer = ({ page }, { onSubmit, params }) => {
         () => {},
         imgSrc
     ));
+}
+export async function submitPrompt(gameCode: string, prompt: string) {
+    console.log("Submitting prompt:", prompt, gameCode);
+    const res = await apiFetch("post", `/api/games/submit/${gameCode}`, {
+        link: { type: "prompt", prompt }
+    } as { link: ChainLink; });
+
+    const data = await res.json();
+    return data;
 }

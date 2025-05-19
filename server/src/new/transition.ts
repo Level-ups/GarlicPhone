@@ -41,6 +41,7 @@ export function transition(playerIdx: PlayerIndex, gameData: GameData, timeStart
 
     // Add additional phase-specific data
     let alertData = {};
+    console.log(`TRANSITIONING. Chains. ToChainIdx=${toChainIdx}:`, gameData.chains);
     if (["prompt", "draw", "guess"].includes(toPhaseType)) { alertData = { ...alertData, timeStarted }}
     if (toPhaseType == "draw") {
         alertData = { ...alertData, prompt: (gameData.chains[toChainIdx].links.at(-1) as ChainPrompt)?.prompt }
