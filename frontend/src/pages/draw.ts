@@ -223,7 +223,7 @@ function cleanup() {
 }
 
 
-export const drawPage: PageRenderer = ({ app }, { onSubmit, params, globalState }) => {
+export const drawPage: PageRenderer = ({ page }, { onSubmit, params, globalState }) => {
   console.log("DRAW PARAMS:", params);
   const prompt = sig<string>(params.alert.prompt);
   const gameCode = globalState.gameCode;
