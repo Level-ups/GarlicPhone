@@ -38,7 +38,7 @@ const GAME_CODE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const randAlNum = () => GAME_CODE_CHARS[Math.floor(Math.random() * GAME_CODE_CHARS.length)];
 
 // Generate a random hexadecimal string of length `n`
-const genGameCode = (n: number = 5) => [...Array(n)].map(randAlNum).join('');
+const genGameCode = (n: number = 6) => [...Array(n)].map(randAlNum).join('');
 
 function createNewGame(host: PlayerId): GameCode {
     const createdAt = Date.now()
@@ -268,4 +268,29 @@ gameRouter.post('/submit/:gameCode', checker(["playerId"], (req, res) => {
 
     const submitRes = submitChainLink(gameCode, playerId, link);
     return handleFailableReturn(submitRes, res);
+}));
+
+// Add a new endpoint to get game state without joining
+gameRouter.get('/state/:gameCode', checker(["playerId"], (req, res) => {
+    const { gameCode } = req.params;
+    
+    if (!(gameCode in currentGames)) {
+        return res.status(404).json(new ErrorDetails("Game not found", [`Game with code ${gameCode} does not exist`]));
+    }
+    
+    const gameData = currentGames[gameCode];
+    
+    // Format player information to match expected frontend structure
+    const playerList = gameData.players.map(playerId => ({
+        id: playerId,
+        name: gameData.playerNames[playerId] || `Player ${playerId}`,
+        isHost: playerId === gameData.players[0] // First player is host
+    }));
+    
+    return res.status(200).json({
+        gameCode,
+        phase: gameData.phase,
+        players: playerList,
+        status: "success"
+    });
 }));

@@ -27,10 +27,28 @@ async function refreshLobbyState(
   gameCode: string,
   players: Signal<PlayerInfo[]>
 ) {
-  const res = await apiFetch("get", `/api/lobbies/code/${gameCode}`, undefined);
-
-  const data = await res.json();
-  players(data.players);
+  try {
+    console.log(`Fetching lobby state for code: ${gameCode}`);
+    const res = await apiFetch("get", `/api/games/state/${gameCode}`, undefined);
+    
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error(`Error fetching lobby data: ${res.status} ${res.statusText}`, errorText);
+      return;
+    }
+    
+    const data = await res.json();
+    console.log("Received lobby data:", data);
+    
+    if (data && Array.isArray(data.players)) {
+      console.log(`Updating players list with ${data.players.length} players`);
+      players(data.players);
+    } else {
+      console.error("Invalid data format, players array not found:", data);
+    }
+  } catch (error) {
+    console.error("Error refreshing lobby state:", error);
+  }
 }
 
 export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => {
@@ -51,13 +69,20 @@ export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => 
     .filter((x) => x.trim() != "")
     .at(-1)!;
     isHost(urlGameCode === "lobby");
+    
+    // Initial load of lobby state
+    if (gameCode()) {
+      console.log("Loading initial lobby state with code:", gameCode());
+      refreshLobbyState(gameCode(), players);
+    }
 
     // Listen on state refresh
     onUpdate((alert) => {
       console.log("RECEIVED UPDATE:", alert);
-      // if (gameCode != "") {
-      //   refreshLobbyState(gameCode, players);
-      // }
+      if (gameCode()) {
+        console.log("Refreshing lobby state with code:", gameCode());
+        refreshLobbyState(gameCode(), players);
+      }
     });
 
   isolateContainer("page");
@@ -86,7 +111,7 @@ export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => 
         },
       },
       "|article.card.lobby-players": {
-        "|seciton.lobby-players-info": {
+        "|section.lobby-players-info": {
              "|p.lobby-players-title": { _: "Players in lobby" },
              "|p.lobby-players-count": {_ : der(() => `${players().length}/10`) },
         },

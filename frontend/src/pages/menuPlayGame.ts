@@ -90,12 +90,22 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
         try {
             // Use local createLobby function instead of lobbyService.createLobby
             (async () => {
-                const gameCode = await createGame();
-                globalState.gameCode = gameCode.gameCode;
-                // Redirect to lobby page
-                visit('lobby');
+                const response = await createGame();
+                console.log("Create game response:", response);
+                
+                if (response && response.gameCode) {
+                    // Store game code in globalState and sessionStorage
+                    globalState.gameCode = response.gameCode;
+                    console.log("Game created with code:", response.gameCode);
+                    
+                    // Redirect to lobby page
+                    visit('lobby');
+                } else {
+                    throw new Error("Invalid response from server");
+                }
             })();
         } catch (error) {
+            console.error("Error creating game:", error);
             alert(`Error creating lobby: ${error instanceof Error ? error.message : 'Unknown error'}`);
             creatingGame(false);
         }
@@ -110,16 +120,20 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
         
         try {
             (async () => {
-                await joinGame(gameCodeInp());
+                console.log("Joining game with code:", gameCodeInp());
+                
+                const response = await joinGame(gameCodeInp());
+                console.log("Join game response:", response);
+                
+                // Store game code in globalState
                 globalState.gameCode = gameCodeInp();
+                console.log("Game code stored in globalState:", globalState.gameCode);
+                
                 // Redirect to lobby page
-                try {
-                    router.visit('lobby');
-                } catch (error) {
-                    console.error('Error navigating to lobby:', error);
-                }
+                visit('lobby');
             })();
         } catch (error) {
+            console.error("Error joining game:", error);
             joiningGame(false);
             alert(`Error joining lobby: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
