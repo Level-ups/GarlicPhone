@@ -93,7 +93,7 @@ app.post('/api/chain/:chainId/latest-image', authenticateRequest, express.raw({ 
   }
 });
 
-gameRouter.post('/api/games/submit-image/:gameCode', authenticateRequest, express.raw({ type: 'image/png', limit: '10mb' }), checkerAsync(["playerId"], async (req, res) => {
+app.post('/api/games/submit-image/:gameCode', authenticateRequest, express.raw({ type: 'image/png', limit: '10mb' }), checkerAsync(["playerId"], async (req, res) => {
   try {
     const { gameCode } = req.params;
     const playerId = req.user?.id;
