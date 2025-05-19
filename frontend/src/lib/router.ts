@@ -171,6 +171,7 @@ export class PageRouter {
         query: { clientId: playerId, playerName: playerName },
         transports: ["websocket"],
       });
+
       this.socket.on("error", (e) => {
         console.error("SOCKET ERROR", e)
       });
