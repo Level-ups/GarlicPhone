@@ -1,5 +1,5 @@
-import { forEl, parse, tryCall, type ElemTree } from "../lib/parse";
-import { der, sig, type Reactive } from "../lib/util/signal";
+import { forEl, parse, randHex, tryCall, type ElemTree } from "../lib/parse";
+import { der, eff, sig, type Reactive } from "../lib/util/signal";
 
 export function defineCustomElem (
   elemName: `${string}-${string}`,
@@ -49,25 +49,32 @@ export function createButton(
         _: tryCall(label),
         '%click': (e: Event) => onClick(e),
       },
-      $: {
-        opacity: disabled != null ? der(() => disabled() ? "50%" : "100%") : "100%"
-      },
-      "@": {
-        disabled: disabled != null ? der(() => `${disabled()}`) : "false"
-      }
+      $: { opacity: disabled != null ? der(() => disabled() ? "50%" : "100%") : "100%" },
+      "@": { disabled: disabled != null ? der(() => `${disabled()}`) : "false" }
     }
   };
 }
 
 export function createInput(
   placeholder: string,
-  val: Reactive<string>
+  val: Reactive<string>,
+  disabled?: Reactive<boolean>
 ): ElemTree {
+  const id = `input-${randHex(10)}`;
+
   return {
-    '|input.gradient-input.base-input': {
-      '@': { placeholder, "maxlength": '40' },
+    [`|input#${id}.gradient-input.base-input`]: {
+      "%": () => {
+        if (disabled != null) {
+          eff(() => ((document.getElementById(id) ?? {}) as HTMLInputElement).disabled = disabled())
+        }
+      },
       '%input': (e: Event) => { val((e.target as HTMLInputElement).value); },
-      $: { color: "var(--black)" }
+      $: {
+        color: "var(--black)",
+        opacity: disabled != null ? der(() => disabled() ? "50%" : "100%") : "100%",
+      },
+      "@": { placeholder, "maxlength": '40', }
     }
   };
 }

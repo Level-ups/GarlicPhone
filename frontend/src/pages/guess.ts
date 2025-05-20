@@ -27,6 +27,8 @@ export function createGuessPage(
     callback: () => void,
     imgSrc?: Reactive<string>,
 ): ElemTree {
+    const inputDisabled = sig<boolean>(false);
+
     return {
         ...titleNav(),
         "|main#guess-page-main": wrapAsFlex({
@@ -44,8 +46,8 @@ export function createGuessPage(
             }: {}),
             ...wrapAsCard({
                 ...wrapAsFlex({
-                    ...createInput(`Enter a ${type}`, promptInput),
-                    ...timerTill(timeEnding)
+                    ...createInput(`Enter a ${type}`, promptInput, inputDisabled),
+                    ...timerTill(timeEnding, () => { inputDisabled(true); })
                 //    "|button.base-button.base-button--accent": {
                 //           "|span": { _: "Submit" },
                 //        "%click": callback

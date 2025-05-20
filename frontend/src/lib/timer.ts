@@ -1,4 +1,4 @@
-import type { ElemTree } from "./parse";
+import { react, type ElemTree } from "./parse";
 import { der, eff, sig } from "./util/signal";
 
 export function timerTill(timeToEnd: number, callback: () => void = () => {}): ElemTree {
@@ -9,18 +9,22 @@ export function timerTill(timeToEnd: number, callback: () => void = () => {}): E
     return `${min < 10 ? "0" + min : min}:${sec < 10 ? "0" + sec : sec}`;
   });
 
+  const ended = der(() => timeLeft() <= 0);
+
   const clock = setInterval(() => {
     timeLeft(timeToEnd - Date.now());
   }, 100); // Tick down
 
   eff(() => {
     if (timeLeft() <= 0) {
-        clearInterval(clock);
-        callback();
+      clearInterval(clock);
+      callback();
     }
 });
 
-  return { "|p.timer": { _: time } };
+  return react([ended], () => ended() ?
+  ({ "|p.timer": { "|span.timer-loader": {} } }) :
+  ({ "|p.timer": { _: time } }));
 }
 
 export function timer(seconds: number, callback: () => void = () => {}): ElemTree {
