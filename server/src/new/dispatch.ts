@@ -8,7 +8,7 @@ import { SUBMISSION_ALERT } from "./gameTypes";
 import { Server as IOServer } from "socket.io";
 import { saveGameDataToDb } from "./saveGame";
 import { SockCoordinator } from "./sockCoordinator";
-import { getChainIdxForPlayer, transition } from "./transition";
+import { getChainIdxForPlayer, phaseToPhaseType, transition } from "./transition";
 import { debugLog } from '..';
 
 //---------- Setup ----------//
@@ -145,7 +145,12 @@ async function progressGame(gameCode: GameCode) {
             // Schedule the next progression after a delay
             // This ensures we continue to the next phase
             debugLog(`Scheduling next progression for game ${gameCode}`);
-            setTimeout(progress, 30_000); // Check every 30 seconds
+
+            const phaseType = phaseToPhaseType(gameData.phase, 2 + gameData.players.length);
+            const delay = (phaseType === "draw") ? 60_000 :
+            (["prompt", "guess"].includes(phaseType)) ? 20_000 : 10_000;
+
+            setTimeout(progress, delay); // Check every 30 seconds
         } else {
             debugLog(`Game ${gameCode} invalid or deleted`);
         }
@@ -162,13 +167,14 @@ async function progressState(gameCode: GameCode): Promise<ProgressStateResult> {
     const gameData = currentGames[gameCode];
 
     //----- Gather player data -----//
-    if (gameData.phase > 0) {
+    const phaseType = phaseToPhaseType(gameData.phase, 2 + gameData.players.length);
+    if (phaseType !== "lobby") {
         // First, notify players to submit their data
         coord.broadcast(gameData.players, SUBMISSION_ALERT, "submission");
         
         // Wait 20 seconds for players to submit their data before transitioning
         // This gives players time to submit their chain links
-        await sleep(20000);
+        await sleep(5_000);
     }
     const timeStarted = Date.now();
 
