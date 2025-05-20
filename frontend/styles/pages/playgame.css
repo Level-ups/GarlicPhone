@@ -29,7 +29,6 @@
 }
 
 .welcome-heading{
-    margin-bottom: 2rem;
     font-size: 2.5rem;
     font-weight: bold;
 }
@@ -45,7 +44,11 @@
 #join-form{
     display: flex;
     justify-content: center;
-    column-gap: 1rem;
+    column-gap: .5rem;
+}
+
+#join-form .base-input{
+    width: 10rem;
 }
 
 
@@ -60,10 +63,10 @@
 }
 
 .waving-garlic{
-    width: 12rem;
+    width: 9rem;
     position: absolute;
-    left: -3rem;
-    top: -2rem;
+    left: -2rem;
+    top: -4rem;
     transform: rotate(-60deg);
     transform-origin: bottom;
     z-index: -1;

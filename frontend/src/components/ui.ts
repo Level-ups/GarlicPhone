@@ -65,7 +65,7 @@ export function createInput(
 ): ElemTree {
   return {
     '|input.gradient-input.base-input': {
-      '@': { placeholder },
+      '@': { placeholder, "maxlength": '40' },
       '%input': (e: Event) => { val((e.target as HTMLInputElement).value); },
       $: { color: "var(--black)" }
     }
