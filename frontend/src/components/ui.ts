@@ -1,4 +1,4 @@
-import { forEl, parse, randHex, tryCall, type ElemTree } from "../lib/parse";
+import { forEl, parse, randHex, react, tryCall, type ElemTree } from "../lib/parse";
 import { der, eff, sig, type Reactive } from "../lib/util/signal";
 
 export function defineCustomElem (
@@ -255,6 +255,47 @@ export function createChainDisplay(links: ChainLink[]): ElemTree {
       }
     }
   };
+}
+
+export type Toast = {
+  id: string;
+  title: string;
+  message: string;
+  expiry: number;
+};
+
+export function createToaster(toasts: Reactive<Toast[]>): ElemTree {
+  return {
+    '|div#toaster.toaster-container': {
+      ...react([toasts], () =>
+        forEl(toasts(), (_, toast: Toast) => ({
+          '|div.card.toast': {
+            '@': { id: toast.id },
+            '|h3': { _: toast.title },
+            '|span': { _: `> ${toast.message}` },
+            // "%click": () => { toasts(ts => ts.filter(t => t.id == toast.id)) } // Delete when clicked
+          }
+        }))
+      )
+    }
+  };
+}
+
+export function showToast(
+  toasts: Reactive<Toast[]>,
+  title: string,
+  message: string,
+  expiry: number = 1.2
+): void {
+  const id = `toast-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+  const newToast: Toast = { id, title, message, expiry };
+
+  toasts(current => [...current, newToast]);
+
+  // Schedule removal
+  setTimeout(() => {
+    toasts(current => current.filter(t => t.id !== id));
+  }, expiry * 1000);
 }
 
 function simpleHash(str: string): number {

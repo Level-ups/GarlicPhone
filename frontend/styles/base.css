@@ -295,3 +295,34 @@ a {
   83% { background-size: 10px 3px, 10px 3px,  10px 10px, 10px 30px, 10px 50px, 10px 3px}
   100% { background-size: 10px 3px, 10px 3px, 10px 3px,  10px 10px, 10px 30px, 10px 50px}
 }
+
+
+/*----- Toast -----*/
+
+.toaster-container {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 1000;
+  width: 300px;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  margin-bottom: 1rem;
+}
+
+@keyframes disappear {
+  from { left: 0; opacity: 100%; }
+  to { left: 2rem; opacity: 0%; }
+}
+
+.disappear {
+  animation-name: fade;
+  animation-duration: 0.25s;
+  animation-delay: 2.75s;
+}

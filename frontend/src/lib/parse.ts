@@ -253,13 +253,6 @@ const elemTreeSpec: ElemTree = {
   }
 };
 
-// { ...repeat(3, { _: "hello world", "asdf": {}, "fdsa": {} }) }
-// {
-//     "0|asdf": {}, "0|fdsa": {}
-//     "1|asdf": {}, "1|fdsa": {}
-//     "2|asdf": {}, "2|fdsa": {}
-// }
-
 //----- Create signal -----//
 function signalSpec(): ElemTree {
     //----- Create signals -----//

@@ -1,9 +1,9 @@
 import { menuNav } from "../components/menuNav";
-import { createButton, createInput } from "../components/ui";
+import { createButton, createInput, createToaster, showToast, type Toast } from "../components/ui";
 import { apiFetch } from "../lib/fetch";
 import { parseInto } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
-import { der, sig } from "../lib/util/signal";
+import { der, sig, type Reactive } from "../lib/util/signal";
 import wavingGarlic from "/assets/waving-garlic.png";
 type PlayerInfo = {
     id: number;
@@ -81,6 +81,7 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
     let creatingGame = sig<boolean>(false);
     let createGameLabel = der<string>(() => creatingGame() ? "Creating..." : "Create Game");
 
+    let toasts = sig<Toast[]>([]);
 
     //----- Button handlers -----//
     // Create a new lobby and redirect to lobby page
@@ -106,7 +107,7 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
             })();
         } catch (error) {
             debugErr("Error creating game:", error);
-            alert(`Error creating lobby: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            showToast(toasts, "Lobby Err", `Error creating lobby: ${error instanceof Error ? error.message : 'Unknown error'}`);
             creatingGame(false);
         }
     };
@@ -114,7 +115,10 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
 
     // Join an existing lobby and redirect to lobby page
     async function handleJoinGame() {
-        if (gameCode() == "") { alert('Please enter a lobby code'); return; }
+        if (gameCode() == "") {
+            showToast(toasts, "Join Err", "Please enter a lobby code")
+            return;
+        }
         
         joiningGame(true);
         
@@ -135,7 +139,7 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
         } catch (error) {
             debugErr("Error joining game:", error);
             joiningGame(false);
-            alert(`Error joining lobby: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            showToast(toasts, "Join Err", `Error joining lobby: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };
 
@@ -145,6 +149,7 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
 
     return parseInto(page, {
         ...menuNav(),
+        ...createToaster(toasts),
         "|section.game-entry": {
             $: {
                 maxWidth: "900px",
