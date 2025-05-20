@@ -90,8 +90,6 @@ export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => 
     }
   });
 
-  isolateContainer("page");
-
   async function handleLeaveLobby() {
     debugLog(`Leaving game ${gameCode()}:`, playerId);
     await apiFetch("post", `/api/games/leave/${gameCode}`, undefined);
@@ -103,6 +101,8 @@ export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => 
     startGame(globalState.gameCode, playerClickedStartGame);
   
   }
+
+  isolateContainer("page", false);
 
   return parseInto(page, {
     ...menuNav(),

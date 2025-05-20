@@ -1,5 +1,6 @@
 // State machine transition functions determining how the game should progress from the current state
 
+import { debugLog } from "..";
 import type { PhaseIndex, PhaseType, PlayerIndex, GameData, ChainIndex, TransitionAlert, Timestamp, ChainPrompt, ChainImage, ChainData, ChainInfo } from "./gameTypes";
 
 

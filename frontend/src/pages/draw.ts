@@ -301,7 +301,7 @@ export const drawPage: PageRenderer = ({ page }, { onSubmit, params, globalState
   // Clean up any existing listeners first
   cleanup();
 
-  isolateContainer("page");
+  isolateContainer("page", false);
   return parseInto(page, {
     ...titleNavWithTimer(30, "draw-page-nav"),
     "|section.draw-page": {

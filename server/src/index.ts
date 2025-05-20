@@ -42,6 +42,11 @@ const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 const EC2_HOST =  process.env.EC2_HOST
 
+export const DEBUG = true;
+export const debugLog = function(...params: any[])   { if (DEBUG) console.log(...params) };
+export const debugErr = function(...params: any[]) { if (DEBUG) console.error(...params) };
+export const debugWarn = function(...params: any[]) { if (DEBUG) console.warn(...params) };
+
 // Init Socket.IO connection
 const httpServer = createServer(app);
 const io = new IOServer(httpServer, { cors: { origin: "*" } })

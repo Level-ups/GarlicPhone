@@ -65,7 +65,7 @@ export const guessPage: PageRenderer = ({ page }, { onSubmit, params, globalStat
         submitPrompt(globalState.gameCode, promptInput()); 
     });
 
-    isolateContainer("page");
+    isolateContainer("page", false);
 
     return parseInto(page, createGuessPage(
         "Time to guess - take a swing!",

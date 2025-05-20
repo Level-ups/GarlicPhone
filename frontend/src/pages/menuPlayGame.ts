@@ -141,6 +141,8 @@ export const menuPlayGamePage: PageRenderer = ({ page }, { globalState, onUpdate
 
 
     //----- Render page ----//
+    isolateContainer("page");
+
     return parseInto(page, {
         ...menuNav(),
         "|section.game-entry": {

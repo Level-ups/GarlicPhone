@@ -11,7 +11,7 @@ export const promptPage: PageRenderer = ({ page }, { globalState, params, onSubm
         submitPrompt(globalState.gameCode, promptInp()); 
     });
 
-    isolateContainer("page");
+    isolateContainer("page", false);
 
     // Render page
     return parseInto(page, createGuessPage(

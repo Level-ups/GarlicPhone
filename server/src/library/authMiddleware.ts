@@ -5,6 +5,7 @@ import userRepository from '../repositories/userRepository.js';
 const googleJWKs = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
 
 import { constants } from '../library/constants';
+import { debugErr } from '../index.js';
 
 export async function authenticateRequest(req: Request, res: Response, next: NextFunction) {
   try {

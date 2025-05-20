@@ -4,6 +4,7 @@ import { importJWK, JWK, jwtVerify } from 'jose';
 import { constants } from '../library/constants';
 import { ErrorDetails, ValidationErrorDetails } from '../library/error-types';
 import userService from '../services/userService';
+import { debugErr } from '..';
 
 const router = Router();
 

@@ -25,7 +25,7 @@ export type Params = { [key: string]: any };
 declare global {
   const router: PageRouter;
   function visit(page: string, params?: Params): void;
-  function isolateContainer(container: string): void;
+  function isolateContainer(container: string, permitReload?: boolean): void;
 }
 
 export interface RouterOptions {
@@ -114,13 +114,25 @@ export class PageRouter {
     this.render(page, params);
   }
 
-  public isolateContainer(container: keyof ContainerMap | "all") {
+  public isolateContainer(container: keyof ContainerMap | "all", permitReload = true) {
+
     for (let c in this.containers) {
       this.containers[c].style.display = container == "all" ? "block" : "none";
     }
     if (container != "all") {
       this.containers[container].style.display = "block";
     }
+    window.onbeforeunload = permitReload ? null : () => "Warning: Reloading will lose game progress";
+
+    // // Prevent opening multiple tabs
+    // const bc = new BroadcastChannel('garlic_phone');
+    // bc.onmessage = function (ev) {
+    //   if(ev.data && ev.data.url===window.location.href) {
+    //     alert("Garlic Phone does not support multi-tab gameplay");
+    //   }
+    // }
+    // bc.postMessage(window.location.href);
+
   }
 
   private render(page: string, params: Params = {}): void {
