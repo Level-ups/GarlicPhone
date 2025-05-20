@@ -148,7 +148,7 @@ async function progressGame(gameCode: GameCode) {
 
             const phaseType = phaseToPhaseType(gameData.phase, 2 + gameData.players.length);
             const delay = (phaseType === "draw") ? 60_000 :
-            (["prompt", "guess"].includes(phaseType)) ? 20_000 : 10_000;
+            (["prompt", "guess"].includes(phaseType)) ? 40_000 : 30_000;
 
             setTimeout(progress, delay); // Check every 30 seconds
         } else {

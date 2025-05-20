@@ -1,7 +1,8 @@
 import { menuNav } from "../components/menuNav";
 import { wrapAsCard } from "../lib/card";
+import { apiFetch } from "../lib/fetch";
 import { GALLERY_FLEX_CONFIG, wrapAsFlex } from "../lib/flex";
-import { forEl, parseInto, type StyleDict } from "../lib/parse";
+import { forEl, parseInto, react, type StyleDict } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
 import { sig } from "../lib/util/signal";
 
@@ -11,6 +12,13 @@ const cardStyleOverrides: StyleDict = {
     maxWidth: "25em",
     padding: "0"
 };
+
+async function getGallery(): Promise<GalleryItem[]> {
+    const res = await apiFetch("get", "/api/users/gallery", undefined);
+    console.log("GALLERY DATA:", await res.json());
+
+    return [];
+}
 
 function createGalleryCard(i: number, itm: GalleryItem) {
     return wrapAsCard({
@@ -34,24 +42,22 @@ function createGalleryCard(i: number, itm: GalleryItem) {
 
 export const menuGalleryPage: PageRenderer = ({ page }) => {
 
+    // { title: "Item A", imgUrl: "https://picsum.photos/100" },
     // Get gallery content
-    const items = sig<GalleryItem[] >([
-        { title: "Item A", imgUrl: "https://picsum.photos/100" },
-        { title: "Item B", imgUrl: "https://picsum.photos/150" },
-        { title: "Item C", imgUrl: "https://picsum.photos/200" },
-        { title: "Item D", imgUrl: "https://picsum.photos/250" },
-        { title: "Item D", imgUrl: "https://picsum.photos/250" },
-        { title: "Item D", imgUrl: "https://picsum.photos/250" },
-        { title: "Item D", imgUrl: "https://picsum.photos/250" },
-        { title: "Item D", imgUrl: "https://picsum.photos/250" },
-        { title: "Item D", imgUrl: "https://picsum.photos/250" }
-    ]);
+    const items = sig<GalleryItem[] >([]);
+
+    (async () => { items(await getGallery()); })();
 
     isolateContainer("page");
 
     // Render page
     return parseInto(page, {
         ...menuNav(),
-        "|section.game-grid": forEl(items(), createGalleryCard)
+        "|section.game-grid": {
+            ...react([items], () => items().length === 0 ?
+                ({ "|p": { _: "Gallery is empty" } }) :
+                forEl(items(), createGalleryCard)
+            )
+        }
     });
 }

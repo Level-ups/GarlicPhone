@@ -91,8 +91,8 @@ export const lobbyPage: PageRenderer = ({ page }, { globalState, onUpdate }) => 
   });
 
   async function handleLeaveLobby() {
-    debugLog(`Leaving game ${gameCode()}:`, playerId);
-    await apiFetch("post", `/api/games/leave/${gameCode}`, undefined);
+    debugLog(`Leaving game ${gameCode()}:`, playerId());
+    await apiFetch("post", `/api/games/leave/${gameCode}`, {});
     visit("gallery");
   }
 

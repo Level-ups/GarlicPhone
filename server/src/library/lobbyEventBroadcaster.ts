@@ -1,4 +1,4 @@
-import { debugLog } from '..';
+import { debugErr, debugLog } from '..';
 import { Lobby } from '../models/Lobby';
 import { ServerSentEventResponseWriter } from './serverSentEvents';
 

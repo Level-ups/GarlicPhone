@@ -2,6 +2,7 @@ import { Either } from "../library/types";
 import { ErrorDetails, InsertErrorDetails } from "../library/error-types";
 import { User, UserDto } from '../models/User';
 import userRepository from '../repositories/userRepository';
+import { FullChainDetail } from "../models/FullChainDetail";
 
 async function getAllUsers(): Promise<Either<User[], ErrorDetails>> {
   try {
@@ -13,6 +14,15 @@ async function getAllUsers(): Promise<Either<User[], ErrorDetails>> {
     }
   } catch (error: any) {
     return [undefined, new ErrorDetails('Failed to retrieve users', [error.message], error.stack)];
+  }
+}
+
+export async function getUserGallery(id: number): Promise<Either<FullChainDetail[], ErrorDetails>> {
+  try {
+    const chainDetails = await userRepository.getGalleryImagesByUserId(id);
+    return [chainDetails, undefined];
+  } catch (error: any) {
+    return [undefined, new ErrorDetails("Error fetching chain details", [error.message], error.stack)];
   }
 }
 
@@ -84,6 +94,7 @@ async function deleteUser(id: string): Promise<Either<boolean, ErrorDetails>> {
 const userService = {
   getAllUsers,
   getUserById,
+  getUserGallery,
   createUser,
   updateUser,
   deleteUser,

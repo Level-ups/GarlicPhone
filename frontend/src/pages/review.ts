@@ -13,7 +13,7 @@ export const reviewPage: PageRenderer = ({ page }, { params }) => {
     const selectedChain = sig<number>(0);
     const chains = sig<ChainInfo[]>(params.alert.chains);
 
-    isolateContainer("page", false);
+    isolateContainer("page");
 
     // Render page
     parseInto(page, {

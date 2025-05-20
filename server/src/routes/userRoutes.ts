@@ -106,5 +106,28 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+router.get('/gallery', async (req, res) => {
+  console.log("Fetching user gallery");
+ 
+  try {
+     const userId = req.user?.id;
+ 
+    if (!userId) {
+      return res.status(401).json(new ErrorDetails("Unauthorized", ["User is not authenticated"]));
+    };
+ 
+    const [images, error] = await userService.getUserGallery(userId);
+    console.log(images![0].prompts);
+   
+    if (error) {
+      return res.status(404).json(error);
+    } else {
+      return res.json(images);
+    }
+  } catch (error: any) {
+    return res.status(500).json(new ErrorDetails("An unexpected error occurred", [error.message], error.stack));
+  }
+})
+
 export { router as userRouter };
 
