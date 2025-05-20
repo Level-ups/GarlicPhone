@@ -73,7 +73,7 @@ export const guessPage: PageRenderer = ({ page }, { onSubmit, params, globalStat
         "Time to guess - take a swing!",
         "guess",
         promptInput,
-        (params?.alert?.timeStarted ?? params?.timeStarted ?? Date.now()) + 30_000,
+        (params?.alert?.timeStarted ?? params?.timeStarted ?? Date.now()) + 20_000,
         () => {},
         imgSrc
     ));

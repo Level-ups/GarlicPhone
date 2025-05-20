@@ -4,7 +4,6 @@ import { apiFetch, apiFetchRawBody } from "../lib/fetch";
 import { PALETTES, type ColourButtonConfig } from "../lib/palettes";
 import { forEl, parseInto, type ElemTree } from "../lib/parse";
 import type { PageRenderer } from "../lib/router";
-import { timerTill } from "../lib/timer";
 import { drawLine, floodFill, paint } from "../lib/util/canvasUtils";
 import { sig } from "../lib/util/signal";
 import eraserToolIcon from "/assets/canvas/eraser-tool.svg";
@@ -303,7 +302,7 @@ export const drawPage: PageRenderer = ({ page }, { onSubmit, params, globalState
 
   isolateContainer("page", false);
   return parseInto(page, {
-    ...titleNavWithTimer(30, "draw-page-nav"),
+    ...titleNavWithTimer(60, "draw-page-nav"),
     "|section.draw-page": {
       "|div.draw-page-prompt-ctn": {
         "|p": { _: "Draw:" },
