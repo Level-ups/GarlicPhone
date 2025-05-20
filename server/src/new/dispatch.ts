@@ -57,7 +57,7 @@ function createNewGame(host: PlayerId): GameCode {
 }
 
 function constructPlayerData(gameData: GameData): PlayerData[] {
-    console.log("GAMEDATA AT UPDATE LOBBY:", gameData);
+    debugLog("GAMEDATA AT UPDATE LOBBY:", gameData);
     return gameData.players.map((p, i) => ({
         playerId: p,
         name: gameData.playerNames[p] ?? `Player ${p}`,
@@ -132,21 +132,21 @@ async function progressGame(gameCode: GameCode) {
     if (!gameData) return; // Game might have been deleted
 
     const progress = async () => {
-        console.log(`Progressing game ${gameCode}, current phase: ${gameData.phase}`);
+        debugLog(`Progressing game ${gameCode}, current phase: ${gameData.phase}`);
         const ps = await progressState(gameCode);
 
-        console.log(`Progressed game ${gameCode} to phase ${gameData.phase}, result: ${ps}`);
+        debugLog(`Progressed game ${gameCode} to phase ${gameData.phase}, result: ${ps}`);
         
         if (ps === "complete") {
-            console.log(`Game ${gameCode} completed!`);
+            debugLog(`Game ${gameCode} completed!`);
             return; // Exit the recursive function when game is complete
         } else if (ps === "in-progress") {
             // Schedule the next progression after a delay
             // This ensures we continue to the next phase
-            console.log(`Scheduling next progression for game ${gameCode}`);
+            debugLog(`Scheduling next progression for game ${gameCode}`);
             setTimeout(progress, 30_000); // Check every 30 seconds
         } else {
-            console.log(`Game ${gameCode} invalid or deleted`);
+            debugLog(`Game ${gameCode} invalid or deleted`);
         }
     };
 
@@ -156,7 +156,7 @@ async function progressGame(gameCode: GameCode) {
 // Alert all players in the specified game of the state to which they must transition
 type ProgressStateResult = "complete" | "in-progress" | "invalidGame";
 async function progressState(gameCode: GameCode): Promise<ProgressStateResult> {
-    console.log('Current games are:', currentGames);
+    debugLog('Current games are:', currentGames);
     if (!(gameCode in currentGames)) return "invalidGame";
     const gameData = currentGames[gameCode];
 
@@ -187,7 +187,7 @@ async function progressState(gameCode: GameCode): Promise<ProgressStateResult> {
     
     //----- Progress phase -----//
     gameData.phase += 1;
-    console.log('gameData.phase [end of progress state]', gameData.phase);
+    debugLog('gameData.phase [end of progress state]', gameData.phase);
     if (isReviewState) return "complete";
     else return "in-progress";
 }
@@ -323,7 +323,7 @@ gameRouter.post('/submit/:gameCode', checker(["playerId"], (req, res) => {
     const { gameCode } = req.params;
     const { link } = req.body as { link: ChainLink };
 
-    console.log('/submit/:gamecode',link);
+    debugLog('/submit/:gamecode',link);
 
     const submitRes = submitChainLink(gameCode, playerId, link);
     return handleFailableReturn(submitRes, res);

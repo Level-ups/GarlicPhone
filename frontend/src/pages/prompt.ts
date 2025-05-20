@@ -7,7 +7,7 @@ export const promptPage: PageRenderer = ({ page }, { globalState, params, onSubm
     const promptInp = sig<string>("");
     
     onSubmit((data) => {
-        console.log("SUBMISSION EVENT", data); 
+        debugLog("SUBMISSION EVENT", data); 
         submitPrompt(globalState.gameCode, promptInp()); 
     });
 

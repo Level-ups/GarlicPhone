@@ -170,7 +170,7 @@ export const updateLobbyStatus = async (lobbyId: UUID, status: LobbyStatus): Pro
         // Schedule pre-callback
         setTimeout(() => {
           broadcastLobbyUpdate(updatedLobby, 'before_lobby_update');
-          console.log('before_lobby_update', new Date());
+          debugLog('before_lobby_update', new Date());
         }, constants.ROUND_LENGTH_MILLISECONDS - constants.UPLOAD_LENGTH_MILLISECONDS);
 
         // Main phase update
@@ -179,12 +179,12 @@ export const updateLobbyStatus = async (lobbyId: UUID, status: LobbyStatus): Pro
 
           updatedLobby.phases.moveToNextPhase();
           broadcastLobbyUpdate(updatedLobby);
-          console.log('during_lobby_update', new Date());
+          debugLog('during_lobby_update', new Date());
 
           // Schedule after-callback
           setTimeout(() => {
             broadcastLobbyUpdate(updatedLobby, 'after_lobby_update');
-            console.log('after_lobby_update', new Date());
+            debugLog('after_lobby_update', new Date());
           }, constants.DOWNLOAD_LENGTH_MILLISECONDS);
 
           // Continue only if not in Review phase

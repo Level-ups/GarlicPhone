@@ -16,7 +16,7 @@ lobbyRouter.post('/', (req: Request, res: Response) => {
     if (!hostId) {
       return res.status(401).json(new ErrorDetails("Unauthorized", ["User is not authenticated"]));
     };
-    // console.log("BODY:", req.body);
+    // debugLog("BODY:", req.body);
 
     if (hostId == null || hostName == null) {
       // TODO: use ValidationResults to let the user know what fields are missing.

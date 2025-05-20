@@ -51,10 +51,10 @@ export function broadcastLobbyUpdate(lobby: Lobby, eventName: string = "lobby_up
   }
   
   const clients = lobbyClients.get(lobbyId) as LobbyClient[];
-  console.log("PHASE PLAYER ASSIGNMENTS:", lobby.phasePlayerAssignments);
+  debugLog("PHASE PLAYER ASSIGNMENTS:", lobby.phasePlayerAssignments);
   const chs = [...new Set(lobby.phasePlayerAssignments.map(x => x.chain.id))];
   chs.sort((a, b) => a - b);
-  console.log("CHS:", chs);
+  debugLog("CHS:", chs);
   for (let p = 0; p < clients.length; p++) {
     
     const chains = (lobby.phasePlayerAssignments.filter(x => (
@@ -64,12 +64,12 @@ export function broadcastLobbyUpdate(lobby: Lobby, eventName: string = "lobby_up
     // for (let c = 0; c < clients.length; c++) {
       const players = chains.map(x => x.player.id);
 
-      console.log(`[${p}]:`, players);
+      debugLog(`[${p}]:`, players);
 
     // }
-    // console.log("---");
+    // debugLog("---");
   }
-  console.log("\n----------")
+  debugLog("\n----------")
 
   let i = 0;
   for (const client of clients) {
@@ -93,7 +93,7 @@ export function broadcastLobbyUpdate(lobby: Lobby, eventName: string = "lobby_up
 
       client.lastActivity = new Date();
     } catch (error) {
-      console.error(`Error broadcasting to client:`, error);
+      debugErr(`Error broadcasting to client:`, error);
     }
     i++;
   }
@@ -116,7 +116,7 @@ export function sendPlayerEvent(lobbyId: string, playerId: string, eventType: st
       });
       client.lastActivity = new Date();
     } catch (error) {
-      console.error(`Error sending player event:`, error);
+      debugErr(`Error sending player event:`, error);
     }
   }
 }

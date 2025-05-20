@@ -15,24 +15,24 @@ export class SockCoordinator<EventType = string> {
 
     // Register connection listener
     this.io.on("connection", (socket: Socket) => {
-      console.log("> CONNECTION:", socket.handshake.query.clientId);
+      debugLog("> CONNECTION:", socket.handshake.query.clientId);
       const clientId = socket.handshake.query.clientId as ClientId;
       // socket.handshake.query.clientId
       if (clientId == null) {
-        console.log("> MISSING CLIENT ID ON CONNECTION");
+        debugLog("> MISSING CLIENT ID ON CONNECTION");
         socket.disconnect(true);
         return;
       }
 
       const addResult = this.addClient(clientId, socket);
       if (addResult == "replacedPrevious") {
-        console.log("> REPLACE EXISTING CONNECTION:", clientId);
+        debugLog("> REPLACE EXISTING CONNECTION:", clientId);
       }
     });
   }
 
   public addClient(clientId: ClientId, socket: Socket): AddClientResult {
-    console.log("ADDING CLIENT:", clientId);
+    debugLog("ADDING CLIENT:", clientId);
     let res: AddClientResult = "success";
 
     // Replace old connection
@@ -53,7 +53,7 @@ export class SockCoordinator<EventType = string> {
   }
 
   public removeClient(clientId: ClientId): void {
-    console.log("REMOVING CLIENT:", clientId);
+    debugLog("REMOVING CLIENT:", clientId);
     const socket = this.clients[clientId];
     if (socket) {
       socket.disconnect(true);
@@ -63,11 +63,11 @@ export class SockCoordinator<EventType = string> {
 
   // Dispatch event to specific client
   public dispatch(clientId: ClientId, data: any, event: EventType): DispatchAlertResult {
-    console.log(`DISPATCH [${event}]:`, clientId, "\n ->", data)
+    debugLog(`DISPATCH [${event}]:`, clientId, "\n ->", data)
     const socket = this.clients[clientId];
     if (!socket) {
-      console.log("INVALID CLIENT ID:", clientId);
-      console.log("CLIENT IDS:", Object.keys(this.clients));
+      debugLog("INVALID CLIENT ID:", clientId);
+      debugLog("CLIENT IDS:", Object.keys(this.clients));
       return "invalidClientId";
     }
     socket.emit(event as string, data);
@@ -76,7 +76,7 @@ export class SockCoordinator<EventType = string> {
 
   // Broadcast to all listed clients
   public broadcast(clients: ClientId[], data: any, event: EventType): void {
-    console.log(`--- BROADCAST [${event}] ---`);
+    debugLog(`--- BROADCAST [${event}] ---`);
     clients.forEach((c) => {
       if (c in this.clients) {
         this.dispatch(c, data, event);

@@ -30,7 +30,7 @@ export async function authenticateRequest(req: Request, res: Response, next: Nex
 
     next();
   } catch (error) {
-    console.error(error);
+    debugErr(error);
     res.status(401).json({ error: 'Invalid Token' });
   }
 }
@@ -55,7 +55,7 @@ export async function authenticateRequestFromQuery(req: Request, res: Response, 
 
     next();
   } catch (error) {
-    console.error(error);
+    debugErr(error);
     res.status(401).json({ error: 'Invalid Token In Query' });
   }
 }

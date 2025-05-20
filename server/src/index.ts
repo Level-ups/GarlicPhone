@@ -57,7 +57,7 @@ app.post('/api/chain/:chainId/latest-image', authenticateRequest, express.raw({ 
     const { chainId } = req.params;
     const userId = req.user?.id;
 
-    console.log("Image buffer length:", req.body.length);
+    debugLog("Image buffer length:", req.body.length);
 
     if (!userId) {
       res.status(401).json(new ErrorDetails("Unauthorized"));
@@ -206,7 +206,7 @@ setInterval(() => {
   try {
     cleanupExpiredLobbies();
   } catch (err) { 
-    console.error('Error cleaning up expired lobbies:', err);
+    debugErr('Error cleaning up expired lobbies:', err);
   }
 }, HOUR_IN_MS);
 
@@ -215,13 +215,13 @@ setInterval(() => {
   try {
     cleanupInactiveClients();
   } catch (err) { 
-    console.error('Error cleaning up inactive clients:', err);
+    debugErr('Error cleaning up inactive clients:', err);
   }
 }, 15 * MINUTE_IN_MS);
 
 // Start server
 httpServer.listen(PORT, '127.0.0.1', () => {
-  console.log(`Server running on http://${EC2_HOST}:${PORT}`);
+  debugLog(`Server running on http://${EC2_HOST}:${PORT}`);
 });
 
 // const options = {
@@ -230,7 +230,7 @@ httpServer.listen(PORT, '127.0.0.1', () => {
 // };
 
 // https.createServer(options, app).listen(443, () => {
-//   console.log('HTTPS server running on port 443');
+//   debugLog('HTTPS server running on port 443');
 // });
 
 export default app;
