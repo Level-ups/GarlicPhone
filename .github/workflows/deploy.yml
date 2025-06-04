@@ -1,38 +1,111 @@
 name: Deploy Application
 
 on:
-  workflow_run:
-    workflows: ["Build Docker Image"]
-    types:
-      - completed
+  workflow_dispatch:
+  push:
+    branches:
+      - kyle/authorisation
 
 env:
-  DATABASE_URL: ${{ secrets.TF_DATABASE_URL }}
+  PORT: ${{ vars.PORT }}
+  EC2_HOST: ${{ vars.EC2_HOST }}
+  EC2_USER: ${{ vars.EC2_USER }}
+  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+  GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+  PG_USER: ${{ secrets.DB_USERNAME }}
+  PG_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  PG_HOST: ${{ vars.PG_HOST }}
+  PG_DATABASE: ${{ vars.PG_DATABASE }}
+  PG_PORT: ${{ vars.PG_PORT }}
+  CERTBOT_EMAIL: ${{ vars.CERTBOT_EMAIL }}
+  APP_URL: ${{ vars.APP_URL }}
+  AWS_S3_BUCKET_NAME: ${{ vars.AWS_S3_BUCKET_NAME }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-      
-    - name: Install AWS CLI
-      run: |
-        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-        unzip awscliv2.zip
-        sudo ./aws/install
-    
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: af-south-1
-    
-    - name: Deploy to EC2
-      run: |
-        aws ssm send-command \
-          --instance-ids ${{ steps.get-terraform-outputs.outputs.instance_id }} \
-          --document-name "AWS-RunShellScript" \
-          --parameters "commands=['cd /home/ec2-user/app && docker-compose pull && docker-compose up -d --remove-orphans']"
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Copy server folder to EC2 via SCP
+        env:
+          PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          HOST: ${{ vars.EC2_HOST }}
+          USER: ${{ vars.EC2_USER }}
+        run: |
+          touch key.pem
+          echo "$PRIVATE_KEY" > key.pem
+          chmod 600 key.pem
+          echo "export PORT=$PORT" > .env
+          echo "export EC2_HOST=$EC2_HOST" >> .env
+          echo "export EC2_USER=$EC2_USER" >> .env
+          echo "export GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID" >> .env
+          echo "export GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET" >> .env
+          echo "export PG_USER=$PG_USER" >> .env
+          echo "export PG_PASSWORD=$PG_PASSWORD" >> .env
+          echo "export PG_HOST=$PG_HOST" >> .env
+          echo "export PG_DATABASE=$PG_DATABASE" >> .env
+          echo "export PG_PORT=$PG_PORT" >> .env
+          echo "export APP_URL=$APP_URL" >> .env
+          echo "export AWS_S3_BUCKET_NAME" >> .env
+          scp -v -i key.pem -o StrictHostKeyChecking=no -r ./server ./frontend ./package.json .env $USER@$HOST:/home/$USER/
+
+      - name: Setup and reload NGINX
+        env:
+          HOST: ${{ vars.EC2_HOST }}
+          USER: ${{ vars.EC2_USER }}
+        run: |
+          ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << EOF
+          sudo cp /home/$USER/server/nginx/garlic-phone.conf /etc/nginx/conf.d/garlic-phone.conf
+
+          # Enable and start NGINX if not running
+          sudo systemctl enable nginx
+          sudo systemctl start nginx
+
+          # Test and reload config
+          sudo nginx -t && sudo systemctl reload nginx
+          EOF
+
+
+      - name: Install Certbot on Amazon Linux 2 and Get SSL Certificate
+        env:
+          HOST: ${{ vars.EC2_HOST }}
+          USER: ${{ vars.EC2_USER }}
+        run: |
+          ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
+          sudo dnf install -y certbot python3-certbot-nginx
+          sudo certbot --nginx \
+            --non-interactive \
+            --agree-tos \
+            --email ${{ vars.CERTBOT_EMAIL }} \
+            -d garlic-phone.com
+          EOF
+
+      - name: Install packages, build, and run
+        env:
+          HOST: ${{ env.EC2_HOST }}
+          USER: ${{ env.EC2_USER }}
+        run: |
+          ssh -i key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
+          source ~/.env
+          cd server
+          npm run clean
+          npm install
+          cd ../frontend
+          npm install
+          cd ..
+          npm run build
+          # Ensure the old process is stopped before starting the new one
+          fuser -k ${PORT}/tcp || true
+          # Start the server, which is now handling HTTPS
+          nohup $(which npm) run start > server.log 2>&1 &
+          EOF

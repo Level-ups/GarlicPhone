@@ -1,0 +1,79 @@
+@keyframes character-animation {
+    0% {
+        left: 4rem; /* initial position */
+    }
+    10% {
+        left: -3rem; /* pop out left */
+    }
+    50% {
+        left: -3rem; /* pause while popped out */
+    }
+    60% {
+        left: 4rem; /* return */
+    }
+    100% {
+        left: 4rem; /* pause before repeating */
+    }
+}
+
+.game-entry{
+    margin: auto;
+}
+
+.name-fieldset{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    row-gap: .5rem;
+}
+
+.welcome-heading{
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+.create-game, .join-game.card{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    row-gap: 1rem;
+}
+
+#join-form{
+    display: flex;
+    justify-content: center;
+    column-gap: .5rem;
+}
+
+#join-form .base-input{
+    width: 10rem;
+}
+
+
+
+#player-form .base-input{
+    font-size: 1.3rem;
+}
+
+.welcome-card{
+    position: relative;
+    overflow: visible;
+}
+
+.waving-garlic{
+    width: 9rem;
+    position: absolute;
+    left: -2rem;
+    top: -4rem;
+    transform: rotate(-60deg);
+    transform-origin: bottom;
+    z-index: -1;
+}
+
+@media screen and (max-width: 1100px) {
+    .waving-garlic{
+        display: none;
+    }
+}

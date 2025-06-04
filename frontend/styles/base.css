@@ -1,0 +1,328 @@
+@keyframes back-colour-fade {
+    0%{
+        background-color: #FEF3E2;
+    }
+    25%{
+        background-color: #C7D9DD;
+    }
+    50%{
+        background-color: #CCE0AC;
+    }
+    75%{
+        background-color: #C8AAAA;
+    }
+    100%{
+        background-color: #FEF3E2;
+    }
+}
+
+/* ---------- Theme ---------- */
+/* Colors */
+:root {
+  --white:  #EEEEEE;
+  --grey:   #DDDDDD;
+  --yellow: #FADA7A;
+  --green:  #64E2B7;
+  --purple: #9B7EBD;
+  --red:    #DA6C6C;
+  --navy:   #2A4759;
+  --black:rgb(20, 30, 36);
+
+  /* Adjusted Colors */
+
+  /*Light*/
+  --plush_pink: #FD9EE0;
+  --plush_purple: #A62DC7;
+  --white_white: #ffffff;
+  --black_black: #000000;
+  --purple_pink: #DFC5E6; 
+  --gold_yellow: #FBBC05;
+
+  /*Dark*/
+  --dark_lightblue: #3377A2;
+  --dark_navyblue: #132C3C;
+  --dark_turquios: #6EB9AD; 
+
+  /*base spaceing*/
+  --gap: 2rem;
+  --padding-tiny: 0.5rem;
+  --padding-small: 1rem;
+  --padding-medium: 2rem;
+  
+  /* base border */
+  --border-standard: 2px solid var(--black);
+  
+  /* base radius */
+  --border-radius-standard: 1rem;
+
+  /* base shadow */
+  --shadow-standard-small: 0.2rem 0.3rem var(--black);
+}
+
+/* Dark theme */
+:root {
+  --bg:         linear-gradient(to bottom, var(--dark_navyblue), var(--dark_lightblue));
+  --text:       var(--white_white);
+  --header_text: var(--dark_turquios);
+  --card:       var(--navy);
+  --border:     var(--green);
+  --header:     var(--white);
+  --link:       var(--purple);
+  --link-hover: color-mix(in hsl, var(--purple), black 15%);
+}
+
+/* Light theme */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg:     linear-gradient(to bottom, var(--plush_purple), var(--plush_pink));
+    --text:   var(--white_white);
+    --header_text: var(--gold_yellow);
+    --card:   var(--grey);
+    --text:   var(--black);
+    --header: var(--navy);
+    --link:   var(--purple);
+  }
+}
+
+/* Global config */
+:root {
+  color-scheme: light dark;
+
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color: var(--text);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+/* ---------- Elements ---------- */
+
+html {
+  font-size: clamp(10px, 2vw + 1rem, 16px); /* 10px to 16px scaling based on viewport width */
+  margin: 0;
+  height: 100%;
+  /* overflow: hidden; */
+
+  /* background: var(--bg); */
+  animation: back-colour-fade 50s ease infinite;
+  background-color: #CCE0AC;
+opacity: 1;
+background-image:  radial-gradient(#0000002a 2px, transparent 2px), radial-gradient(#0000002A 2px, #CCE0AC00 2px);
+background-size: 80px 80px;
+background-position: 0 0,40px 40px; 
+}
+
+/* Extra large screens (e.g. 4K monitors) */
+@media (min-width: 1921px) {
+  html {
+    font-size: clamp(18px, 1vw + 1rem, 24px);
+  }
+}
+
+/* Large screens (e.g. desktops, 1440px and up) */
+@media (min-width: 1441px) and (max-width: 1920px) {
+  html {
+    font-size: clamp(16px, 1vw + 1rem, 20px);
+  }
+}
+
+/* Medium screens (tablet) */
+@media (max-width: 1200px) {
+  html {
+    font-size: clamp(9px, 2vw + 1rem, 15px);
+  }
+}
+
+/* Small screens (large phones) */
+@media (max-width: 992px) {
+  html {
+    font-size: clamp(8px, 2vw + 1rem, 14px);
+  }
+}
+
+/* Extra small screens (small phones) */
+@media (max-width: 768px) {
+  html {
+    font-size: clamp(7px, 2vw + 1rem, 13px);
+  }
+}
+
+/* Tiny screens (very small devices) */
+@media (max-width: 576px) {
+  html {
+    font-size: clamp(6px, 2vw + 1rem, 12px);
+  }
+}
+
+@media (max-width: 375px) {
+  html {
+    font-size: clamp(5px, 2vw + 1rem, 11px);
+  }
+}
+
+@media (max-width: 345px) {
+  html {
+    font-size: clamp(4px, 2vw + 1rem, 10px);
+  }
+}
+
+
+*,
+*::after,
+*::before{
+  margin: 0;
+  padding: 0;
+  box-sizing: inherit;
+  font-family: inherit;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  box-sizing: border-box;
+}
+
+fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+@keyframes gradient {
+	0% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+	100% {
+		background-position: 0% 50%;
+	}
+}
+
+a {
+  font-weight: 500;
+  text-decoration: inherit;
+}
+
+
+#app {
+  width: 100vw;
+  height: 100vh;
+  min-height: fit-content;
+  margin: 0 auto;
+  text-align: center;
+  /* border: 1px solid red; */
+    container-type: inline-size;
+}
+
+#page {
+  --pageWidth: calc(min(100vw, 80em));
+  --topPad: 1em;
+  --botPad: 1em;
+
+  position: absolute;
+  top: 0;
+  left: calc(50vw - var(--pageWidth)/2);
+
+  width: var(--pageWidth);
+  height: 100vh;
+  padding-top: var(--topPad);
+  padding-bottom: var(--botPad);
+  min-height: fit-content;
+  /* border: 1px solid var(--dark_turquios); */
+  padding-left: 1rem;
+  padding-right: 1rem;
+  container-type: inline-size;
+}
+  
+.btnGuess {
+  background-color: var(--gold_yellow);   
+  color: var(--white_white); 
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.btnGuess:hover{
+  border-color: #817503;
+}
+
+.flex-equal-size-item {
+  flex: 1;
+}
+
+.flex-main-item-size {
+  flex: 1 0 50%;
+}
+
+.flex-container {
+  width: 100%;
+}
+
+.guess-text {
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+/*------------------------------------------------------------------------------*/
+
+.timer-loader {
+    position: relative;
+    width: 85px;
+    height: 50px;
+    background-repeat: no-repeat;
+    background-image: linear-gradient(var(--purple) 50px, transparent 0),
+                      linear-gradient(var(--purple) 50px, transparent 0),
+                      linear-gradient(var(--purple) 50px, transparent 0),
+                      linear-gradient(var(--purple) 50px, transparent 0),
+                      linear-gradient(var(--purple) 50px, transparent 0),
+                      linear-gradient(var(--purple) 50px, transparent 0);
+    background-position: 0px center, 15px center, 30px center, 45px center, 60px center, 75px center, 90px center;
+    animation: rikSpikeRoll 0.6s linear infinite alternate;
+  }
+@keyframes rikSpikeRoll {
+  0% { background-size: 10px 3px;}
+  16% { background-size: 10px 50px, 10px 3px, 10px 3px, 10px 3px, 10px 3px, 10px 3px}
+  33% { background-size: 10px 30px, 10px 50px, 10px 3px, 10px 3px, 10px 3px, 10px 3px}
+  50% { background-size: 10px 10px, 10px 30px, 10px 50px, 10px 3px, 10px 3px, 10px 3px}
+  66% { background-size: 10px 3px, 10px 10px, 10px 30px, 10px 50px, 10px 3px, 10px 3px}
+  83% { background-size: 10px 3px, 10px 3px,  10px 10px, 10px 30px, 10px 50px, 10px 3px}
+  100% { background-size: 10px 3px, 10px 3px, 10px 3px,  10px 10px, 10px 30px, 10px 50px}
+}
+
+
+/*----- Toast -----*/
+
+.toaster-container {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 1000;
+  width: 300px;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  margin-bottom: 1rem;
+}
+
+@keyframes disappear {
+  from { left: 0; opacity: 100%; }
+  to { left: 2rem; opacity: 0%; }
+}
+
+.disappear {
+  animation-name: fade;
+  animation-duration: 0.25s;
+  animation-delay: 2.75s;
+}

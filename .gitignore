@@ -1,3 +1,14 @@
 node_modules
 .env
 .dist
+dist
+
+#Terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+terraform.tfvars
+
+# AWS key-pair
+*.pem
+*.ppk

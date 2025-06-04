@@ -1,0 +1,53 @@
+@startuml
+participant Player
+participant Dispatch
+participant GameData
+participant Transition
+participant SSECoordinator
+participant SaveGame
+participant Database
+
+Player -> Dispatch: POST /create
+activate Dispatch
+Dispatch -> GameData: createNewGame(hostId)
+GameData --> Dispatch: gameCode (e.g., "A1B2C")
+Dispatch --> Player: 201 {gameCode}
+deactivate Dispatch
+
+Player -> Dispatch: POST /join/:gameCode
+activate Dispatch
+Dispatch -> GameData: addPlayerToGame(gameCode, playerId)
+alt SUCCESS
+GameData --> Dispatch: "success"
+Dispatch --> Player: 201 {status}
+else GAME_FULL
+GameData --> Dispatch: "gameFull"
+Dispatch --> Player: 400 {reason}
+end
+deactivate Dispatch
+
+Dispatch -> Transition: progressState(gameCode)
+activate Transition
+Transition -> GameData: get chains[]
+Transition -> SSECoordinator: broadcast(players, SUBMISSION_ALERT)
+SSECoordinator -> Players: event: submission\ndata: {...}
+Transition -> Transition: sleep(2000)
+Transition -> GameData: phase += 1
+loop foreach player
+Transition -> Transition: transition(pIdx, gameData)
+Transition -> SSECoordinator: dispatch(pIdx, TransitionAlert)
+end
+Transition -> SaveGame: saveGameDataToDb()
+activate SaveGame
+SaveGame -> Database: BEGIN TRANSACTION
+SaveGame -> Database: INSERT game
+SaveGame -> Database: INSERT chains
+SaveGame -> Database: INSERT prompts/images
+alt SUCCESS
+SaveGame -> Database: COMMIT
+else FAILURE
+SaveGame -> Database: ROLLBACK
+end
+deactivate SaveGame
+deactivate Transition
+@enduml

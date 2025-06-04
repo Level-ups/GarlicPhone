@@ -1,9 +1,7 @@
-export class ErrorResponse {
+export type ValidationResult = {
+  field: string;
   message: string;
-  details: string[] | undefined;
-
-  constructor(message: string, details?: string[]) {
-    this.message = message;
-    this.details = details;
-  }
+  isValid: boolean;
 }
+
+export type Either<A, B> = [A, undefined?] | [undefined, B];

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Garlic Phone Game - Lobby Demo</title>
+  <link rel="stylesheet" href="styles/lobby.css">
+</head>
+<body>
+  <div id="lobby-container"></div>
+  <div id="debug">
+    <h3>Debug Info:</h3>
+    <div id="debug-output"></div>
+  </div>
+
+  <script>
+    // Debug function
+    function debugLog(message) {
+      const debugOutput = document.getElementById('debug-output');
+      if (debugOutput) {
+        const logEntry = document.createElement('div');
+        logEntry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+        debugOutput.appendChild(logEntry);
+      }
+    }
+
+    // Initialize when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      debugLog('DOM loaded, attempting to load ES modules...');
+      
+      // Load the module directly
+      import('./dist/components/LobbyUI.js')
+        .then(module => {
+          debugLog('Module loaded successfully. Initializing LobbyUI...');
+          const LobbyUI = module.LobbyUI;
+          const lobbyUI = new LobbyUI('lobby-container');
+          debugLog('LobbyUI initialized successfully.');
+        })
+        .catch(error => {
+          debugLog(`Error loading module: ${error.message}`);
+          console.error('Error loading module:', error);
+          document.getElementById('lobby-container').innerHTML = `
+            <div class="error-message">
+              <h2>Error loading lobby</h2>
+              <p>${error.message}</p>
+              <p>Check the console for more details.</p>
+            </div>
+          `;
+        });
+    });
+  </script>
+</body>
+</html> 

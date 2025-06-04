@@ -1,0 +1,35 @@
+.item {
+  border: none;
+  width: 100%;
+  font-size: 2em;
+  border-radius: 1em;
+  margin: 0.4em 0;
+  padding: 0.2em 0.6em;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.item:hover {
+  transform: scale(1.05);
+}
+
+.checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+.checkbox-list label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.checkbox-list input[type="checkbox"] {
+  margin-right: 0.5em;
+  width: 1.1em;
+  height: 1.1em;
+  accent-color: #6a11cb;
+  transition: transform 0.1s ease;
+}
+.checkbox-list input[type="checkbox"]:checked {
+  transform: scale(1.2);
+}

@@ -5,13 +5,11 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'migrations/**'
-      - '.github/workflows/flyway-migrations.yml'
 
 jobs:
   migrate:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,23 +20,20 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Download Flyway
+      - name: Install Flyway CLI
         run: |
-          wget -q -O flyway-commandline.zip https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/9.22.3/flyway-commandline-9.22.3.zip
-          unzip flyway-commandline.zip -d flyway
-          rm flyway-commandline.zip
-          echo "$(pwd)/flyway" >> $GITHUB_PATH
-
-      - name: Get Terraform outputs
-        id: terraform
-        run: |
-          echo "DB_HOST=$(terraform output -raw db_host)" >> $GITHUB_OUTPUT
-          echo "DB_NAME=$(terraform output -raw db_name)" >> $GITHUB_OUTPUT
+          curl -L https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/9.22.3/flyway-commandline-9.22.3-linux-x64.tar.gz | tar xz
+          sudo ln -s $PWD/flyway-9.22.3/flyway /usr/local/bin/flyway
 
       - name: Run Flyway migrations
         env:
-          FLYWAY_URL: jdbc:postgresql://${{ steps.terraform.outputs.DB_HOST }}:5432/${{ steps.terraform.outputs.DB_NAME }}
-          FLYWAY_USER: ${{ secrets.DB_USER }}
+          FLYWAY_URL: jdbc:postgresql://${{ vars.PG_HOST }}:${{ vars.PG_PORT }}/${{ vars.PG_DATABASE }}
+          FLYWAY_USER: ${{ secrets.DB_USERNAME }}
           FLYWAY_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          flyway migrate
+          flyway \
+            -url="$FLYWAY_URL" \
+            -user="$FLYWAY_USER" \
+            -password="$FLYWAY_PASSWORD" \
+            -locations=filesystem:flyway/sql/migrations,filesystem:flyway/sql/migrations/repeatable-scripts \
+            migrate

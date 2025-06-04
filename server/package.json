@@ -2,11 +2,17 @@
   "name": "express-typescript-api",
   "version": "1.0.0",
   "description": "Minimal Express API server using TypeScript",
-  "main": "dist/index.js",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "build": "tsc",
+    "dev_old": "ts-node-dev --watch --poll --respawn --transpile-only src/index.ts",
+    "build_old": "NODE_OPTIONS='--max-old-space-size=4096' tsc",
+    "dev": "ts-node-dev --watch --poll --respawn --transpile-only src/index.ts",
+
+    "build": "sh -c \"vite build --config vite.config.ts\"",
+    "buildWin": "vite build --config vite.config.ts",
+
     "start": "node dist/index.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint . --ext .ts",
@@ -21,18 +27,22 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.1692.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "morgan": "^1.10.0",
+    "jose": "^6.0.10",
+    "node-fetch": "^3.3.2",
     "pg": "^8.15.6",
-    "pg-promise": "^11.13.0"
+    "socket.io": "^4.8.1",
+    "ws": "^8.18.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.10.5",
+    "@types/pg": "^8.11.14",
     "@types/supertest": "^2.0.16",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
@@ -41,8 +51,12 @@
     "eslint-plugin-prettier": "^5.2.6",
     "prettier": "^3.5.3",
     "supertest": "^6.3.3",
+    "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3",
+    "vite": "^6.3.5",
+    "vite-plugin-dts": "^4.5.4",
+    "vite-plugin-node": "^5.0.1",
     "vitest": "^3.1.2"
   }
 }

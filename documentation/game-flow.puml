@@ -1,0 +1,80 @@
+@startuml Game Flow
+actor PlayerBrowser as Browser
+
+participant "HTTP Server" as HTTP
+participant "SQL Database" as DB
+participant "S3 Bucket" as S3
+
+== Lobby Creation & Join ==
+Browser -> HTTP : POST /lobby/create { userId }
+activate HTTP
+HTTP --> Browser : 201 Created\n{ url_id }
+deactivate HTTP
+
+Browser -> HTTP : POST /lobby/{url_id}/join { userId }
+activate HTTP
+HTTP --> Browser : 200 OK
+HTTP --> Browser : SSE LobbyUpdate({lobbyId, players: [], status: 'waiting'})
+deactivate HTTP
+
+== Lobby State Sync (In-Memory) ==
+
+Browser -> HTTP : DELETE  /lobby/{url_id}/{playerId}
+activate HTTP
+HTTP --> Browser : 200 OK
+HTTP --> Browser : SSE LobbyUpdate({players: [], status: 'waiting'})
+deactivate HTTP
+
+loop while playAgain == true
+  == Start Game ==
+  Browser -> HTTP : POST /lobby/{url_id}/start
+  activate HTTP
+  HTTP -> DB : INSERT INTO games(status_id='active')
+  DB -> HTTP : Game
+  ' do we really need to store the game status?
+  HTTP -> Browser : 200 OK 
+  loop each round
+    HTTP -> Browser : SSE ChainUpdateEvent({playerChainId: [player -> chain], roundType: 'prompt' | 'image' | 'guess', roundDuration: x})
+
+    alt roundType == 'prompt'
+      Browser -> HTTP : POST /lobby/{url_id}/prompt { chainId, text, userId }
+      HTTP -> DB : INSERT INTO prompts(text, userId, chainId, index)
+      DB -> HTTP : Prompt
+      HTTP -> Browser : 200 OK
+    else roundType == 'image'
+      Browser -> HTTP : POST /lobby/{url_id}/image { chainId, userId }
+      'the image to chain relationship is implicit -> should it be explicit?
+      HTTP -> S3 : Upload Image
+      S3 -> HTTP : URL
+      HTTP -> DB : INSERT INTO Images(userId, promptId, URL)
+      DB -> HTTP : Image
+      HTTP -> Browser : 200 OK
+    else roundType == 'guess'
+      Browser -> HTTP : POST /lobby/{url_id}/guess { chainId, text, userId }
+      HTTP -> DB : INSERT INTO prompts(text, userId, chainId, index)
+      DB -> HTTP : Prompt
+      HTTP -> Browser : 200 OK
+    end
+    HTTP -> Browser : 200 OK
+  end
+
+  'update game status in DB
+
+  'Option 1 -> DB method -> good because of reuse
+  HTTP -> Browser : SSE RoundsCompletedEvent(gameId)
+  Browser -> HTTP : GET Game/{gameId}/results
+  'Option 2 -> SSE method -> good because of speed
+  ' HTTP -> Browser : SSE RoundsCompletedEvent({gameDetails})
+
+  loop each chain
+    loop each chain item
+      HTTP -> Browser : SSE ShowNextChainItem({chainId, promptId / imageId})
+    end
+  end
+
+  HTTP -> Browser : SSE GameEndedEvent({gameDetails})
+
+'if you decide to play again, loop back to line 28
+end
+
+@enduml

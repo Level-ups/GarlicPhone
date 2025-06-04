@@ -1,12 +1,49 @@
-// User type
+import { ValidationResult } from "../library/types";
+import { Role } from "./Role";
+
+export type UserQueryResult = {
+  user_id: number;
+  google_sub: string;
+  name: string;
+  avatar_url: string | null;
+  role_id: number;
+  role_name: string;
+}
+
 export type User = {
-  userId: string;
-  username: string;
-  email: string;
+  id: number;
+  googleSub: string;
+  name: string;
+  avatarUrl: string | null;
+  role: Role;
 };
 
-/**
- * This file demonstrates the separation of concerns:
- * - Models directory contains type definitions and business logic
- * - Repositories directory handles database access
- */
+export type UserDto = {
+  googleSub: string;
+  name: string;
+  avatarUrl: string;
+  roleName: string;
+}
+
+export function validateCreateUser(input: Partial<UserDto>): ValidationResult[] {
+
+  const createUserValidations: ValidationResult[] = [
+    {
+      field: "name",
+      message: "'name' is required",
+      isValid: !!input.name?.trim(),
+    },
+    {
+      field: "googleSub",
+      message: "'googleSub' is required",
+      isValid: !!input.googleSub?.trim(),
+    },
+    {
+      field: "roleName",
+      message: "'roleName' is required",
+      isValid:!!input.roleName?.trim(),
+    }
+  ];
+  
+  return createUserValidations.filter((field) => !field.isValid);
+}

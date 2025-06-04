@@ -1,0 +1,14 @@
+.base-input {
+  border: var(--border-standard);
+  border-radius: var(--border-radius-standard);
+  padding: var(--padding-tiny);
+  width: auto;
+  flex: 1;
+  background-color: var(--yellow);
+  box-shadow: .2rem .3rem var(--black);
+  font-size: .9rem;
+}
+
+.base-input:focus {
+  outline: none;
+}

@@ -1,0 +1,64 @@
+@startuml
+
+hide circle
+
+skinparam class {
+  DefaultTextAlignment Center
+  BackgroundColor White
+  BorderColor Black
+}
+
+class Login {
+  login
+}
+
+package "Menu" {
+  class MenuPlay {
+    [PLAY] . . . GALLERY
+    CREATE
+    JOIN
+  }
+
+  class MenuGallery {
+    PLAY . . . [GALLERY]
+  }
+
+  MenuPlay <-> MenuGallery : tab
+}
+
+class Lobby {
+  game list | start
+}
+
+class Prompt {
+  > prompt text input
+  [Submit]
+}
+
+class Draw {
+  | Canvas |
+  [Submit]
+
+}
+
+class Guess {
+  > guess text input
+  [Submit]
+}
+
+class Review {
+  - Chain 1
+  - Chain 2
+  - ...
+  - Chain N
+}
+
+Login --> MenuPlay : auth
+MenuPlay --> Lobby : play/create/join
+Lobby --> Prompt : start
+Prompt --> Draw : submit prompt
+Guess -l-> Draw : N times
+Draw -r-> Guess : submit drawing
+Guess --> Review : submit guess
+Review --> MenuPlay : return/quit
+@enduml
